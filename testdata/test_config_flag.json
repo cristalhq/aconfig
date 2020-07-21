@@ -1,0 +1,12 @@
+{
+  "Str": "str-flag",
+  "Int": 1001,
+  "HTTPPort": 30000,
+  "Sub": {
+    "Float": 123.321
+  },
+  "PtrSub": {
+    "Float": 321.123
+  },
+  "Em": "em-flag"
+}

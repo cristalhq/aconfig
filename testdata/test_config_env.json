@@ -1,0 +1,12 @@
+{
+  "Str": "str-env",
+  "Int": 121,
+  "HTTPPort": 3000,
+  "Sub": {
+    "Float": 222.333
+  },
+  "PtrSub": {
+    "Float": 444.555
+  },
+  "Em": "em-env"
+}
