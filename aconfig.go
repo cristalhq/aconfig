@@ -247,7 +247,7 @@ func setFieldDataHelper(field *fieldData, value string) error {
 		return setMap(field, value)
 
 	default:
-		return fmt.Errorf("aconfig: type %q isn't supported", kind)
+		return fmt.Errorf("type kind %q isn't supported", kind)
 	}
 }
 

@@ -280,6 +280,26 @@ func TestBadDefauts(t *testing.T) {
 	f(&struct {
 		Dur time.Duration `default:"1h_2m3s"`
 	}{})
+
+	f(&struct {
+		Slice []int `default:"1,a,2"`
+	}{})
+
+	f(&struct {
+		Map map[string]int `default:"1:a,2:2"`
+	}{})
+
+	f(&struct {
+		Map map[int]string `default:"a:1"`
+	}{})
+
+	f(&struct {
+		Map map[int]string `default:"a1"`
+	}{})
+
+	f(&struct {
+		Array [2]string `default:"a1"`
+	}{})
 }
 
 func TestBadFiles(t *testing.T) {
