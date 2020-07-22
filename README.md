@@ -31,18 +31,20 @@ go get github.com/cristalhq/aconfig
 
 ```go
 type MyConfig struct {
-	Port int `default:"port"`
+	Port int `default:"1111"`
 	Auth struct {
-		User string `default:"admin"`
-		Pass stirng `default:"github"`
+		User string `default:"def-user"`
+		Pass string `default:"def-pass"`
 	}
 }
 
-loader := aconfig.NewLoader(aconfig.Config{
-	UseDefaults: true,
-	UseFile:     true,
-	UseEnv:      true,
-	UseFlag:     true,
+loader := aconfig.NewLoader(aconfig.LoaderConfig{
+	// skip some steps, if you want to :)
+    // SkipDefaults: true,
+    // SkipFile: true,
+    // SkipEnv:  true,
+    // SkipFlag: true,
+
 	Files:       []string{"file.json", "ouch.yaml"},
 	FlagPrefix:  "app",
 	EnvPrefix:   "APP",
@@ -61,7 +63,7 @@ if err := loader.Load(&cfg); err != nil {
 // 4. and command-line flags if they are
 ```
 
-Also see examples: TODO
+Also see examples: [this above](https://github.com/cristalhq/aconfig/blob/master/example_test.go)
 
 ## Documentation
 
