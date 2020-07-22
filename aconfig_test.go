@@ -298,6 +298,7 @@ func TestBadFiles(t *testing.T) {
 	}
 
 	f("testdata/no_such_file.json")
+	f("testdata/bad_config.json")
 	f("testdata/unknown.ext")
 }
 
