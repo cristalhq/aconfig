@@ -293,3 +293,53 @@ func setString(field *fieldData, value string) error {
 	field.Value.SetString(value)
 	return nil
 }
+
+func setSlice(field *fieldData, value string) error {
+	vals := strings.Split(value, ",")
+	slice := reflect.MakeSlice(field.Field.Type, len(vals), len(vals))
+	for i, val := range vals {
+		val = strings.TrimSpace(val)
+		fd := &fieldData{
+			Parent: field,
+			Value:  slice.Index(i),
+		}
+		if err := setFieldDataHelper(fd, val); err != nil {
+			return fmt.Errorf("incorrect slice item %q: %w", val, err)
+		}
+	}
+	field.Value.Set(slice)
+	return nil
+}
+
+func setMap(field *fieldData, value string) error {
+	vals := strings.Split(value, ",")
+	mapField := reflect.MakeMapWithSize(field.Field.Type, len(vals))
+
+	for _, val := range vals {
+		entry := strings.SplitN(val, ":", 2)
+		if len(entry) != 2 {
+			return fmt.Errorf("incorrect map item: %s", val)
+		}
+		key := strings.TrimSpace(entry[0])
+		val := strings.TrimSpace(entry[1])
+
+		fdk := &fieldData{
+			Parent: field,
+			Value:  reflect.New(field.Field.Type.Key()).Elem(),
+		}
+		if err := setFieldDataHelper(fdk, key); err != nil {
+			return fmt.Errorf("incorrect map key %q: %w", key, err)
+		}
+
+		fdv := &fieldData{
+			Parent: field,
+			Value:  reflect.New(field.Field.Type.Elem()).Elem(),
+		}
+		if err := setFieldDataHelper(fdv, val); err != nil {
+			return fmt.Errorf("incorrect map value %q: %w", val, err)
+		}
+		mapField.SetMapIndex(fdk.Value, fdv.Value)
+	}
+	field.Value.Set(mapField)
+	return nil
+}
