@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -14,17 +15,20 @@ import (
 )
 
 type TestConfig struct {
-	Str      string `default:"str"`
+	Str      string `default:"str-def"`
 	Int      int32  `default:"123"`
 	HTTPPort int    `default:"8080"`
 	Sub      SubConfig
-	//PtrSub   *SubConfig
+
+	Slice []int          `default:"1,2,3"`
+	Map1  map[string]int `default:"a:1,b:2,c:3"`
+	Map2  map[int]string `default:"1:a,2:b,3:c"`
 
 	EmbeddedConfig
 }
 
 type EmbeddedConfig struct {
-	Em string `default:"xxx"`
+	Em string `default:"em-def"`
 }
 
 type SubConfig struct {
@@ -62,6 +66,26 @@ type MyDuration string
 
 func (m MyDuration) Duration() (time.Duration, error) {
 	return time.ParseDuration(string(m))
+}
+
+func TestLoadDefaults(t *testing.T) {
+	loader := NewLoader(LoaderConfig{
+		SkipFile: true,
+		SkipEnv:  true,
+		SkipFlag: true,
+	})
+
+	var cfg TestConfig
+	if err := loader.Load(&cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	var want TestConfig
+	loadFile(t, "testdata/test_config_def.json", &want)
+
+	if got := cfg; !reflect.DeepEqual(got, want) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
 }
 
 func TestLoadDefault_AllTypesConfig(t *testing.T) {
@@ -117,7 +141,7 @@ func TestLoadFile(t *testing.T) {
 
 		loadFile(t, filepath, &want)
 
-		if got := cfg; got != want {
+		if got := cfg; !reflect.DeepEqual(got, want) {
 			t.Fatalf("want %v, got %v", want, got)
 		}
 	}
@@ -150,7 +174,7 @@ func TestLoadEnv(t *testing.T) {
 	var want TestConfig
 	loadFile(t, "testdata/test_config_env.json", &want)
 
-	if got := cfg; got != want {
+	if got := cfg; !reflect.DeepEqual(got, want) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
@@ -178,7 +202,7 @@ func TestLoadFlag(t *testing.T) {
 	var want TestConfig
 	loadFile(t, "testdata/test_config_flag.json", &want)
 
-	if got := cfg; got != want {
+	if got := cfg; !reflect.DeepEqual(got, want) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }

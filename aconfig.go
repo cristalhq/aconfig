@@ -154,12 +154,7 @@ func (l *Loader) getFlagName(name string) string {
 }
 
 func (l *Loader) setFieldData(field *fieldData, value string) error {
-	setter, ok := settersByKind[field.Value.Kind()]
-	if ok {
-		return setter(field, value)
-	}
-	panic(fmt.Sprintf("unknown kind: %#v %#v", field.Value.Kind(), field))
-	return nil
+	return setFieldDataHelper(field, value)
 }
 
 func getFields(x interface{}) []*fieldData {
@@ -225,26 +220,35 @@ func (f *fieldData) FullName() string {
 	}
 }
 
-type setterKindFn func(field *fieldData, value string) error
+func setFieldDataHelper(field *fieldData, value string) error {
+	switch kind := field.Value.Type().Kind(); kind {
+	case reflect.Bool:
+		return setBool(field, value)
 
-var settersByKind = map[reflect.Kind]setterKindFn{
-	reflect.Bool:   setBool,
-	reflect.String: setString,
+	case reflect.String:
+		return setString(field, value)
 
-	reflect.Int:   setInt,
-	reflect.Int8:  setInt,
-	reflect.Int16: setInt,
-	reflect.Int32: setInt,
-	reflect.Int64: setInt64,
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return setInt(field, value)
 
-	reflect.Uint:   setUint,
-	reflect.Uint8:  setUint,
-	reflect.Uint16: setUint,
-	reflect.Uint32: setUint,
-	reflect.Uint64: setUint,
+	case reflect.Int64:
+		return setInt64(field, value)
 
-	reflect.Float32: setFloat,
-	reflect.Float64: setFloat,
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return setUint(field, value)
+
+	case reflect.Float32, reflect.Float64:
+		return setFloat(field, value)
+
+	case reflect.Slice:
+		return setSlice(field, value)
+
+	case reflect.Map:
+		return setMap(field, value)
+
+	default:
+		return fmt.Errorf("aconfig: type %q isn't supported", kind)
+	}
 }
 
 func setBool(field *fieldData, value string) error {
