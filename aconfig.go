@@ -184,19 +184,18 @@ func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData 
 		if field.Type.Kind() != reflect.Struct {
 			fields = append(fields, fd)
 		} else {
-			parent := fd
-			// remove prefix fpr embedded struct
-			if field.Anonymous {
-				parent = fd.Parent
+			fieldParent := parent
+			// remove prefix for embedded struct
+			if !field.Anonymous {
+				fieldParent = fd
 			}
-			fields = append(fields, getFieldsHelper(value, parent)...)
+			fields = append(fields, getFieldsHelper(value, fieldParent)...)
 		}
 	}
 	return fields
 }
 
 type fieldData struct {
-	Parent       *fieldData
 	Name         string
 	Field        reflect.StructField
 	Value        reflect.Value
@@ -206,7 +205,6 @@ type fieldData struct {
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
 	return &fieldData{
 		Name:         makaName(field.Name, parent),
-		Parent:       parent,
 		Value:        value,
 		Field:        field,
 		DefaultValue: field.Tag.Get(defaultValueTag),
@@ -311,8 +309,7 @@ func setSlice(field *fieldData, value string) error {
 	for i, val := range vals {
 		val = strings.TrimSpace(val)
 		fd := &fieldData{
-			Parent: field,
-			Value:  slice.Index(i),
+			Value: slice.Index(i),
 		}
 		if err := setFieldDataHelper(fd, val); err != nil {
 			return fmt.Errorf("incorrect slice item %q: %w", val, err)
@@ -335,16 +332,14 @@ func setMap(field *fieldData, value string) error {
 		val := strings.TrimSpace(entry[1])
 
 		fdk := &fieldData{
-			Parent: field,
-			Value:  reflect.New(field.Field.Type.Key()).Elem(),
+			Value: reflect.New(field.Field.Type.Key()).Elem(),
 		}
 		if err := setFieldDataHelper(fdk, key); err != nil {
 			return fmt.Errorf("incorrect map key %q: %w", key, err)
 		}
 
 		fdv := &fieldData{
-			Parent: field,
-			Value:  reflect.New(field.Field.Type.Elem()).Elem(),
+			Value: reflect.New(field.Field.Type.Elem()).Elem(),
 		}
 		if err := setFieldDataHelper(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
