@@ -280,9 +280,8 @@ func setInt64(field *fieldData, value string) error {
 		}
 		field.Value.Set(reflect.ValueOf(val))
 		return nil
-	} else {
-		return setInt(field, value)
 	}
+	return setInt(field, value)
 }
 
 func setUint(field *fieldData, value string) error {
