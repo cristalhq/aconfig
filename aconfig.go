@@ -115,7 +115,7 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 
 func (l *Loader) loadEnvironment() error {
 	for _, field := range l.fields {
-		envName := l.getEnvName(field.FullName())
+		envName := l.getEnvName(field.Name)
 		v, ok := os.LookupEnv(envName)
 		if !ok {
 			continue
@@ -133,7 +133,7 @@ func (l *Loader) loadFlags() error {
 	}
 
 	for _, field := range l.fields {
-		flagName := l.getFlagName(field.FullName())
+		flagName := l.getFlagName(field.Name)
 		flg := flag.Lookup(flagName)
 		if flg == nil {
 			continue
@@ -178,13 +178,7 @@ func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData 
 
 		// TODO: pointers
 
-		fd := &fieldData{
-			Name:         field.Name,
-			Parent:       parent,
-			Value:        value,
-			Field:        field,
-			DefaultValue: field.Tag.Get(defaultValueTag),
-		}
+		fd := newFieldData(field, value, parent)
 
 		// if just a field - add and process next, else expand struct
 		if field.Type.Kind() != reflect.Struct {
@@ -209,15 +203,21 @@ type fieldData struct {
 	DefaultValue string
 }
 
-func (f *fieldData) FullName() string {
-	switch {
-	case f == nil:
-		return ""
-	case f.Parent == nil:
-		return f.Name
-	default:
-		return f.Parent.FullName() + "." + f.Name
+func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
+	return &fieldData{
+		Name:         makaName(field.Name, parent),
+		Parent:       parent,
+		Value:        value,
+		Field:        field,
+		DefaultValue: field.Tag.Get(defaultValueTag),
 	}
+}
+
+func makaName(name string, parent *fieldData) string {
+	if parent == nil {
+		return name
+	}
+	return parent.Name + "." + name
 }
 
 func setFieldDataHelper(field *fieldData, value string) error {
