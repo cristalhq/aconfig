@@ -5,7 +5,11 @@
 [![Go Report Card][reportcard-img]][reportcard-url]
 [![Coverage][coverage-img]][coverage-url]
 
-Simple, opinionated and helpful config loader. Defaults, files, environemnt, flags - doesn't matter. Everything will be scanned.
+Simple, opinionated and config loader.
+
+4 common configuration sources: (some) defaults, config files, environment variables, command-line flags.
+
+Works with all of them.
 
 ## Features
 
