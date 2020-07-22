@@ -21,7 +21,7 @@ Simple, opinionated and helpful config loader. Defaults, files, environemnt, fla
 
 ## Install
 
-Go version 1.13+
+Go version 1.14+
 
 ```
 go get github.com/cristalhq/aconfig
@@ -31,11 +31,11 @@ go get github.com/cristalhq/aconfig
 
 ```go
 type MyConfig struct {
-  Port int `default:"port"`
-  Auth struct {
-    User string `default:"admin"`
-    Pass stirng `default:"github"`
-  }
+	Port int `default:"port"`
+	Auth struct {
+		User string `default:"admin"`
+		Pass stirng `default:"github"`
+	}
 }
 
 loader := aconfig.NewLoader(aconfig.Config{
@@ -43,14 +43,14 @@ loader := aconfig.NewLoader(aconfig.Config{
 	UseFile:     true,
 	UseEnv:      true,
 	UseFlag:     true,
-  Files:       []string{"file.json", "ouch.yaml"},
-  FlagPrefix:  "app",
+	Files:       []string{"file.json", "ouch.yaml"},
+	FlagPrefix:  "app",
 	EnvPrefix:   "APP",
 })
 
 var cfg MyConfig
 if err := loader.Load(&cfg); err != nil {
-  panic(err)
+	panic(err)
 }
 
 // configuration fields will be loaded from:
