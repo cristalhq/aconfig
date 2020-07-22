@@ -183,6 +183,160 @@ func TestLoadFlag(t *testing.T) {
 	}
 }
 
+func TestBadDefauts(t *testing.T) {
+	f := func(testCase func(*Loader) error) {
+		t.Helper()
+		loader := NewLoader(LoaderConfig{
+			SkipFile: true,
+			SkipEnv:  true,
+			SkipFlag: true,
+		})
+		if err := testCase(loader); err == nil {
+			t.Fatal(err)
+		}
+	}
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Bool bool `default:"omg"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Int int `default:"1a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Int8 int8 `default:"12a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Int16 int16 `default:"123a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Int32 int32 `default:"13a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Int64 int64 `default:"23a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Uint uint `default:"1234a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Uint8 uint8 `default:"124a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Uint16 uint16 `default:"134a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Uint32 uint32 `default:"234a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Uint64 uint64 `default:"24a"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Float32 float32 `default:"1234x213"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Float64 float64 `default:"1234x234"`
+		}{})
+	})
+
+	f(func(loader *Loader) error {
+		return loader.Load(&struct {
+			Dur time.Duration `default:"1h_2m3s"`
+		}{})
+	})
+}
+
+func TestBadFiles(t *testing.T) {
+	f := func(filepath string) {
+		t.Helper()
+
+		loader := NewLoader(LoaderConfig{
+			SkipDefaults: true,
+			SkipEnv:      true,
+			SkipFlag:     true,
+			Files:        []string{filepath},
+		})
+		var cfg TestConfig
+		if err := loader.Load(&cfg); err == nil {
+			t.Fatal(err)
+		}
+	}
+
+	f("testdata/no_such_file.json")
+	f("testdata/unknown.ext")
+}
+
+func TestBadEnvs(t *testing.T) {
+	setEnv(t, "TST_HTTPPORT", "30a00")
+	defer os.Clearenv()
+
+	loader := NewLoader(LoaderConfig{
+		SkipDefaults: true,
+		SkipFile:     true,
+		SkipFlag:     true,
+		EnvPrefix:    "tst",
+	})
+
+	var cfg TestConfig
+	if err := loader.Load(&cfg); err == nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBadFlags(t *testing.T) {
+	type Config struct {
+		Field int
+	}
+	setFlag("tst.field", "10a01")
+
+	loader := NewLoader(LoaderConfig{
+		SkipDefaults: true,
+		SkipFile:     true,
+		SkipEnv:      true,
+		FlagPrefix:   "tst",
+	})
+
+	var cfg Config
+	if err := loader.Load(&cfg); err == nil {
+		t.Fatal(err)
+	}
+}
+
 func loadFile(t *testing.T, file string, dst interface{}) {
 	f, err := os.Open(file)
 	if err != nil {
