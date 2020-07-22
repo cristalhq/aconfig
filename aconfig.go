@@ -23,25 +23,15 @@ type Loader struct {
 }
 
 type LoaderConfig struct {
-	UseDefaults bool
-	UseFile     bool
-	UseEnv      bool
-	UseFlag     bool
+	SkipDefaults bool
+	SkipFile     bool
+	SkipEnv      bool
+	SkipFlag     bool
 
 	EnvPrefix  string
 	FlagPrefix string
 
 	Files []string
-}
-
-// DefaultConfig ...
-func DefaultConfig() LoaderConfig {
-	return LoaderConfig{
-		UseDefaults: true,
-		UseFile:     true,
-		UseEnv:      true,
-		UseFlag:     true,
-	}
 }
 
 func NewLoader(config LoaderConfig) *Loader {
@@ -57,22 +47,22 @@ func NewLoader(config LoaderConfig) *Loader {
 func (l *Loader) Load(into interface{}) error {
 	l.fields = getFields(into)
 
-	if l.config.UseDefaults {
+	if !l.config.SkipDefaults {
 		if err := l.loadDefaults(); err != nil {
 			return err
 		}
 	}
-	if l.config.UseFile {
+	if !l.config.SkipFile {
 		if err := l.loadFromFile(into); err != nil {
 			return err
 		}
 	}
-	if l.config.UseEnv {
+	if !l.config.SkipEnv {
 		if err := l.loadEnvironment(); err != nil {
 			return err
 		}
 	}
-	if l.config.UseFlag {
+	if !l.config.SkipFlag {
 		if err := l.loadFlags(); err != nil {
 			return err
 		}

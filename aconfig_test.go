@@ -61,7 +61,9 @@ func (m MyDuration) Duration() (time.Duration, error) {
 
 func TestLoadDefault_AllTypesConfig(t *testing.T) {
 	loader := NewLoader(LoaderConfig{
-		UseDefaults: true,
+		SkipFile: true,
+		SkipEnv:  true,
+		SkipFlag: true,
 	})
 	var cfg, want AllTypesConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -76,7 +78,9 @@ func TestLoadDefault_AllTypesConfig(t *testing.T) {
 }
 func TestLoadDefault_DurationConfig(t *testing.T) {
 	loader := NewLoader(LoaderConfig{
-		UseDefaults: true,
+		SkipFile: true,
+		SkipEnv:  true,
+		SkipFlag: true,
 	})
 	var cfg, want DurationConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -93,8 +97,10 @@ func TestLoadDefault_DurationConfig(t *testing.T) {
 func TestLoadFile(t *testing.T) {
 	filepath := "testdata/config1.json"
 	loader := NewLoader(LoaderConfig{
-		UseFile: true,
-		Files:   []string{filepath},
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlag:     true,
+		Files:        []string{filepath},
 	})
 	var cfg, want TestConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -117,8 +123,10 @@ func TestLoadEnv(t *testing.T) {
 	defer os.Clearenv()
 
 	loader := NewLoader(LoaderConfig{
-		UseEnv:    true,
-		EnvPrefix: "tst",
+		SkipDefaults: true,
+		SkipFile:     true,
+		SkipFlag:     true,
+		EnvPrefix:    "tst",
 	})
 
 	var cfg TestConfig
@@ -144,8 +152,10 @@ func TestLoadFlag(t *testing.T) {
 	flag.Parse()
 
 	loader := NewLoader(LoaderConfig{
-		UseFlag:    true,
-		FlagPrefix: "tst",
+		SkipDefaults: true,
+		SkipFile:     true,
+		SkipEnv:      true,
+		FlagPrefix:   "tst",
 	})
 
 	var cfg TestConfig
