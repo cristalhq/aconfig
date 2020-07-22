@@ -47,6 +47,13 @@ func NewLoader(config LoaderConfig) *Loader {
 func (l *Loader) Load(into interface{}) error {
 	l.fields = getFields(into)
 
+	if err := l.loadSources(into); err != nil {
+		return fmt.Errorf("aconfig: cannot load config: %w", err)
+	}
+	return nil
+}
+
+func (l *Loader) loadSources(into interface{}) error {
 	if !l.config.SkipDefaults {
 		if err := l.loadDefaults(); err != nil {
 			return err
