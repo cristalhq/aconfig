@@ -184,101 +184,78 @@ func TestLoadFlag(t *testing.T) {
 }
 
 func TestBadDefauts(t *testing.T) {
-	f := func(testCase func(*Loader) error) {
+	f := func(cfg interface{}) {
 		t.Helper()
+
 		loader := NewLoader(LoaderConfig{
 			SkipFile: true,
 			SkipEnv:  true,
 			SkipFlag: true,
 		})
-		if err := testCase(loader); err == nil {
+		if err := loader.Load(cfg); err == nil {
 			t.Fatal(err)
 		}
 	}
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Bool bool `default:"omg"`
-		}{})
-	})
+	f(&struct {
+		Bool bool `default:"omg"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Int int `default:"1a"`
-		}{})
-	})
+	f(&struct {
+		Bool bool `default:"omg"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Int8 int8 `default:"12a"`
-		}{})
-	})
+	f(&struct {
+		Int int `default:"1a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Int16 int16 `default:"123a"`
-		}{})
-	})
+	f(&struct {
+		Int8 int8 `default:"12a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Int32 int32 `default:"13a"`
-		}{})
-	})
+	f(&struct {
+		Int16 int16 `default:"123a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Int64 int64 `default:"23a"`
-		}{})
-	})
+	f(&struct {
+		Int32 int32 `default:"13a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Uint uint `default:"1234a"`
-		}{})
-	})
+	f(&struct {
+		Int64 int64 `default:"23a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Uint8 uint8 `default:"124a"`
-		}{})
-	})
+	f(&struct {
+		Uint uint `default:"1234a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Uint16 uint16 `default:"134a"`
-		}{})
-	})
+	f(&struct {
+		Uint8 uint8 `default:"124a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Uint32 uint32 `default:"234a"`
-		}{})
-	})
+	f(&struct {
+		Uint16 uint16 `default:"134a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Uint64 uint64 `default:"24a"`
-		}{})
-	})
+	f(&struct {
+		Uint32 uint32 `default:"234a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Float32 float32 `default:"1234x213"`
-		}{})
-	})
+	f(&struct {
+		Uint64 uint64 `default:"24a"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Float64 float64 `default:"1234x234"`
-		}{})
-	})
+	f(&struct {
+		Float32 float32 `default:"1234x213"`
+	}{})
 
-	f(func(loader *Loader) error {
-		return loader.Load(&struct {
-			Dur time.Duration `default:"1h_2m3s"`
-		}{})
-	})
+	f(&struct {
+		Float64 float64 `default:"1234x234"`
+	}{})
+
+	f(&struct {
+		Dur time.Duration `default:"1h_2m3s"`
+	}{})
 }
 
 func TestBadFiles(t *testing.T) {
