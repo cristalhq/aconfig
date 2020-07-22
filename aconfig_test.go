@@ -4,8 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/BurntSushi/toml"
+	"gopkg.in/yaml.v2"
 )
 
 type TestConfig struct {
@@ -76,6 +81,7 @@ func TestLoadDefault_AllTypesConfig(t *testing.T) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
+
 func TestLoadDefault_DurationConfig(t *testing.T) {
 	loader := NewLoader(LoaderConfig{
 		SkipFile: true,
@@ -95,23 +101,30 @@ func TestLoadDefault_DurationConfig(t *testing.T) {
 }
 
 func TestLoadFile(t *testing.T) {
-	filepath := "testdata/config1.json"
-	loader := NewLoader(LoaderConfig{
-		SkipDefaults: true,
-		SkipEnv:      true,
-		SkipFlag:     true,
-		Files:        []string{filepath},
-	})
-	var cfg, want TestConfig
-	if err := loader.Load(&cfg); err != nil {
-		t.Fatal(err)
+	f := func(filepath string) {
+		t.Helper()
+
+		loader := NewLoader(LoaderConfig{
+			SkipDefaults: true,
+			SkipEnv:      true,
+			SkipFlag:     true,
+			Files:        []string{filepath},
+		})
+		var cfg, want TestConfig
+		if err := loader.Load(&cfg); err != nil {
+			t.Fatal(err)
+		}
+
+		loadFile(t, filepath, &want)
+
+		if got := cfg; got != want {
+			t.Fatalf("want %v, got %v", want, got)
+		}
 	}
 
-	loadFile(t, filepath, &want)
-
-	if got := cfg; got != want {
-		t.Fatalf("want %v, got %v", want, got)
-	}
+	f("testdata/config1.json")
+	f("testdata/config1.yaml")
+	f("testdata/config1.toml")
 }
 
 func TestLoadEnv(t *testing.T) {
@@ -149,7 +162,6 @@ func TestLoadFlag(t *testing.T) {
 	setFlag("tst.sub.float", "123.321")
 	setFlag("tst.ptrsub.float", "321.123")
 	setFlag("tst.em", "em-flag")
-	flag.Parse()
 
 	loader := NewLoader(LoaderConfig{
 		SkipDefaults: true,
@@ -176,7 +188,16 @@ func loadFile(t *testing.T, file string, dst interface{}) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := json.NewDecoder(f).Decode(dst); err != nil {
+	ext := strings.ToLower(filepath.Ext(file))
+	switch ext {
+	case ".yaml", ".yml":
+		err = yaml.NewDecoder(f).Decode(dst)
+	case ".json":
+		err = json.NewDecoder(f).Decode(dst)
+	case ".toml":
+		_, err = toml.DecodeReader(f, dst)
+	}
+	if err != nil {
 		t.Fatal(err)
 	}
 }
