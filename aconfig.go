@@ -308,9 +308,8 @@ func setSlice(field *fieldData, value string) error {
 	slice := reflect.MakeSlice(field.Field.Type, len(vals), len(vals))
 	for i, val := range vals {
 		val = strings.TrimSpace(val)
-		fd := &fieldData{
-			Value: slice.Index(i),
-		}
+
+		fd := newFieldData(reflect.StructField{}, slice.Index(i), nil)
 		if err := setFieldDataHelper(fd, val); err != nil {
 			return fmt.Errorf("incorrect slice item %q: %w", val, err)
 		}
@@ -331,16 +330,12 @@ func setMap(field *fieldData, value string) error {
 		key := strings.TrimSpace(entry[0])
 		val := strings.TrimSpace(entry[1])
 
-		fdk := &fieldData{
-			Value: reflect.New(field.Field.Type.Key()).Elem(),
-		}
+		fdk := newFieldData(reflect.StructField{}, reflect.New(field.Field.Type.Key()).Elem(), nil)
 		if err := setFieldDataHelper(fdk, key); err != nil {
 			return fmt.Errorf("incorrect map key %q: %w", key, err)
 		}
 
-		fdv := &fieldData{
-			Value: reflect.New(field.Field.Type.Elem()).Elem(),
-		}
+		fdv := newFieldData(reflect.StructField{}, reflect.New(field.Field.Type.Elem()).Elem(), nil)
 		if err := setFieldDataHelper(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
 		}
