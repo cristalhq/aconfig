@@ -17,11 +17,13 @@ import (
 
 const defaultValueTag = "default"
 
+// Loader of user configuration.
 type Loader struct {
 	config LoaderConfig
 	fields []*fieldData
 }
 
+// LoaderConfig to configure configuration loader.
 type LoaderConfig struct {
 	SkipDefaults bool
 	SkipFile     bool
@@ -34,6 +36,8 @@ type LoaderConfig struct {
 	Files []string
 }
 
+// NewLoader creates a new Loader based on a config.
+// Zero-value config is acceptable.
 func NewLoader(config LoaderConfig) *Loader {
 	if config.EnvPrefix != "" {
 		config.EnvPrefix += "_"
@@ -44,6 +48,7 @@ func NewLoader(config LoaderConfig) *Loader {
 	return &Loader{config: config}
 }
 
+// Load configuration into a given param.
 func (l *Loader) Load(into interface{}) error {
 	l.fields = getFields(into)
 
