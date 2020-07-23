@@ -5,11 +5,11 @@
 [![Go Report Card][reportcard-img]][reportcard-url]
 [![Coverage][coverage-img]][coverage-url]
 
-Simple, opinionated and config loader.
+Simple, useful and opinionated config loader.
 
-4 common configuration sources: (some) defaults, config files, environment variables, command-line flags.
+## Rationale
 
-Works with all of them.
+There are more than 2000 repositories on Github regarding configuration in Go. I was looking for a simple configuration loader that will automate a lot of things for me. Idea was to load config from 4 common places: defaults (in the code), config files, environment variables, command-line flags. This library works with all of them.
 
 ## Features
 
@@ -19,8 +19,8 @@ Works with all of them.
 * Supports different sources:
   * defaults in code
   * files (JSON, YAML, TOML)
-  * environemtn variables
-  * command flags  
+  * environment variables
+  * command-line flags  
 * Dependency-free (except file parsers)
 
 ## Install
@@ -43,11 +43,11 @@ type MyConfig struct {
 }
 
 loader := aconfig.NewLoader(aconfig.LoaderConfig{
-	// skip some steps, if you want to :)
-    // SkipDefaults: true,
-    // SkipFile: true,
-    // SkipEnv:  true,
-    // SkipFlag: true,
+	// feel free to skip some steps :)
+	// SkipDefaults: true,
+	// SkipFile: true,
+	// SkipEnv:  true,
+	// SkipFlag: true,
 
 	Files:       []string{"file.json", "ouch.yaml"},
 	FlagPrefix:  "app",
@@ -59,11 +59,11 @@ if err := loader.Load(&cfg); err != nil {
 	panic(err)
 }
 
-// configuration fields will be loaded from:
+// configuration fields will be loaded from (in order):
 //
 // 1. defaults set in structure tags (see structure defenition)
-// 2. loaded from files `file.json` if not `ouch.yaml`
-// 3. than corresponding environment variables with prefix `APP`
+// 2. loaded from files `file.json` if not `ouch.yaml` will be used
+// 3. from corresponding environment variables with prefix `APP`
 // 4. and command-line flags if they are
 ```
 
