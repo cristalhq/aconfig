@@ -108,10 +108,10 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 		case ".toml":
 			_, err = toml.DecodeReader(f, dst)
 		default:
-			return fmt.Errorf("aconfig: file format '%q' isn't supported", ext)
+			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 		if err != nil {
-			return fmt.Errorf("aconfig: file parsing error: %s", err.Error())
+			return fmt.Errorf("file parsing error: %w", err)
 		}
 		break
 	}
@@ -186,16 +186,17 @@ func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData 
 		fd := newFieldData(field, value, parent)
 
 		// if just a field - add and process next, else expand struct
-		if field.Type.Kind() != reflect.Struct {
-			fields = append(fields, fd)
-		} else {
-			fieldParent := parent
-			// remove prefix for embedded struct
-			if !field.Anonymous {
-				fieldParent = fd
+		if field.Type.Kind() == reflect.Struct {
+			var subFieldParent *fieldData
+			if field.Anonymous {
+				subFieldParent = parent
+			} else {
+				subFieldParent = fd
 			}
-			fields = append(fields, getFieldsHelper(value, fieldParent)...)
+			fields = append(fields, getFieldsHelper(value, subFieldParent)...)
+			continue
 		}
+		fields = append(fields, fd)
 	}
 	return fields
 }
@@ -214,6 +215,10 @@ func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldD
 		Field:        field,
 		DefaultValue: field.Tag.Get(defaultValueTag),
 	}
+}
+
+func newSimpleFieldData(value reflect.Value) *fieldData {
+	return newFieldData(reflect.StructField{}, value, nil)
 }
 
 func makaName(name string, parent *fieldData) string {
@@ -334,12 +339,12 @@ func setMap(field *fieldData, value string) error {
 		key := strings.TrimSpace(entry[0])
 		val := strings.TrimSpace(entry[1])
 
-		fdk := newFieldData(reflect.StructField{}, reflect.New(field.Field.Type.Key()).Elem(), nil)
+		fdk := newSimpleFieldData(reflect.New(field.Field.Type.Key()).Elem())
 		if err := setFieldDataHelper(fdk, key); err != nil {
 			return fmt.Errorf("incorrect map key %q: %w", key, err)
 		}
 
-		fdv := newFieldData(reflect.StructField{}, reflect.New(field.Field.Type.Elem()).Elem(), nil)
+		fdv := newSimpleFieldData(reflect.New(field.Field.Type.Elem()).Elem())
 		if err := setFieldDataHelper(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
 		}
