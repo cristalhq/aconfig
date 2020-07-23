@@ -237,6 +237,10 @@ func setFieldDataHelper(field *fieldData, value string) error {
 		field.Value = field.Value.Elem()
 	}
 
+	if value == "" {
+		return nil
+	}
+
 	switch kind := field.Value.Type().Kind(); kind {
 	case reflect.Bool:
 		return setBool(field, value)

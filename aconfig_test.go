@@ -18,6 +18,7 @@ type TestConfig struct {
 	Str      string `default:"str-def"`
 	Int      *int32 `default:"123"`
 	HTTPPort int    `default:"8080"`
+	Param    int    // no default tag, so default value
 	Sub      SubConfig
 
 	Slice []int          `default:"1,2,3"`
