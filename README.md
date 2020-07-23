@@ -1,7 +1,7 @@
 # aconfig
 
 [![Build Status][build-img]][build-url]
-[![GoDoc][doc-img]][doc-url]
+[![GoDoc][pkg-img]][pkg-url]
 [![Go Report Card][reportcard-img]][reportcard-url]
 [![Coverage][coverage-img]][coverage-url]
 
@@ -71,7 +71,7 @@ Also see examples: [this above](https://github.com/cristalhq/aconfig/blob/master
 
 ## Documentation
 
-See [these docs][doc-url].
+See here: [pkg.go.dev][pkg-url].
 
 ## License
 
@@ -79,8 +79,8 @@ See [these docs][doc-url].
 
 [build-img]: https://github.com/cristalhq/aconfig/workflows/build/badge.svg
 [build-url]: https://github.com/cristalhq/aconfig/actions
-[doc-img]: https://godoc.org/github.com/cristalhq/aconfig?status.svg
-[doc-url]: https://pkg.go.dev/github.com/cristalhq/aconfig
+[pkg-img]: https://pkg.go.dev/badge/cristalhq/aconfig
+[pkg-url]: https://pkg.go.dev/cristalhq/aconfig
 [reportcard-img]: https://goreportcard.com/badge/cristalhq/aconfig
 [reportcard-url]: https://goreportcard.com/report/cristalhq/aconfig
 [coverage-img]: https://codecov.io/gh/cristalhq/aconfig/branch/master/graph/badge.svg
