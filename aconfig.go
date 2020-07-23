@@ -19,8 +19,9 @@ const defaultValueTag = "default"
 
 // Loader of user configuration.
 type Loader struct {
-	config LoaderConfig
-	fields []*fieldData
+	config  LoaderConfig
+	fields  []*fieldData
+	flagSet *flag.FlagSet
 }
 
 // LoaderConfig to configure configuration loader.
@@ -38,19 +39,54 @@ type LoaderConfig struct {
 
 // NewLoader creates a new Loader based on a config.
 // Zero-value config is acceptable.
-func NewLoader(config LoaderConfig) *Loader {
+func NewLoaderFor(cfg interface{}, config LoaderConfig) *Loader {
 	if config.EnvPrefix != "" {
 		config.EnvPrefix += "_"
 	}
 	if config.FlagPrefix != "" {
 		config.FlagPrefix += "."
 	}
-	return &Loader{config: config}
+	l := &Loader{config: config}
+	l.preLoad(cfg)
+	return l
+}
+
+func (l *Loader) preLoad(cfg interface{}) {
+	fields := getFields(cfg)
+
+	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
+
+	for _, field := range fields {
+		flagName := l.getFlagName(field.Name)
+		envName := l.getEnvName(field.Name)
+		v, ok := os.LookupEnv(envName)
+
+		defaultValue := field.DefaultValue
+		if ok {
+			defaultValue = v
+		}
+		l.flagSet.String(flagName, defaultValue, "")
+	}
+}
+
+func (l *Loader) Flags() *flag.FlagSet {
+	return l.flagSet
 }
 
 // Load configuration into a given param.
 func (l *Loader) Load(into interface{}) error {
 	l.fields = getFields(into)
+
+	if err := l.loadSources(into); err != nil {
+		return fmt.Errorf("aconfig: cannot load config: %w", err)
+	}
+	return nil
+}
+
+// LoadWithFiles configuration into a given param.
+func (l *Loader) LoadWithFiles(into interface{}, files []string) error {
+	l.fields = getFields(into)
+	l.config.Files = files
 
 	if err := l.loadSources(into); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
@@ -133,14 +169,21 @@ func (l *Loader) loadEnvironment() error {
 }
 
 func (l *Loader) loadFlags() error {
-	if !flag.Parsed() {
-		flag.Parse()
+	if !l.flagSet.Parsed() {
+		if err := l.flagSet.Parse(os.Args[1:]); err != nil {
+			return err
+		}
 	}
+
+	actualFlags := map[string]*flag.Flag{}
+	l.flagSet.Visit(func(f *flag.Flag) {
+		actualFlags[f.Name] = f
+	})
 
 	for _, field := range l.fields {
 		flagName := l.getFlagName(field.Name)
-		flg := flag.Lookup(flagName)
-		if flg == nil {
+		flg, ok := actualFlags[flagName]
+		if !ok {
 			continue
 		}
 		if err := l.setFieldData(field, flg.Value.String()); err != nil {
@@ -206,6 +249,7 @@ type fieldData struct {
 	Field        reflect.StructField
 	Value        reflect.Value
 	DefaultValue string
+	IsSet        bool
 }
 
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {

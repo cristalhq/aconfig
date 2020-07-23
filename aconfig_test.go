@@ -2,7 +2,6 @@ package aconfig
 
 import (
 	"encoding/json"
-	"flag"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -82,7 +81,7 @@ func (m MyDuration) Duration() (time.Duration, error) {
 }
 
 func TestLoadDefaults(t *testing.T) {
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&TestConfig{}, LoaderConfig{
 		SkipFile: true,
 		SkipEnv:  true,
 		SkipFlag: true,
@@ -102,16 +101,17 @@ func TestLoadDefaults(t *testing.T) {
 }
 
 func TestLoadDefault_AllTypesConfig(t *testing.T) {
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&AllTypesConfig{}, LoaderConfig{
 		SkipFile: true,
 		SkipEnv:  true,
 		SkipFlag: true,
 	})
-	var cfg, want AllTypesConfig
+	var cfg AllTypesConfig
 	if err := loader.Load(&cfg); err != nil {
 		t.Fatal(err)
 	}
 
+	var want AllTypesConfig
 	loadFile(t, "testdata/all_types_config.json", &want)
 
 	if got := cfg; got != want {
@@ -120,16 +120,17 @@ func TestLoadDefault_AllTypesConfig(t *testing.T) {
 }
 
 func TestLoadDefault_DurationConfig(t *testing.T) {
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&DurationConfig{}, LoaderConfig{
 		SkipFile: true,
 		SkipEnv:  true,
 		SkipFlag: true,
 	})
-	var cfg, want DurationConfig
+	var cfg DurationConfig
 	if err := loader.Load(&cfg); err != nil {
 		t.Fatal(err)
 	}
 
+	var want DurationConfig
 	loadFile(t, "testdata/my_duration_config.json", &want)
 
 	if got := cfg; got != want {
@@ -138,16 +139,17 @@ func TestLoadDefault_DurationConfig(t *testing.T) {
 }
 
 func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&OtherNumbersConfig{}, LoaderConfig{
 		SkipFile: true,
 		SkipEnv:  true,
 		SkipFlag: true,
 	})
-	var cfg, want OtherNumbersConfig
+	var cfg OtherNumbersConfig
 	if err := loader.Load(&cfg); err != nil {
 		t.Fatal(err)
 	}
 
+	var want OtherNumbersConfig
 	loadFile(t, "testdata/other_numbers_config.json", &want)
 
 	if got := cfg; got != want {
@@ -159,7 +161,7 @@ func TestLoadFile(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
 
-		loader := NewLoader(LoaderConfig{
+		loader := NewLoaderFor(&TestConfig{}, LoaderConfig{
 			SkipDefaults: true,
 			SkipEnv:      true,
 			SkipFlag:     true,
@@ -167,6 +169,32 @@ func TestLoadFile(t *testing.T) {
 		})
 		var cfg, want TestConfig
 		if err := loader.Load(&cfg); err != nil {
+			t.Fatal(err)
+		}
+
+		loadFile(t, filepath, &want)
+
+		if got := cfg; !reflect.DeepEqual(got, want) {
+			t.Fatalf("want %v, got %v", want, got)
+		}
+	}
+
+	f("testdata/config1.json")
+	f("testdata/config1.yaml")
+	f("testdata/config1.toml")
+}
+
+func TestLoadFile_WithFiles(t *testing.T) {
+	f := func(filepath string) {
+		t.Helper()
+
+		loader := NewLoaderFor(&TestConfig{}, LoaderConfig{
+			SkipDefaults: true,
+			SkipEnv:      true,
+			SkipFlag:     true,
+		})
+		var cfg, want TestConfig
+		if err := loader.LoadWithFiles(&cfg, []string{filepath}); err != nil {
 			t.Fatal(err)
 		}
 
@@ -190,7 +218,7 @@ func TestLoadEnv(t *testing.T) {
 	setEnv(t, "TST_EM", "em-env")
 	defer os.Clearenv()
 
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&TestConfig{}, LoaderConfig{
 		SkipDefaults: true,
 		SkipFile:     true,
 		SkipFlag:     true,
@@ -211,19 +239,26 @@ func TestLoadEnv(t *testing.T) {
 }
 
 func TestLoadFlag(t *testing.T) {
-	setFlag("tst.str", "str-flag")
-	setFlag("tst.int", "1001")
-	setFlag("tst.httpport", "30000")
-	setFlag("tst.sub.float", "123.321")
-	setFlag("tst.ptrsub.float", "321.123")
-	setFlag("tst.em", "em-flag")
-
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&TestConfig{}, LoaderConfig{
 		SkipDefaults: true,
 		SkipFile:     true,
 		SkipEnv:      true,
 		FlagPrefix:   "tst",
 	})
+
+	flags := []string{
+		"-tst.str=str-flag",
+		"-tst.int=1001",
+		"-tst.int=1001",
+		"-tst.httpport=30000",
+		"-tst.sub.float=123.321",
+		"-tst.em=em-flag",
+	}
+
+	// hack for test :(
+	if err := loader.Flags().Parse(flags); err != nil {
+		t.Fatal(err)
+	}
 
 	var cfg TestConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -242,7 +277,7 @@ func TestBadDefauts(t *testing.T) {
 	f := func(cfg interface{}) {
 		t.Helper()
 
-		loader := NewLoader(LoaderConfig{
+		loader := NewLoaderFor(cfg, LoaderConfig{
 			SkipFile: true,
 			SkipEnv:  true,
 			SkipFlag: true,
@@ -337,7 +372,7 @@ func TestBadFiles(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
 
-		loader := NewLoader(LoaderConfig{
+		loader := NewLoaderFor(&TestConfig{}, LoaderConfig{
 			SkipDefaults: true,
 			SkipEnv:      true,
 			SkipFlag:     true,
@@ -358,7 +393,7 @@ func TestBadEnvs(t *testing.T) {
 	setEnv(t, "TST_HTTPPORT", "30a00")
 	defer os.Clearenv()
 
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&TestConfig{}, LoaderConfig{
 		SkipDefaults: true,
 		SkipFile:     true,
 		SkipFlag:     true,
@@ -375,14 +410,18 @@ func TestBadFlags(t *testing.T) {
 	type Config struct {
 		Field int
 	}
-	setFlag("tst.field", "10a01")
 
-	loader := NewLoader(LoaderConfig{
+	loader := NewLoaderFor(&Config{}, LoaderConfig{
 		SkipDefaults: true,
 		SkipFile:     true,
 		SkipEnv:      true,
 		FlagPrefix:   "tst",
 	})
+
+	// hack for test :(
+	if err := loader.Flags().Parse([]string{"-tst.field=10a01"}); err != nil {
+		t.Fatal(err)
+	}
 
 	var cfg Config
 	if err := loader.Load(&cfg); err == nil {
@@ -413,8 +452,4 @@ func setEnv(t *testing.T, key, value string) {
 	if err := os.Setenv(key, value); err != nil {
 		t.Fatal(err)
 	}
-}
-
-func setFlag(flg, value string) {
-	flag.String(flg, value, "testing")
 }
