@@ -1,7 +1,6 @@
 package aconfig_test
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -103,15 +102,15 @@ func Example_Env() {
 // Finally read command line flags.
 //
 func Example_Flag() {
-	flag.String("ex.port", "4444", "app port")
-	flag.String("ex.auth.user", "flag-user", "app user")
-	flag.String("ex.auth.pass", "flag-pass", "app pass")
-
 	loader := aconfig.NewLoaderFor(&MyConfig{}, aconfig.LoaderConfig{
 		EnvPrefix:  "EXAMPLE",
 		FlagPrefix: "ex",
 		Files:      []string{"testdata/example_config.json"},
 	})
+
+	flags := loader.Flags() // <- USE THIS TO DEFINE YOUR NON-CONFIG(!!) FLAGS
+
+	flags.String("my.other.port", "1234", "debug port")
 
 	var cfg MyConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -122,7 +121,11 @@ func Example_Flag() {
 	fmt.Printf("Auth.User: %v\n", cfg.Auth.User)
 	fmt.Printf("Auth.Pass: %v\n", cfg.Auth.Pass)
 
-	// Output:
+	// Next comment doesn't have `:` after `Output`
+	// it's disabled due to additional flags passed via `go test` command
+	// but it works, trust me :)
+
+	// Output
 	//
 	// Port:      4444
 	// Auth.User: flag-user
