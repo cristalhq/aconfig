@@ -42,7 +42,7 @@ type MyConfig struct {
 	}
 }
 
-loader := aconfig.NewLoader(aconfig.LoaderConfig{
+loader := aconfig.NewLoaderFor(&MyConfig{}, aconfig.LoaderConfig{
 	// feel free to skip some steps :)
 	// SkipDefaults: true,
 	// SkipFile: true,
@@ -53,6 +53,8 @@ loader := aconfig.NewLoader(aconfig.LoaderConfig{
 	FlagPrefix:  "app",
 	EnvPrefix:   "APP",
 })
+
+flagSet := loader.Flags() // now use exactly this flags to define your own
 
 var cfg MyConfig
 if err := loader.Load(&cfg); err != nil {
