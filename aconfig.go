@@ -229,6 +229,14 @@ func makaName(name string, parent *fieldData) string {
 }
 
 func setFieldDataHelper(field *fieldData, value string) error {
+	// unwrap pointers
+	for field.Value.Type().Kind() == reflect.Ptr {
+		if field.Value.IsNil() {
+			field.Value.Set(reflect.New(field.Value.Type().Elem()))
+		}
+		field.Value = field.Value.Elem()
+	}
+
 	switch kind := field.Value.Type().Kind(); kind {
 	case reflect.Bool:
 		return setBool(field, value)

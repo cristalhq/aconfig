@@ -16,7 +16,7 @@ import (
 
 type TestConfig struct {
 	Str      string `default:"str-def"`
-	Int      int32  `default:"123"`
+	Int      *int32 `default:"123"`
 	HTTPPort int    `default:"8080"`
 	Sub      SubConfig
 
