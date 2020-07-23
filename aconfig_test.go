@@ -58,6 +58,18 @@ type AllTypesConfig struct {
 	Time time.Time     `default:"2000-04-05 10:20:30 +0000 UTC"`
 }
 
+type OtherNumbersConfig struct {
+	Int    int   `default:"0b111"`
+	Int8   int8  `default:"0o123"`
+	Int8x2 int8  `default:"0123"`
+	Int16  int16 `default:"0x123"`
+
+	Uint   uint   `default:"0b111"`
+	Uint8  uint8  `default:"0o123"`
+	Uint16 uint16 `default:"0123"`
+	Uint32 uint32 `default:"0x123"`
+}
+
 type DurationConfig struct {
 	MyDur MyDuration `default:"1h2m3s" json:"my_dur"`
 }
@@ -118,6 +130,24 @@ func TestLoadDefault_DurationConfig(t *testing.T) {
 	}
 
 	loadFile(t, "testdata/my_duration_config.json", &want)
+
+	if got := cfg; got != want {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
+	loader := NewLoader(LoaderConfig{
+		SkipFile: true,
+		SkipEnv:  true,
+		SkipFlag: true,
+	})
+	var cfg, want OtherNumbersConfig
+	if err := loader.Load(&cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	loadFile(t, "testdata/other_numbers_config.json", &want)
 
 	if got := cfg; got != want {
 		t.Fatalf("want %v, got %v", want, got)

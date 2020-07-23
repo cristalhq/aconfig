@@ -264,7 +264,7 @@ func setBool(field *fieldData, value string) error {
 }
 
 func setInt(field *fieldData, value string) error {
-	val, err := strconv.ParseInt(value, 10, 64)
+	val, err := strconv.ParseInt(value, 0, field.Value.Type().Bits())
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,7 @@ func setInt64(field *fieldData, value string) error {
 }
 
 func setUint(field *fieldData, value string) error {
-	val, err := strconv.ParseUint(value, 10, 64)
+	val, err := strconv.ParseUint(value, 0, field.Value.Type().Bits())
 	if err != nil {
 		return err
 	}
@@ -294,7 +294,7 @@ func setUint(field *fieldData, value string) error {
 }
 
 func setFloat(field *fieldData, value string) error {
-	val, err := strconv.ParseFloat(value, 64)
+	val, err := strconv.ParseFloat(value, field.Value.Type().Bits())
 	if err != nil {
 		return err
 	}
