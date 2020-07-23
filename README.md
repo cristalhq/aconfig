@@ -80,7 +80,7 @@ See here: [pkg.go.dev][pkg-url].
 [build-img]: https://github.com/cristalhq/aconfig/workflows/build/badge.svg
 [build-url]: https://github.com/cristalhq/aconfig/actions
 [pkg-img]: https://pkg.go.dev/badge/cristalhq/aconfig
-[pkg-url]: https://pkg.go.dev/cristalhq/aconfig
+[pkg-url]: https://pkg.go.dev/github.com/cristalhq/aconfig
 [reportcard-img]: https://goreportcard.com/badge/cristalhq/aconfig
 [reportcard-url]: https://goreportcard.com/report/cristalhq/aconfig
 [coverage-img]: https://codecov.io/gh/cristalhq/aconfig/branch/master/graph/badge.svg
