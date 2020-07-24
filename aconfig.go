@@ -15,7 +15,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const defaultValueTag = "default"
+const (
+	defaultValueTag = "default"
+	usageTag        = "usage"
+)
 
 // Loader of user configuration.
 type Loader struct {
@@ -58,14 +61,7 @@ func (l *Loader) preLoad(cfg interface{}) {
 
 	for _, field := range fields {
 		flagName := l.getFlagName(field.Name)
-		envName := l.getEnvName(field.Name)
-		v, ok := os.LookupEnv(envName)
-
-		defaultValue := field.DefaultValue
-		if ok {
-			defaultValue = v
-		}
-		l.flagSet.String(flagName, defaultValue, "")
+		l.flagSet.String(flagName, field.DefaultValue, field.Usage)
 	}
 }
 
@@ -249,7 +245,7 @@ type fieldData struct {
 	Field        reflect.StructField
 	Value        reflect.Value
 	DefaultValue string
-	IsSet        bool
+	Usage        string
 }
 
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
@@ -258,6 +254,7 @@ func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldD
 		Value:        value,
 		Field:        field,
 		DefaultValue: field.Tag.Get(defaultValueTag),
+		Usage:        field.Tag.Get(usageTag),
 	}
 }
 

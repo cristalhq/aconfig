@@ -20,7 +20,7 @@ type TestConfig struct {
 	Param    int    // no default tag, so default value
 	Sub      SubConfig
 
-	Slice []int          `default:"1,2,3"`
+	Slice []int          `default:"1,2,3" usage:"just pass elements"`
 	Map1  map[string]int `default:"a:1,b:2,c:3"`
 	Map2  map[int]string `default:"1:a,2:b,3:c"`
 
@@ -28,7 +28,7 @@ type TestConfig struct {
 }
 
 type EmbeddedConfig struct {
-	Em string `default:"em-def"`
+	Em string `default:"em-def" usage:"use... em...field."`
 }
 
 type SubConfig struct {
@@ -269,6 +269,24 @@ func TestLoadFlag(t *testing.T) {
 	loadFile(t, "testdata/test_config_flag.json", &want)
 
 	if got := cfg; !reflect.DeepEqual(got, want) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func TestUsage(t *testing.T) {
+	loader := NewLoaderFor(&EmbeddedConfig{}, LoaderConfig{})
+
+	var builder strings.Builder
+	flags := loader.Flags()
+	flags.SetOutput(&builder)
+	flags.PrintDefaults()
+
+	got := builder.String()
+	want := `  -em string
+    	use... em...field. (default "em-def")
+`
+
+	if got != want {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
