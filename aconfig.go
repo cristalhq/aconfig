@@ -20,6 +20,7 @@ const defaultValueTag = "default"
 // Loader of user configuration.
 type Loader struct {
 	config  LoaderConfig
+	src     interface{}
 	fields  []*fieldData
 	flagSet *flag.FlagSet
 }
@@ -48,6 +49,52 @@ func NewLoaderFor(cfg interface{}, config LoaderConfig) *Loader {
 	}
 	l := &Loader{config: config}
 	l.preLoad(cfg)
+	return l
+}
+
+// Loader creates a new Loader based on a config.
+// Zero-value config is acceptable.
+func LoaderFor(src interface{}) *Loader {
+	return &Loader{src: src}
+}
+
+func (l *Loader) SkipDefaults() *Loader {
+	l.config.SkipDefaults = true
+	return l
+}
+
+func (l *Loader) SkipFiles() *Loader {
+	l.config.SkipFile = true
+	return l
+}
+
+func (l *Loader) SkipEnvironment() *Loader {
+	l.config.SkipEnv = true
+	return l
+}
+
+func (l *Loader) SkipFlags() *Loader {
+	l.config.SkipFlag = true
+	return l
+}
+
+func (l *Loader) WithFiles(files []string) *Loader {
+	l.config.Files = files
+	return l
+}
+
+func (l *Loader) WithEnvPrefix(prefix string) *Loader {
+	l.config.EnvPrefix = prefix
+	return l
+}
+
+func (l *Loader) WithFlagPrefix(prefix string) *Loader {
+	l.config.FlagPrefix = prefix
+	return l
+}
+
+func (l *Loader) Build() *Loader {
+	l.preLoad(l.src)
 	return l
 }
 

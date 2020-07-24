@@ -16,6 +16,30 @@ type MyConfig struct {
 	}
 }
 
+func Example_NewApi() {
+	loader := aconfig.LoaderFor(&MyConfig{}).
+		SkipDefaults().SkipFiles().SkipEnvironment().SkipFlags().
+		WithFiles([]string{"/var/opt/myapp/config.json"}).
+		WithEnvPrefix("APP").
+		WithFlagPrefix("app").
+		Build()
+
+	var cfg MyConfig
+	if err := loader.Load(&cfg); err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Printf("Port:      %v\n", cfg.Port)
+	fmt.Printf("Auth.User: %q\n", cfg.Auth.User)
+	fmt.Printf("Auth.Pass: %q\n", cfg.Auth.Pass)
+
+	// Output:
+	//
+	// Port:      0
+	// Auth.User: ""
+	// Auth.Pass: ""
+}
+
 // Just load defaults from struct defenition.
 //
 func Example_Defaults() {
