@@ -573,7 +573,7 @@ func TestPanicWhenNotBuilt(t *testing.T) {
 		_ = LoaderFor(nil).Flags()
 	})
 	f(func() {
-		_ = LoaderFor(nil).WalkFields(nil)
+		LoaderFor(nil).WalkFields(nil)
 	})
 }
 
