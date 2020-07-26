@@ -40,6 +40,7 @@ type MyConfig struct {
 		User string `default:"def-user"`
 		Pass string `default:"def-pass"`
 	}
+	Pass string `default:"" env:"SECRET" flag:"sec_ret"`
 }
 
 loader := aconfig.LoaderFor(&MyConfig{}).

@@ -454,6 +454,39 @@ func TestBadFlags(t *testing.T) {
 	}
 }
 
+func TestCustomNames(t *testing.T) {
+	type Config struct {
+		A int `default:"-1" env:"one"`
+		B int `default:"-1" flag:"two"`
+		C int `default:"-1" env:"three" flag:"four"`
+	}
+
+	loader := LoaderFor(&Config{}).Build()
+
+	setEnv(t, "ONE", "1")
+	setEnv(t, "three", "3")
+	defer os.Clearenv()
+
+	if err := loader.Flags().Parse([]string{"-two=2", "-four=4"}); err != nil {
+		t.Fatal(err)
+	}
+
+	var cfg Config
+	if err := loader.Load(&cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if want := 1; cfg.A != want {
+		t.Errorf("got %#v, want %#v", cfg.A, want)
+	}
+	if want := 2; cfg.B != want {
+		t.Errorf("got %#v, want %#v", cfg.B, want)
+	}
+	if want := 4; cfg.C != want {
+		t.Errorf("got %#v, want %#v", cfg.C, want)
+	}
+}
+
 func loadFile(t *testing.T, file string, dst interface{}) {
 	f, err := os.Open(file)
 	if err != nil {
