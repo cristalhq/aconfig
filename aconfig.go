@@ -22,14 +22,14 @@ const (
 
 // Loader of user configuration.
 type Loader struct {
-	config  LoaderConfig
+	config  loaderConfig
 	src     interface{}
 	fields  []*fieldData
 	flagSet *flag.FlagSet
 }
 
-// LoaderConfig to configure configuration loader.
-type LoaderConfig struct {
+// loaderConfig to configure configuration loader.
+type loaderConfig struct {
 	SkipDefaults bool
 	SkipFile     bool
 	SkipEnv      bool
@@ -39,20 +39,6 @@ type LoaderConfig struct {
 	FlagPrefix string
 
 	Files []string
-}
-
-// NewLoader creates a new Loader based on a config.
-// Zero-value config is acceptable.
-func NewLoaderFor(cfg interface{}, config LoaderConfig) *Loader {
-	if config.EnvPrefix != "" {
-		config.EnvPrefix += "_"
-	}
-	if config.FlagPrefix != "" {
-		config.FlagPrefix += "."
-	}
-	l := &Loader{config: config}
-	l.preLoad(cfg)
-	return l
 }
 
 // Loader creates a new Loader based on a config.
@@ -88,11 +74,17 @@ func (l *Loader) WithFiles(files []string) *Loader {
 
 func (l *Loader) WithEnvPrefix(prefix string) *Loader {
 	l.config.EnvPrefix = prefix
+	if l.config.EnvPrefix != "" {
+		l.config.EnvPrefix += "_"
+	}
 	return l
 }
 
 func (l *Loader) WithFlagPrefix(prefix string) *Loader {
 	l.config.FlagPrefix = prefix
+	if l.config.FlagPrefix != "" {
+		l.config.FlagPrefix += "."
+	}
 	return l
 }
 
@@ -102,10 +94,9 @@ func (l *Loader) Build() *Loader {
 }
 
 func (l *Loader) preLoad(cfg interface{}) {
-	fields := getFields(cfg)
-
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 
+	fields := getFields(cfg)
 	for _, field := range fields {
 		flagName := l.getFlagName(field.Name)
 		l.flagSet.String(flagName, field.DefaultValue, field.Usage)

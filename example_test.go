@@ -43,11 +43,11 @@ func Example_NewApi() {
 // Just load defaults from struct defenition.
 //
 func Example_Defaults() {
-	loader := aconfig.NewLoaderFor(&MyConfig{}, aconfig.LoaderConfig{
-		SkipFile: true,
-		SkipEnv:  true,
-		SkipFlag: true,
-	})
+	loader := aconfig.LoaderFor(&MyConfig{}).
+		SkipFiles().
+		SkipEnvironment().
+		SkipFlags().
+		Build()
 
 	var cfg MyConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -68,11 +68,11 @@ func Example_Defaults() {
 // Load defaults from struct defenition and overwrite with a file.
 //
 func Example_File() {
-	loader := aconfig.NewLoaderFor(&MyConfig{}, aconfig.LoaderConfig{
-		SkipEnv:  true,
-		SkipFlag: true,
-		Files:    []string{"testdata/example_config.json"},
-	})
+	loader := aconfig.LoaderFor(&MyConfig{}).
+		SkipEnvironment().
+		SkipFlags().
+		WithFiles([]string{"testdata/example_config.json"}).
+		Build()
 
 	var cfg MyConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -99,11 +99,11 @@ func Example_Env() {
 	os.Setenv("EXAMPLE_AUTH_PASS", "env-pass")
 	defer os.Clearenv()
 
-	loader := aconfig.NewLoaderFor(&MyConfig{}, aconfig.LoaderConfig{
-		SkipFlag:  true,
-		EnvPrefix: "EXAMPLE",
-		Files:     []string{"testdata/example_config.json"},
-	})
+	loader := aconfig.LoaderFor(&MyConfig{}).
+		SkipFlags().
+		WithEnvPrefix("EXAMPLE").
+		WithFiles([]string{"testdata/example_config.json"}).
+		Build()
 
 	var cfg MyConfig
 	if err := loader.Load(&cfg); err != nil {
@@ -126,11 +126,10 @@ func Example_Env() {
 // Finally read command line flags.
 //
 func Example_Flag() {
-	loader := aconfig.NewLoaderFor(&MyConfig{}, aconfig.LoaderConfig{
-		EnvPrefix:  "EXAMPLE",
-		FlagPrefix: "ex",
-		Files:      []string{"testdata/example_config.json"},
-	})
+	loader := aconfig.LoaderFor(&MyConfig{}).
+		WithEnvPrefix("EXAMPLE").
+		WithFlagPrefix("ex").
+		WithFiles([]string{"testdata/example_config.json"})
 
 	flags := loader.Flags() // <- USE THIS TO DEFINE YOUR NON-CONFIG(!!) FLAGS
 
