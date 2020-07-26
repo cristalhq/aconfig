@@ -26,6 +26,7 @@ type Loader struct {
 	src     interface{}
 	fields  []*fieldData
 	flagSet *flag.FlagSet
+	isBuilt bool
 }
 
 // loaderConfig to configure configuration loader.
@@ -90,6 +91,7 @@ func (l *Loader) WithFlagPrefix(prefix string) *Loader {
 
 func (l *Loader) Build() *Loader {
 	l.preLoad(l.src)
+	l.isBuilt = true
 	return l
 }
 
@@ -104,11 +106,17 @@ func (l *Loader) preLoad(cfg interface{}) {
 }
 
 func (l *Loader) Flags() *flag.FlagSet {
+	if !l.isBuilt {
+		panic("aconfig: before using loader you must run Build method")
+	}
 	return l.flagSet
 }
 
 // Load configuration into a given param.
 func (l *Loader) Load(into interface{}) error {
+	if !l.isBuilt {
+		panic("aconfig: before using loader you must run Build method")
+	}
 	l.fields = getFields(into)
 
 	if err := l.loadSources(into); err != nil {
@@ -119,6 +127,9 @@ func (l *Loader) Load(into interface{}) error {
 
 // LoadWithFiles configuration into a given param.
 func (l *Loader) LoadWithFiles(into interface{}, files []string) error {
+	if !l.isBuilt {
+		panic("aconfig: before using loader you must run Build method")
+	}
 	l.fields = getFields(into)
 	l.config.Files = files
 
