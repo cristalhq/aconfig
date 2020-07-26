@@ -17,6 +17,8 @@ import (
 
 const (
 	defaultValueTag = "default"
+	envNameTag      = "env"
+	flagNameTag     = "flag"
 	usageTag        = "usage"
 )
 
@@ -100,7 +102,7 @@ func (l *Loader) preLoad(cfg interface{}) {
 
 	fields := getFields(cfg)
 	for _, field := range fields {
-		flagName := l.getFlagName(field.Name)
+		flagName := l.getFlagName(field)
 		l.flagSet.String(flagName, field.DefaultValue, field.Usage)
 	}
 }
@@ -201,7 +203,7 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 
 func (l *Loader) loadEnvironment() error {
 	for _, field := range l.fields {
-		envName := l.getEnvName(field.Name)
+		envName := l.getEnvName(field)
 		v, ok := os.LookupEnv(envName)
 		if !ok {
 			continue
@@ -226,7 +228,7 @@ func (l *Loader) loadFlags() error {
 	})
 
 	for _, field := range l.fields {
-		flagName := l.getFlagName(field.Name)
+		flagName := l.getFlagName(field)
 		flg, ok := actualFlags[flagName]
 		if !ok {
 			continue
@@ -238,11 +240,19 @@ func (l *Loader) loadFlags() error {
 	return nil
 }
 
-func (l *Loader) getEnvName(name string) string {
+func (l *Loader) getEnvName(field *fieldData) string {
+	name := field.Name
+	if field.EnvName != "" {
+		name = field.EnvName
+	}
 	return strings.ToUpper(l.config.EnvPrefix + strings.ReplaceAll(name, ".", "_"))
 }
 
-func (l *Loader) getFlagName(name string) string {
+func (l *Loader) getFlagName(field *fieldData) string {
+	name := field.Name
+	if field.FlagName != "" {
+		name = field.FlagName
+	}
 	return strings.ToLower(l.config.FlagPrefix + name)
 }
 
@@ -294,15 +304,20 @@ type fieldData struct {
 	Field        reflect.StructField
 	Value        reflect.Value
 	DefaultValue string
+	EnvName      string
+	FlagName     string
 	Usage        string
 }
 
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
+	name := makeName(field.Name, parent)
 	return &fieldData{
-		Name:         makaName(field.Name, parent),
+		Name:         name,
 		Value:        value,
 		Field:        field,
 		DefaultValue: field.Tag.Get(defaultValueTag),
+		EnvName:      field.Tag.Get(envNameTag),
+		FlagName:     field.Tag.Get(flagNameTag),
 		Usage:        field.Tag.Get(usageTag),
 	}
 }
@@ -311,7 +326,7 @@ func newSimpleFieldData(value reflect.Value) *fieldData {
 	return newFieldData(reflect.StructField{}, value, nil)
 }
 
-func makaName(name string, parent *fieldData) string {
+func makeName(name string, parent *fieldData) string {
 	if parent == nil {
 		return name
 	}
