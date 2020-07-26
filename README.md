@@ -20,8 +20,9 @@ There are more than 2000 repositories on Github regarding configuration in Go. I
   * defaults in code
   * files (JSON, YAML, TOML)
   * environment variables
-  * command-line flags  
-* Dependency-free (except file parsers)
+  * command-line flags
+* Dependency-free (except file parsers).
+* Walk over configuration fields.
 
 ## Install
 
@@ -35,7 +36,7 @@ go get github.com/cristalhq/aconfig
 
 ```go
 type MyConfig struct {
-	Port int `default:"1111"`
+	Port int `default:"1111" usage:"just give a number"`
 	Auth struct {
 		User string `default:"def-user"`
 		Pass string `default:"def-pass"`

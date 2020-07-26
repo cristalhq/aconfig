@@ -44,6 +44,22 @@ type loaderConfig struct {
 	Files []string
 }
 
+// Field of the user configuration structure.
+// Done as an interface to export less things in lib.
+type Field interface {
+	// Name of the field.
+	Name() string
+
+	// DefaultValue of the field.
+	DefaultValue() string
+
+	// Usage of the field (set in `usage` tag).
+	Usage() string
+
+	// Tag returns a given tag for a field.
+	Tag(tag string) string
+}
+
 // Loader creates a new Loader based on a config.
 // Zero-value config is acceptable.
 func LoaderFor(src interface{}) *Loader {
@@ -92,18 +108,18 @@ func (l *Loader) WithFlagPrefix(prefix string) *Loader {
 }
 
 func (l *Loader) Build() *Loader {
-	l.preLoad(l.src)
+	l.parseFields(l.src)
 	l.isBuilt = true
 	return l
 }
 
-func (l *Loader) preLoad(cfg interface{}) {
+func (l *Loader) parseFields(cfg interface{}) {
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
+	l.fields = getFields(cfg)
 
-	fields := getFields(cfg)
-	for _, field := range fields {
+	for _, field := range l.fields {
 		flagName := l.getFlagName(field)
-		l.flagSet.String(flagName, field.DefaultValue, field.Usage)
+		l.flagSet.String(flagName, field.defaultValue, field.usage)
 	}
 }
 
@@ -114,11 +130,23 @@ func (l *Loader) Flags() *flag.FlagSet {
 	return l.flagSet
 }
 
+// WalkFields iterates over configuration fields.
+// Easy way to create documentation or other stuff.
+func (l *Loader) WalkFields(fn func(f Field)) {
+	if !l.isBuilt {
+		panic("aconfig: before using loader you must run Build method")
+	}
+	for _, f := range l.fields {
+		fn(f)
+	}
+}
+
 // Load configuration into a given param.
 func (l *Loader) Load(into interface{}) error {
 	if !l.isBuilt {
 		panic("aconfig: before using loader you must run Build method")
 	}
+	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
 
 	if err := l.loadSources(into); err != nil {
@@ -132,6 +160,7 @@ func (l *Loader) LoadWithFiles(into interface{}, files []string) error {
 	if !l.isBuilt {
 		panic("aconfig: before using loader you must run Build method")
 	}
+	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
 	l.config.Files = files
 
@@ -167,7 +196,7 @@ func (l *Loader) loadSources(into interface{}) error {
 
 func (l *Loader) loadDefaults() error {
 	for _, fd := range l.fields {
-		if err := l.setFieldData(fd, fd.DefaultValue); err != nil {
+		if err := l.setFieldData(fd, fd.defaultValue); err != nil {
 			return err
 		}
 	}
@@ -241,17 +270,17 @@ func (l *Loader) loadFlags() error {
 }
 
 func (l *Loader) getEnvName(field *fieldData) string {
-	name := field.Name
-	if field.EnvName != "" {
-		name = field.EnvName
+	name := field.name
+	if field.envName != "" {
+		name = field.envName
 	}
 	return strings.ToUpper(l.config.EnvPrefix + strings.ReplaceAll(name, ".", "_"))
 }
 
 func (l *Loader) getFlagName(field *fieldData) string {
-	name := field.Name
-	if field.FlagName != "" {
-		name = field.FlagName
+	name := field.name
+	if field.flagName != "" {
+		name = field.flagName
 	}
 	return strings.ToLower(l.config.FlagPrefix + name)
 }
@@ -300,24 +329,24 @@ func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData 
 }
 
 type fieldData struct {
-	Name         string
-	Field        reflect.StructField
-	Value        reflect.Value
-	DefaultValue string
-	EnvName      string
-	FlagName     string
-	Usage        string
+	name         string
+	field        reflect.StructField
+	value        reflect.Value
+	defaultValue string
+	envName      string
+	flagName     string
+	usage        string
 }
 
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
 	return &fieldData{
-		Name:         makeName(field.Name, parent),
-		Value:        value,
-		Field:        field,
-		DefaultValue: field.Tag.Get(defaultValueTag),
-		EnvName:      field.Tag.Get(envNameTag),
-		FlagName:     field.Tag.Get(flagNameTag),
-		Usage:        field.Tag.Get(usageTag),
+		name:         makeName(field.Name, parent),
+		value:        value,
+		field:        field,
+		defaultValue: field.Tag.Get(defaultValueTag),
+		envName:      field.Tag.Get(envNameTag),
+		flagName:     field.Tag.Get(flagNameTag),
+		usage:        field.Tag.Get(usageTag),
 	}
 }
 
@@ -329,23 +358,42 @@ func makeName(name string, parent *fieldData) string {
 	if parent == nil {
 		return name
 	}
-	return parent.Name + "." + name
+	return parent.name + "." + name
+}
+
+func (f *fieldData) Name() string {
+	return f.name
+}
+
+// DefaultValue of the field.
+func (f *fieldData) DefaultValue() string {
+	return f.defaultValue
+}
+
+// Usage of the field (set in `usage` tag) .
+func (f *fieldData) Usage() string {
+	return f.usage
+}
+
+// Tag returns a given tag for a field.
+func (f *fieldData) Tag(tag string) string {
+	return f.field.Tag.Get(tag)
 }
 
 func setFieldDataHelper(field *fieldData, value string) error {
 	// unwrap pointers
-	for field.Value.Type().Kind() == reflect.Ptr {
-		if field.Value.IsNil() {
-			field.Value.Set(reflect.New(field.Value.Type().Elem()))
+	for field.value.Type().Kind() == reflect.Ptr {
+		if field.value.IsNil() {
+			field.value.Set(reflect.New(field.value.Type().Elem()))
 		}
-		field.Value = field.Value.Elem()
+		field.value = field.value.Elem()
 	}
 
 	if value == "" {
 		return nil
 	}
 
-	switch kind := field.Value.Type().Kind(); kind {
+	switch kind := field.value.Type().Kind(); kind {
 	case reflect.Bool:
 		return setBool(field, value)
 
@@ -380,57 +428,57 @@ func setBool(field *fieldData, value string) error {
 	if err != nil {
 		return err
 	}
-	field.Value.SetBool(val)
+	field.value.SetBool(val)
 	return nil
 }
 
 func setInt(field *fieldData, value string) error {
-	val, err := strconv.ParseInt(value, 0, field.Value.Type().Bits())
+	val, err := strconv.ParseInt(value, 0, field.value.Type().Bits())
 	if err != nil {
 		return err
 	}
-	field.Value.SetInt(val)
+	field.value.SetInt(val)
 	return nil
 }
 
 func setInt64(field *fieldData, value string) error {
-	if field.Field.Type == reflect.TypeOf(time.Second) {
+	if field.field.Type == reflect.TypeOf(time.Second) {
 		val, err := time.ParseDuration(value)
 		if err != nil {
 			return err
 		}
-		field.Value.Set(reflect.ValueOf(val))
+		field.value.Set(reflect.ValueOf(val))
 		return nil
 	}
 	return setInt(field, value)
 }
 
 func setUint(field *fieldData, value string) error {
-	val, err := strconv.ParseUint(value, 0, field.Value.Type().Bits())
+	val, err := strconv.ParseUint(value, 0, field.value.Type().Bits())
 	if err != nil {
 		return err
 	}
-	field.Value.SetUint(val)
+	field.value.SetUint(val)
 	return nil
 }
 
 func setFloat(field *fieldData, value string) error {
-	val, err := strconv.ParseFloat(value, field.Value.Type().Bits())
+	val, err := strconv.ParseFloat(value, field.value.Type().Bits())
 	if err != nil {
 		return err
 	}
-	field.Value.SetFloat(val)
+	field.value.SetFloat(val)
 	return nil
 }
 
 func setString(field *fieldData, value string) error {
-	field.Value.SetString(value)
+	field.value.SetString(value)
 	return nil
 }
 
 func setSlice(field *fieldData, value string) error {
 	vals := strings.Split(value, ",")
-	slice := reflect.MakeSlice(field.Field.Type, len(vals), len(vals))
+	slice := reflect.MakeSlice(field.field.Type, len(vals), len(vals))
 	for i, val := range vals {
 		val = strings.TrimSpace(val)
 
@@ -439,13 +487,13 @@ func setSlice(field *fieldData, value string) error {
 			return fmt.Errorf("incorrect slice item %q: %w", val, err)
 		}
 	}
-	field.Value.Set(slice)
+	field.value.Set(slice)
 	return nil
 }
 
 func setMap(field *fieldData, value string) error {
 	vals := strings.Split(value, ",")
-	mapField := reflect.MakeMapWithSize(field.Field.Type, len(vals))
+	mapField := reflect.MakeMapWithSize(field.field.Type, len(vals))
 
 	for _, val := range vals {
 		entry := strings.SplitN(val, ":", 2)
@@ -455,17 +503,17 @@ func setMap(field *fieldData, value string) error {
 		key := strings.TrimSpace(entry[0])
 		val := strings.TrimSpace(entry[1])
 
-		fdk := newSimpleFieldData(reflect.New(field.Field.Type.Key()).Elem())
+		fdk := newSimpleFieldData(reflect.New(field.field.Type.Key()).Elem())
 		if err := setFieldDataHelper(fdk, key); err != nil {
 			return fmt.Errorf("incorrect map key %q: %w", key, err)
 		}
 
-		fdv := newSimpleFieldData(reflect.New(field.Field.Type.Elem()).Elem())
+		fdv := newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
 		if err := setFieldDataHelper(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
 		}
-		mapField.SetMapIndex(fdk.Value, fdv.Value)
+		mapField.SetMapIndex(fdk.value, fdv.value)
 	}
-	field.Value.Set(mapField)
+	field.value.Set(mapField)
 	return nil
 }
