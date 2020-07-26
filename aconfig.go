@@ -125,7 +125,7 @@ func (l *Loader) parseFields(cfg interface{}) {
 
 func (l *Loader) Flags() *flag.FlagSet {
 	if !l.isBuilt {
-		panic("aconfig: before using loader you must run Build method")
+		panic("aconfig: you must run Build method before using the loader")
 	}
 	return l.flagSet
 }
@@ -134,7 +134,7 @@ func (l *Loader) Flags() *flag.FlagSet {
 // Easy way to create documentation or other stuff.
 func (l *Loader) WalkFields(fn func(f Field)) {
 	if !l.isBuilt {
-		panic("aconfig: before using loader you must run Build method")
+		panic("aconfig: you must run Build method before using the loader")
 	}
 	for _, f := range l.fields {
 		fn(f)
@@ -144,7 +144,7 @@ func (l *Loader) WalkFields(fn func(f Field)) {
 // Load configuration into a given param.
 func (l *Loader) Load(into interface{}) error {
 	if !l.isBuilt {
-		panic("aconfig: before using loader you must run Build method")
+		panic("aconfig: you must run Build method before using the loader")
 	}
 	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
@@ -158,7 +158,7 @@ func (l *Loader) Load(into interface{}) error {
 // LoadWithFiles configuration into a given param.
 func (l *Loader) LoadWithFiles(into interface{}, files []string) error {
 	if !l.isBuilt {
-		panic("aconfig: before using loader you must run Build method")
+		panic("aconfig: you must run Build method before using the loader")
 	}
 	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
