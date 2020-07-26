@@ -44,6 +44,26 @@ type loaderConfig struct {
 	Files []string
 }
 
+// Field of the user configuration structure.
+type Field struct {
+	f *fieldData
+}
+
+// Name of the field.
+func (f *Field) Name() string {
+	return f.f.Name
+}
+
+// Usage of the field (set in `usage` tag) .
+func (f *Field) Usage() string {
+	return f.f.Usage
+}
+
+// Tag returns a given tag for a field.
+func (f *Field) Tag(tag string) string {
+	return f.f.Field.Tag.Get(tag)
+}
+
 // Loader creates a new Loader based on a config.
 // Zero-value config is acceptable.
 func LoaderFor(src interface{}) *Loader {
@@ -112,6 +132,14 @@ func (l *Loader) Flags() *flag.FlagSet {
 		panic("aconfig: before using loader you must run Build method")
 	}
 	return l.flagSet
+}
+
+// WalkFields iterates over configuration fields.
+// Easy way to create documentation or other stuff.
+func (l *Loader) WalkFields(fn func(f *Field)) {
+	for _, f := range l.fields {
+		fn(&Field{f: f})
+	}
 }
 
 // Load configuration into a given param.
