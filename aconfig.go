@@ -310,9 +310,8 @@ type fieldData struct {
 }
 
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
-	name := makeName(field.Name, parent)
 	return &fieldData{
-		Name:         name,
+		Name:         makeName(field.Name, parent),
 		Value:        value,
 		Field:        field,
 		DefaultValue: field.Tag.Get(defaultValueTag),
