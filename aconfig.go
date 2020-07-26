@@ -54,6 +54,11 @@ func (f *Field) Name() string {
 	return f.f.Name
 }
 
+// DefaultValue of the field.
+func (f *Field) DefaultValue() string {
+	return f.f.DefaultValue
+}
+
 // Usage of the field (set in `usage` tag) .
 func (f *Field) Usage() string {
 	return f.f.Usage
@@ -119,9 +124,9 @@ func (l *Loader) Build() *Loader {
 
 func (l *Loader) preLoad(cfg interface{}) {
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
+	l.fields = getFields(cfg)
 
-	fields := getFields(cfg)
-	for _, field := range fields {
+	for _, field := range l.fields {
 		flagName := l.getFlagName(field)
 		l.flagSet.String(flagName, field.DefaultValue, field.Usage)
 	}

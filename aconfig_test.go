@@ -487,6 +487,63 @@ func TestCustomNames(t *testing.T) {
 	}
 }
 
+func TestWalkFields(t *testing.T) {
+	type Config struct {
+		A int `default:"-1" env:"one" marco:"polo"`
+		B struct {
+			C int `default:"-1" flag:"two" usage:"pretty simple usage duh"`
+			D struct {
+				E int `default:"-1" env:"three"`
+			}
+		}
+	}
+
+	fields := []Field{
+		{
+			f: &fieldData{
+				Name:         "A",
+				EnvName:      "one",
+				DefaultValue: "-1",
+			},
+		},
+		{
+			f: &fieldData{
+				Name:         "B.C",
+				FlagName:     "two",
+				DefaultValue: "-1",
+				Usage:        "pretty simple usage duh",
+			},
+		},
+		{
+			f: &fieldData{
+				Name:         "B.D.E",
+				EnvName:      "three",
+				DefaultValue: "-1",
+			},
+		},
+	}
+
+	i := 0
+
+	LoaderFor(&Config{}).Build().WalkFields(func(f *Field) {
+		wantFields := fields[i]
+		if f.Name() != wantFields.Name() {
+			t.Errorf("got name %v, want %v", f.Name(), wantFields.Name())
+		}
+		if f.DefaultValue() != wantFields.DefaultValue() {
+			t.Errorf("got default %#v, want %#v", f.DefaultValue(), wantFields.DefaultValue())
+		}
+		if f.Usage() != wantFields.Usage() {
+			t.Errorf("got usage %#v, want %#v", f.Usage(), wantFields.Usage())
+		}
+		i++
+	})
+
+	if want := 3; i != want {
+		t.Errorf("got %v, want %v", i, want)
+	}
+}
+
 func loadFile(t *testing.T, file string, dst interface{}) {
 	f, err := os.Open(file)
 	if err != nil {
