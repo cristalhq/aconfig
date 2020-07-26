@@ -42,17 +42,16 @@ type MyConfig struct {
 	}
 }
 
-loader := aconfig.NewLoaderFor(&MyConfig{}, aconfig.LoaderConfig{
+loader := aconfig.LoaderFor(&MyConfig{}).
 	// feel free to skip some steps :)
-	// SkipDefaults: true,
-	// SkipFile: true,
-	// SkipEnv:  true,
-	// SkipFlag: true,
-
-	Files:       []string{"file.json", "ouch.yaml"},
-	FlagPrefix:  "app",
-	EnvPrefix:   "APP",
-})
+	// SkipDefaults().
+	// SkipFiles().
+	// SkipEnvironment().
+	// SkipFlags().
+	WithFiles([]string{"file.json", "ouch.yaml"}).
+	WithEnvPrefix("APP").
+	WithFlagPrefix("app").
+	Build()
 
 flagSet := loader.Flags() // now use exactly this flags to define your own
 
