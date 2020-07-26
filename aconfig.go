@@ -53,7 +53,7 @@ type Field interface {
 	// DefaultValue of the field.
 	DefaultValue() string
 
-	// Usage of the field (set in `usage` tag) .
+	// Usage of the field (set in `usage` tag).
 	Usage() string
 
 	// Tag returns a given tag for a field.
@@ -146,6 +146,7 @@ func (l *Loader) Load(into interface{}) error {
 	if !l.isBuilt {
 		panic("aconfig: before using loader you must run Build method")
 	}
+	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
 
 	if err := l.loadSources(into); err != nil {
@@ -159,6 +160,7 @@ func (l *Loader) LoadWithFiles(into interface{}, files []string) error {
 	if !l.isBuilt {
 		panic("aconfig: before using loader you must run Build method")
 	}
+	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
 	l.config.Files = files
 
