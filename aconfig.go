@@ -132,12 +132,14 @@ func (l *Loader) Flags() *flag.FlagSet {
 
 // WalkFields iterates over configuration fields.
 // Easy way to create documentation or other stuff.
-func (l *Loader) WalkFields(fn func(f Field)) {
+func (l *Loader) WalkFields(fn func(f Field) bool) {
 	if !l.isBuilt {
 		panic("aconfig: you must run Build method before using the loader")
 	}
 	for _, f := range l.fields {
-		fn(f)
+		if !fn(f) {
+			return
+		}
 	}
 }
 

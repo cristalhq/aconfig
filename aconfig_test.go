@@ -519,7 +519,7 @@ func TestWalkFields(t *testing.T) {
 
 	i := 0
 
-	LoaderFor(&Config{}).Build().WalkFields(func(f Field) {
+	LoaderFor(&Config{}).Build().WalkFields(func(f Field) bool {
 		wantFields := fields[i]
 		if f.Name() != wantFields.Name() {
 			t.Fatalf("got name %v, want %v", f.Name(), wantFields.Name())
@@ -531,6 +531,7 @@ func TestWalkFields(t *testing.T) {
 			t.Fatalf("got usage %#v, want %#v", f.Usage(), wantFields.Usage())
 		}
 		i++
+		return true
 	})
 
 	if want := 3; i != want {
@@ -538,15 +539,19 @@ func TestWalkFields(t *testing.T) {
 	}
 
 	i = 0
-	LoaderFor(&Config{}).Build().WalkFields(func(f Field) {
+	LoaderFor(&Config{}).Build().WalkFields(func(f Field) bool {
 		if i > 0 {
-			return
+			return false
 		}
 		if got := f.Tag("marco"); got != "polo" {
 			t.Fatalf("got %v, want %v", got, "polo")
 		}
 		i++
+		return true
 	})
+	if i != 1 {
+		t.Fatal()
+	}
 }
 
 func TestPanicWhenNotBuilt(t *testing.T) {
