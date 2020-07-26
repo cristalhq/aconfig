@@ -499,33 +499,27 @@ func TestWalkFields(t *testing.T) {
 	}
 
 	fields := []Field{
-		{
-			f: &fieldData{
-				Name:         "A",
-				EnvName:      "one",
-				DefaultValue: "-1",
-			},
+		&fieldData{
+			name:         "A",
+			envName:      "one",
+			defaultValue: "-1",
 		},
-		{
-			f: &fieldData{
-				Name:         "B.C",
-				FlagName:     "two",
-				DefaultValue: "-1",
-				Usage:        "pretty simple usage duh",
-			},
+		&fieldData{
+			name:         "B.C",
+			flagName:     "two",
+			defaultValue: "-1",
+			usage:        "pretty simple usage duh",
 		},
-		{
-			f: &fieldData{
-				Name:         "B.D.E",
-				EnvName:      "three",
-				DefaultValue: "-1",
-			},
+		&fieldData{
+			name:         "B.D.E",
+			envName:      "three",
+			defaultValue: "-1",
 		},
 	}
 
 	i := 0
 
-	LoaderFor(&Config{}).Build().WalkFields(func(f *Field) {
+	LoaderFor(&Config{}).Build().WalkFields(func(f Field) {
 		wantFields := fields[i]
 		if f.Name() != wantFields.Name() {
 			t.Errorf("got name %v, want %v", f.Name(), wantFields.Name())
@@ -541,6 +535,10 @@ func TestWalkFields(t *testing.T) {
 
 	if want := 3; i != want {
 		t.Errorf("got %v, want %v", i, want)
+	}
+
+	if got := fields[0].Tag("marco"); got != "polo" {
+		t.Errorf("got %v, want %v", got, "want")
 	}
 }
 
