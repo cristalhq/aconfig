@@ -549,6 +549,34 @@ func TestWalkFields(t *testing.T) {
 	})
 }
 
+func TestPanicWhenNotBuilt(t *testing.T) {
+	f := func(fn func()) {
+		t.Helper()
+
+		defer func() {
+			t.Helper()
+			if err := recover(); err == nil {
+				t.Fatal()
+			}
+		}()
+		fn()
+	}
+
+	// ok to pass nils
+	f(func() {
+		_ = LoaderFor(nil).Load(nil)
+	})
+	f(func() {
+		_ = LoaderFor(nil).LoadWithFiles(nil, nil)
+	})
+	f(func() {
+		_ = LoaderFor(nil).Flags()
+	})
+	f(func() {
+		LoaderFor(nil).WalkFields(nil)
+	})
+}
+
 func loadFile(t *testing.T, file string, dst interface{}) {
 	f, err := os.Open(file)
 	if err != nil {
