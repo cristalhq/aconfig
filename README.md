@@ -71,6 +71,10 @@ if err := loader.Load(&cfg); err != nil {
 
 Also see examples: [this above](https://github.com/cristalhq/aconfig/blob/master/example_test.go)
 
+### Cobra integration
+
+aconfig integrates seamlessly with [Cobra](https://github.com/spf13/cobra) using `AddGoFlagSet`. See the full example [here](https://play.golang.org/p/5dqN3EIOqCA).
+
 ## Documentation
 
 See here: [pkg.go.dev][pkg-url].
