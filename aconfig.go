@@ -41,7 +41,8 @@ type loaderConfig struct {
 	EnvPrefix  string
 	FlagPrefix string
 
-	Files []string
+	ShouldStopOnFileError bool
+	Files                 []string
 }
 
 // Field of the user configuration structure.
@@ -96,6 +97,11 @@ func (l *Loader) WithEnvPrefix(prefix string) *Loader {
 	if l.config.EnvPrefix != "" {
 		l.config.EnvPrefix += "_"
 	}
+	return l
+}
+
+func (l *Loader) StopOnFileError() *Loader {
+	l.config.ShouldStopOnFileError = true
 	return l
 }
 
@@ -157,14 +163,14 @@ func (l *Loader) Load(into interface{}) error {
 	return nil
 }
 
-// LoadWithFiles configuration into a given param.
-func (l *Loader) LoadWithFiles(into interface{}, files []string) error {
+// LoadWithFile configuration into a given param.
+func (l *Loader) LoadWithFile(into interface{}, file string) error {
 	if !l.isBuilt {
 		panic("aconfig: you must run Build method before using the loader")
 	}
 	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
-	l.config.Files = files
+	l.config.Files = []string{file}
 
 	if err := l.loadSources(into); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
@@ -209,7 +215,10 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 	for _, file := range l.config.Files {
 		f, err := os.Open(file)
 		if err != nil {
-			return err
+			if l.config.ShouldStopOnFileError {
+				return err
+			}
+			continue
 		}
 		defer func() { _ = f.Close() }()
 
@@ -224,10 +233,13 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 		default:
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
-		if err != nil {
+
+		if err == nil {
+			return nil
+		}
+		if l.config.ShouldStopOnFileError {
 			return fmt.Errorf("file parsing error: %w", err)
 		}
-		break
 	}
 	return nil
 }

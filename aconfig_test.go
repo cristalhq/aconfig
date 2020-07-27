@@ -199,7 +199,7 @@ func TestLoadFile_WithFiles(t *testing.T) {
 			Build()
 
 		var cfg, want TestConfig
-		if err := loader.LoadWithFiles(&cfg, []string{filepath}); err != nil {
+		if err := loader.LoadWithFile(&cfg, filepath); err != nil {
 			t.Fatal(err)
 		}
 
@@ -400,6 +400,7 @@ func TestBadFiles(t *testing.T) {
 			SkipDefaults().
 			SkipEnvironment().
 			SkipFlags().
+			StopOnFileError().
 			WithFiles([]string{filepath}).
 			Build()
 
@@ -572,7 +573,7 @@ func TestPanicWhenNotBuilt(t *testing.T) {
 		_ = LoaderFor(nil).Load(nil)
 	})
 	f(func() {
-		_ = LoaderFor(nil).LoadWithFiles(nil, nil)
+		_ = LoaderFor(nil).LoadWithFile(nil, "")
 	})
 	f(func() {
 		_ = LoaderFor(nil).Flags()
