@@ -573,7 +573,7 @@ func TestPanicWhenNotBuilt(t *testing.T) {
 		_ = LoaderFor(nil).Load(nil)
 	})
 	f(func() {
-		_ = LoaderFor(nil).LoadWithFiles(nil, nil)
+		_ = LoaderFor(nil).LoadWithFile(nil, "")
 	})
 	f(func() {
 		_ = LoaderFor(nil).Flags()
