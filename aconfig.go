@@ -168,17 +168,9 @@ func (l *Loader) Load(into interface{}) error {
 
 // LoadWithFile configuration into a given param.
 func (l *Loader) LoadWithFile(into interface{}, file string) error {
-	if !l.isBuilt {
-		panic("aconfig: you must run Build method before using the loader")
-	}
-	// we need to get fields once more, 'cause `into` is new for us
-	l.fields = getFields(into)
 	l.config.Files = []string{file}
 
-	if err := l.loadSources(into); err != nil {
-		return fmt.Errorf("aconfig: cannot load config: %w", err)
-	}
-	return nil
+	return l.Load(into)
 }
 
 func (l *Loader) loadSources(into interface{}) error {
