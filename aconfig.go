@@ -308,10 +308,13 @@ func (l *Loader) setFieldData(field *fieldData, value string) error {
 
 func getFields(x interface{}) []*fieldData {
 	value := reflect.ValueOf(x)
+	for value.Type().Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
 	if value.Kind() != reflect.Struct {
 		panic("aconfig: only struct can be passed to the loader")
 	}
-	return getFieldsHelper(value.Elem(), nil)
+	return getFieldsHelper(value, nil)
 }
 
 func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData {
