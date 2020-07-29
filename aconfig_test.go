@@ -569,6 +569,29 @@ func TestDontFillFlagsIfDisabled(t *testing.T) {
 	}
 }
 
+func TestPassNonStructs(t *testing.T) {
+	f := func(cfg interface{}) {
+		t.Helper()
+
+		defer func() {
+			t.Helper()
+			if err := recover(); err == nil {
+				t.Fatal()
+			}
+		}()
+
+		if err := LoaderFor(nil).Build().Load(cfg); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	f(nil)
+	f(map[string]string{})
+	f([]string{})
+	f([4]string{})
+	f(func() {})
+}
+
 func TestPanicWhenNotBuilt(t *testing.T) {
 	f := func(fn func()) {
 		t.Helper()
