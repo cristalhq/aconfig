@@ -70,7 +70,7 @@ if err := loader.Load(&cfg); err != nil {
 // 4. and command-line flags if they are
 ```
 
-Also see examples: [examples_test.go](https://github.com/cristalhq/aconfig/blob/master/example_test.go) or integration with `spf13/Cobra` using using `AddGoFlagSet` [playground](https://play.golang.org/p/OsCR8qTCN0H)
+Also see examples: [examples_test.go](https://github.com/cristalhq/aconfig/blob/master/example_test.go) or integration with `spf13/Cobra` using `AddGoFlagSet` [playground](https://play.golang.org/p/OsCR8qTCN0H)
 
 ## Documentation
 
