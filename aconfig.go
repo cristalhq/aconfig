@@ -123,6 +123,9 @@ func (l *Loader) parseFields(cfg interface{}) {
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	l.fields = getFields(cfg)
 
+	if l.config.SkipFlag {
+		return
+	}
 	for _, field := range l.fields {
 		flagName := l.getFlagName(field)
 		l.flagSet.String(flagName, field.defaultValue, field.usage)

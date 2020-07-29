@@ -555,6 +555,20 @@ func TestWalkFields(t *testing.T) {
 	}
 }
 
+func TestDontFillFlagsIfDisabled(t *testing.T) {
+	type Config struct {
+		A int `default:"1"`
+	}
+
+	loader := LoaderFor(&Config{}).
+		SkipFlags().
+		Build()
+
+	if flags := loader.Flags().NFlag(); flags != 0 {
+		t.Errorf("want empty, got %v", flags)
+	}
+}
+
 func TestPanicWhenNotBuilt(t *testing.T) {
 	f := func(fn func()) {
 		t.Helper()
