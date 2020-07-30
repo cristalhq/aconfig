@@ -19,6 +19,10 @@ type TestConfig struct {
 	HTTPPort int    `default:"8080"`
 	Param    int    // no default tag, so default value
 	Sub      SubConfig
+	Anon     struct {
+		IsAnon bool `default:"true"`
+	}
+	//EmptyPtr *int32
 
 	Slice []int          `default:"1,2,3" usage:"just pass elements"`
 	Map1  map[string]int `default:"a:1,b:2,c:3"`
