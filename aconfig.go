@@ -496,6 +496,13 @@ func setString(field *fieldData, value string) error {
 }
 
 func setSlice(field *fieldData, value string) error {
+	// Special case for []byte
+	if field.field.Type.Elem().Kind() == reflect.Uint8 {
+		value := reflect.ValueOf([]byte(value))
+		field.value.Set(value)
+		return nil
+	}
+
 	vals := strings.Split(value, ",")
 	slice := reflect.MakeSlice(field.field.Type, len(vals), len(vals))
 	for i, val := range vals {

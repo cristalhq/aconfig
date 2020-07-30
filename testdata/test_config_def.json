@@ -1,5 +1,6 @@
 {
   "Str": "str-def",
+  "Bytes": "Ynl0ZXMtZGVm",
   "Int": 123,
   "HTTPPort": 8080,
   "Sub": {

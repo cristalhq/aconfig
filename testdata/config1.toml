@@ -1,4 +1,4 @@
-Str = "str-json"
+Str = "str-toml"
 Int = 101
 HTTPPort = 65000
 [Sub]
