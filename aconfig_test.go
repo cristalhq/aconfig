@@ -38,45 +38,6 @@ type SubConfig struct {
 	Float float64 `default:"123.123"`
 }
 
-type AllTypesConfig struct {
-	Bool   bool   `default:"true"`
-	String string `default:"str"`
-
-	Int   int   `default:"1"`
-	Int8  int8  `default:"12"`
-	Int16 int16 `default:"123"`
-	Int32 int32 `default:"13"`
-	Int64 int64 `default:"23"`
-
-	Uint   uint   `default:"1234"`
-	Uint8  uint8  `default:"124"`
-	Uint16 uint16 `default:"134"`
-	Uint32 uint32 `default:"234"`
-	Uint64 uint64 `default:"24"`
-
-	Float32 float32 `default:"1234.213"`
-	Float64 float64 `default:"1234.234"`
-
-	Dur  time.Duration `default:"1h2m3s"`
-	Time time.Time     `default:"2000-04-05 10:20:30 +0000 UTC"`
-}
-
-type OtherNumbersConfig struct {
-	Int    int   `default:"0b111"`
-	Int8   int8  `default:"0o123"`
-	Int8x2 int8  `default:"0123"`
-	Int16  int16 `default:"0x123"`
-
-	Uint   uint   `default:"0b111"`
-	Uint8  uint8  `default:"0o123"`
-	Uint16 uint16 `default:"0123"`
-	Uint32 uint32 `default:"0x123"`
-}
-
-type DurationConfig struct {
-	MyDur MyDuration `default:"1h2m3s" json:"my_dur"`
-}
-
 type MyDuration string
 
 func (m MyDuration) Duration() (time.Duration, error) {
@@ -104,6 +65,29 @@ func TestLoadDefaults(t *testing.T) {
 }
 
 func TestLoadDefault_AllTypesConfig(t *testing.T) {
+	type AllTypesConfig struct {
+		Bool   bool   `default:"true"`
+		String string `default:"str"`
+
+		Int   int   `default:"1"`
+		Int8  int8  `default:"12"`
+		Int16 int16 `default:"123"`
+		Int32 int32 `default:"13"`
+		Int64 int64 `default:"23"`
+
+		Uint   uint   `default:"1234"`
+		Uint8  uint8  `default:"124"`
+		Uint16 uint16 `default:"134"`
+		Uint32 uint32 `default:"234"`
+		Uint64 uint64 `default:"24"`
+
+		Float32 float32 `default:"1234.213"`
+		Float64 float64 `default:"1234.234"`
+
+		Dur  time.Duration `default:"1h2m3s"`
+		Time time.Time     `default:"2000-04-05 10:20:30 +0000 UTC"`
+	}
+
 	loader := LoaderFor(&AllTypesConfig{}).
 		SkipFiles().
 		SkipEnvironment().
@@ -124,6 +108,10 @@ func TestLoadDefault_AllTypesConfig(t *testing.T) {
 }
 
 func TestLoadDefault_DurationConfig(t *testing.T) {
+	type DurationConfig struct {
+		MyDur MyDuration `default:"1h2m3s" json:"my_dur"`
+	}
+
 	loader := LoaderFor(&DurationConfig{}).
 		SkipFiles().
 		SkipEnvironment().
@@ -144,6 +132,18 @@ func TestLoadDefault_DurationConfig(t *testing.T) {
 }
 
 func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
+	type OtherNumbersConfig struct {
+		Int    int   `default:"0b111"`
+		Int8   int8  `default:"0o123"`
+		Int8x2 int8  `default:"0123"`
+		Int16  int16 `default:"0x123"`
+
+		Uint   uint   `default:"0b111"`
+		Uint8  uint8  `default:"0o123"`
+		Uint16 uint16 `default:"0123"`
+		Uint32 uint32 `default:"0x123"`
+	}
+
 	loader := LoaderFor(&OtherNumbersConfig{}).
 		SkipFiles().
 		SkipEnvironment().
