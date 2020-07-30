@@ -5,6 +5,9 @@
   "Sub": {
     "Float": 123.123
   },
+  "Anon": {
+    "IsAnon": true
+  },
   "Slice": [
     1,
     2,

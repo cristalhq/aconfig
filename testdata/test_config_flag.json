@@ -5,6 +5,9 @@
   "Sub": {
     "Float": 123.321
   },
+  "Anon": {
+    "IsAnon": true
+  },
   "PtrSub": {
     "Float": 321.123
   },

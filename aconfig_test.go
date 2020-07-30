@@ -19,6 +19,9 @@ type TestConfig struct {
 	HTTPPort int    `default:"8080"`
 	Param    int    // no default tag, so default value
 	Sub      SubConfig
+	Anon     struct {
+		IsAnon bool `default:"true"`
+	}
 
 	Slice []int          `default:"1,2,3" usage:"just pass elements"`
 	Map1  map[string]int `default:"a:1,b:2,c:3"`
@@ -220,6 +223,7 @@ func TestLoadEnv(t *testing.T) {
 	setEnv(t, "TST_INT", "121")
 	setEnv(t, "TST_HTTPPORT", "3000")
 	setEnv(t, "TST_SUB_FLOAT", "222.333")
+	setEnv(t, "TST_ANON_ISANON", "true")
 	setEnv(t, "TST_EM", "em-env")
 	defer os.Clearenv()
 
@@ -257,6 +261,7 @@ func TestLoadFlag(t *testing.T) {
 		"-tst.int=1001",
 		"-tst.httpport=30000",
 		"-tst.sub.float=123.321",
+		"-tst.anon.isanon=true",
 		"-tst.em=em-flag",
 	}
 
