@@ -61,37 +61,42 @@ type Field interface {
 	Tag(tag string) string
 }
 
-// Loader creates a new Loader based on a config.
-// Zero-value config is acceptable.
+// LoaderFor creates a new Loader based on a given configuration structure.
 func LoaderFor(src interface{}) *Loader {
 	return &Loader{src: src}
 }
 
+// SkipDefaults if you don't want to use them.
 func (l *Loader) SkipDefaults() *Loader {
 	l.config.SkipDefaults = true
 	return l
 }
 
+// SkipFiles if you don't want to use them.
 func (l *Loader) SkipFiles() *Loader {
 	l.config.SkipFile = true
 	return l
 }
 
+// SkipEnvironment if you don't want to use it.
 func (l *Loader) SkipEnvironment() *Loader {
 	l.config.SkipEnv = true
 	return l
 }
 
+// SkipFlags if you don't want to use them.
 func (l *Loader) SkipFlags() *Loader {
 	l.config.SkipFlag = true
 	return l
 }
 
+// WithFiles for a configuration.
 func (l *Loader) WithFiles(files []string) *Loader {
 	l.config.Files = files
 	return l
 }
 
+// WithEnvPrefix to specify environment prefix.
 func (l *Loader) WithEnvPrefix(prefix string) *Loader {
 	l.config.EnvPrefix = prefix
 	if l.config.EnvPrefix != "" {
@@ -100,11 +105,13 @@ func (l *Loader) WithEnvPrefix(prefix string) *Loader {
 	return l
 }
 
+// StopOnFileError to stop configuration loading on file error.
 func (l *Loader) StopOnFileError() *Loader {
 	l.config.ShouldStopOnFileError = true
 	return l
 }
 
+// WithFlagPrefix to specify command-line flags prefix.
 func (l *Loader) WithFlagPrefix(prefix string) *Loader {
 	l.config.FlagPrefix = prefix
 	if l.config.FlagPrefix != "" {
@@ -113,6 +120,7 @@ func (l *Loader) WithFlagPrefix(prefix string) *Loader {
 	return l
 }
 
+// Build to initialize flags for a given configuration.
 func (l *Loader) Build() *Loader {
 	l.parseFields(l.src)
 	l.isBuilt = true
@@ -132,6 +140,7 @@ func (l *Loader) parseFields(cfg interface{}) {
 	}
 }
 
+// Flags returngs flag.FlagSet to create your own flags.
 func (l *Loader) Flags() *flag.FlagSet {
 	if !l.isBuilt {
 		panic("aconfig: you must run Build method before using the loader")
