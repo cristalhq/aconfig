@@ -504,22 +504,31 @@ func TestWalkFields(t *testing.T) {
 		}
 	}
 
-	fields := []Field{
-		&fieldData{
-			name:         "A",
-			envName:      "one",
-			defaultValue: "-1",
+	fields := []struct {
+		Name         string
+		ParentName   string
+		DefaultValue string
+		EnvName      string
+		FlagName     string
+		Usage        string
+	}{
+		{
+			Name:         "A",
+			EnvName:      "one",
+			DefaultValue: "-1",
 		},
-		&fieldData{
-			name:         "B.C",
-			flagName:     "two",
-			defaultValue: "-1",
-			usage:        "pretty simple usage duh",
+		{
+			Name:         "B.C",
+			ParentName:   "B",
+			FlagName:     "two",
+			DefaultValue: "-1",
+			Usage:        "pretty simple usage duh",
 		},
-		&fieldData{
-			name:         "B.D.E",
-			envName:      "three",
-			defaultValue: "-1",
+		{
+			Name:         "B.D.E",
+			ParentName:   "B.D",
+			EnvName:      "three",
+			DefaultValue: "-1",
 		},
 	}
 
@@ -527,14 +536,18 @@ func TestWalkFields(t *testing.T) {
 
 	LoaderFor(&Config{}).Build().WalkFields(func(f Field) bool {
 		wantFields := fields[i]
-		if f.Name() != wantFields.Name() {
-			t.Fatalf("got name %v, want %v", f.Name(), wantFields.Name())
+		if f.Name() != wantFields.Name {
+			t.Fatalf("got name %v, want %v", f.Name(), wantFields.Name)
 		}
-		if f.DefaultValue() != wantFields.DefaultValue() {
-			t.Fatalf("got default %#v, want %#v", f.DefaultValue(), wantFields.DefaultValue())
+
+		if parent, ok := f.Parent(); ok && parent.Name() != wantFields.ParentName {
+			t.Fatalf("got name %v, want %v", parent.Name(), wantFields.ParentName)
 		}
-		if f.Usage() != wantFields.Usage() {
-			t.Fatalf("got usage %#v, want %#v", f.Usage(), wantFields.Usage())
+		if f.DefaultValue() != wantFields.DefaultValue {
+			t.Fatalf("got default %#v, want %#v", f.DefaultValue(), wantFields.DefaultValue)
+		}
+		if f.Usage() != wantFields.Usage {
+			t.Fatalf("got usage %#v, want %#v", f.Usage(), wantFields.Usage)
 		}
 		i++
 		return true

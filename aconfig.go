@@ -59,6 +59,9 @@ type Field interface {
 
 	// Tag returns a given tag for a field.
 	Tag(tag string) string
+
+	// Parent of the current node.
+	Parent() (Field, bool)
 }
 
 // LoaderFor creates a new Loader based on a given configuration structure.
@@ -353,6 +356,7 @@ func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData 
 
 type fieldData struct {
 	name         string
+	parent       *fieldData
 	field        reflect.StructField
 	value        reflect.Value
 	defaultValue string
@@ -364,6 +368,7 @@ type fieldData struct {
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
 	return &fieldData{
 		name:         makeName(field.Name, parent),
+		parent:       parent,
 		value:        value,
 		field:        field,
 		defaultValue: field.Tag.Get(defaultValueTag),
@@ -401,6 +406,10 @@ func (f *fieldData) Usage() string {
 // Tag returns a given tag for a field.
 func (f *fieldData) Tag(tag string) string {
 	return f.field.Tag.Get(tag)
+}
+
+func (f *fieldData) Parent() (Field, bool) {
+	return f.parent, f.parent != nil
 }
 
 func setFieldDataHelper(field *fieldData, value string) error {
