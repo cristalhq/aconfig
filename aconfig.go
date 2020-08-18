@@ -2,6 +2,7 @@ package aconfig
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -41,6 +42,7 @@ type loaderConfig struct {
 	EnvPrefix  string
 	FlagPrefix string
 
+	FailOnNotParsedFlags  bool
 	ShouldStopOnFileError bool
 	Files                 []string
 }
@@ -105,6 +107,14 @@ func (l *Loader) WithEnvPrefix(prefix string) *Loader {
 	if l.config.EnvPrefix != "" {
 		l.config.EnvPrefix += "_"
 	}
+	return l
+}
+
+// FailOnNotParsedFlags to not forget parse flags explicitly.
+// Use `l.FlagSet().Parse(os.Args[1:])` in your code for this.
+//
+func (l *Loader) FailOnNotParsedFlags() *Loader {
+	l.config.FailOnNotParsedFlags = true
 	return l
 }
 
@@ -267,9 +277,10 @@ func (l *Loader) loadEnvironment() error {
 
 func (l *Loader) loadFlags() error {
 	if !l.flagSet.Parsed() {
-		if err := l.flagSet.Parse(os.Args[1:]); err != nil {
-			return err
+		if l.config.FailOnNotParsedFlags {
+			return errors.New("aconfig: flags must be parsed")
 		}
+		return nil
 	}
 
 	actualFlags := map[string]*flag.Flag{}
