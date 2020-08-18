@@ -155,18 +155,14 @@ func (l *Loader) parseFields(cfg interface{}) {
 
 // Flags returngs flag.FlagSet to create your own flags.
 func (l *Loader) Flags() *flag.FlagSet {
-	if !l.isBuilt {
-		panic("aconfig: you must run Build method before using the loader")
-	}
+	l.assertBuilt()
 	return l.flagSet
 }
 
 // WalkFields iterates over configuration fields.
 // Easy way to create documentation or other stuff.
 func (l *Loader) WalkFields(fn func(f Field) bool) {
-	if !l.isBuilt {
-		panic("aconfig: you must run Build method before using the loader")
-	}
+	l.assertBuilt()
 	for _, f := range l.fields {
 		if !fn(f) {
 			return
@@ -176,9 +172,7 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 
 // Load configuration into a given param.
 func (l *Loader) Load(into interface{}) error {
-	if !l.isBuilt {
-		panic("aconfig: you must run Build method before using the loader")
-	}
+	l.assertBuilt()
 	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
 
@@ -299,6 +293,12 @@ func (l *Loader) loadFlags() error {
 		}
 	}
 	return nil
+}
+
+func (l *Loader) assertBuilt() {
+	if !l.isBuilt {
+		panic("aconfig: you must run Build method before using the loader")
+	}
 }
 
 func (l *Loader) getEnvName(field *fieldData) string {
