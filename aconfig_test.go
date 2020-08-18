@@ -397,6 +397,17 @@ func TestBadDefauts(t *testing.T) {
 	}{})
 }
 
+func TestNotParsedFlags(t *testing.T) {
+	loader := LoaderFor(&TestConfig{}).
+		FailOnNotParsedFlags().
+		Build()
+
+	var cfg TestConfig
+	if err := loader.Load(&cfg); err == nil {
+		t.Fatal(err)
+	}
+}
+
 func TestBadFiles(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
