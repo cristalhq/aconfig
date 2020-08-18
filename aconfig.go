@@ -278,7 +278,7 @@ func (l *Loader) loadEnvironment() error {
 func (l *Loader) loadFlags() error {
 	if !l.flagSet.Parsed() {
 		if l.config.FailOnNotParsedFlags {
-			return errors.New("aconfig: flags must be parsed")
+			return errors.New("flags must be parsed")
 		}
 		return nil
 	}
@@ -404,17 +404,14 @@ func (f *fieldData) Name() string {
 	return f.name
 }
 
-// DefaultValue of the field.
 func (f *fieldData) DefaultValue() string {
 	return f.defaultValue
 }
 
-// Usage of the field (set in `usage` tag) .
 func (f *fieldData) Usage() string {
 	return f.usage
 }
 
-// Tag returns a given tag for a field.
 func (f *fieldData) Tag(tag string) string {
 	return f.field.Tag.Get(tag)
 }
