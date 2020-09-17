@@ -303,7 +303,7 @@ func (l *Loader) assertBuilt() {
 }
 
 func (l *Loader) getEnvName(field *fieldData) string {
-	return strings.ToUpper(l.config.EnvPrefix + field.envName)
+	return l.config.EnvPrefix + field.envName
 }
 
 func (l *Loader) getFlagName(field *fieldData) string {
@@ -398,34 +398,34 @@ func makeName(name string, parent *fieldData) string {
 func makeEnvName(field reflect.StructField, parent *fieldData, words []string) string {
 	envName := field.Tag.Get(envNameTag)
 	if envName == "" {
-		for i, w := range words {
-			if i > 0 {
-				envName += "_"
-			}
-			envName += strings.ToUpper(w)
-		}
+		envName = makeParsingName(words)
 	}
-
-	if parent == nil {
-		return envName
+	if parent != nil {
+		envName = parent.envName + "_" + envName
 	}
-	return parent.envName + "_" + envName
+	return strings.ToUpper(envName)
 }
 
 func makeFlagName(field reflect.StructField, parent *fieldData, words []string) string {
 	flagName := field.Tag.Get(flagNameTag)
 	if flagName == "" {
-		for i, w := range words {
-			if i > 0 {
-				flagName += "."
-			}
-			flagName += strings.ToLower(w)
+		flagName = makeParsingName(words)
+	}
+	if parent != nil {
+		flagName = parent.flagName + "." + flagName
+	}
+	return strings.ToLower(flagName)
+}
+
+func makeParsingName(words []string) string {
+	name := ""
+	for i, w := range words {
+		if i > 0 {
+			name += "_"
 		}
+		name += strings.ToLower(w)
 	}
-	if parent == nil {
-		return flagName
-	}
-	return parent.flagName + "." + flagName
+	return name
 }
 
 func (f *fieldData) Name() string {

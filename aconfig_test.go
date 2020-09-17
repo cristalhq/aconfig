@@ -231,7 +231,7 @@ func TestLoadEnv(t *testing.T) {
 		SkipDefaults().
 		SkipFiles().
 		SkipFlags().
-		WithEnvPrefix("tst").
+		WithEnvPrefix("TST").
 		Build()
 
 	var cfg TestConfig
@@ -259,9 +259,9 @@ func TestLoadFlag(t *testing.T) {
 		"-tst.str=str-flag",
 		"-tst.int=1001",
 		"-tst.int=1001",
-		"-tst.http.port=30000",
+		"-tst.http_port=30000",
 		"-tst.sub.float=123.321",
-		"-tst.anon.is.anon=true",
+		"-tst.anon.is_anon=true",
 		"-tst.em=em-flag",
 	}
 
@@ -439,7 +439,7 @@ func TestBadEnvs(t *testing.T) {
 		SkipDefaults().
 		SkipFiles().
 		SkipFlags().
-		WithEnvPrefix("tst").
+		WithEnvPrefix("TST").
 		Build()
 
 	var cfg TestConfig
