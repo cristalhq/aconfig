@@ -14,15 +14,15 @@ import (
 
 const (
 	defaultValueTag = "default"
+	usageTag        = "usage"
 	envNameTag      = "env"
 	flagNameTag     = "flag"
-	usageTag        = "usage"
 )
 
 // Loader of user configuration.
 type Loader struct {
 	config  loaderConfig
-	src     interface{}
+	dst     interface{}
 	fields  []*fieldData
 	flagSet *flag.FlagSet
 	isBuilt bool
@@ -62,8 +62,8 @@ type Field interface {
 }
 
 // LoaderFor creates a new Loader based on a given configuration structure.
-func LoaderFor(src interface{}) *Loader {
-	return &Loader{src: src}
+func LoaderFor(dst interface{}) *Loader {
+	return &Loader{dst: dst}
 }
 
 // SkipDefaults if you don't want to use them.
@@ -105,12 +105,6 @@ func (l *Loader) WithEnvPrefix(prefix string) *Loader {
 	return l
 }
 
-// StopOnFileError to stop configuration loading on file error.
-func (l *Loader) StopOnFileError() *Loader {
-	l.config.ShouldStopOnFileError = true
-	return l
-}
-
 // WithFlagPrefix to specify command-line flags prefix.
 func (l *Loader) WithFlagPrefix(prefix string) *Loader {
 	l.config.FlagPrefix = prefix
@@ -120,9 +114,15 @@ func (l *Loader) WithFlagPrefix(prefix string) *Loader {
 	return l
 }
 
+// StopOnFileError to stop configuration loading on file error.
+func (l *Loader) StopOnFileError() *Loader {
+	l.config.ShouldStopOnFileError = true
+	return l
+}
+
 // Build to initialize flags for a given configuration.
 func (l *Loader) Build() *Loader {
-	l.parseFields(l.src)
+	l.parseFields(l.dst)
 	l.isBuilt = true
 	return l
 }
@@ -160,7 +160,7 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 // Load configuration into a given param.
 func (l *Loader) Load() error {
 	l.assertBuilt()
-	if err := l.loadSources(l.src); err != nil {
+	if err := l.loadSources(l.dst); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
 	return nil
@@ -204,7 +204,7 @@ func (l *Loader) loadSources(into interface{}) error {
 
 func (l *Loader) loadDefaults() error {
 	for _, fd := range l.fields {
-		if err := l.setFieldData(fd, fd.defaultValue); err != nil {
+		if err := setFieldData(fd, fd.defaultValue); err != nil {
 			return err
 		}
 	}
@@ -251,7 +251,7 @@ func (l *Loader) loadEnvironment() error {
 		if !ok {
 			continue
 		}
-		if err := l.setFieldData(field, v); err != nil {
+		if err := setFieldData(field, v); err != nil {
 			return err
 		}
 	}
@@ -276,13 +276,9 @@ func (l *Loader) loadFlags() error {
 		if !ok {
 			continue
 		}
-		if err := l.setFieldData(field, flg.Value.String()); err != nil {
+		if err := setFieldData(field, flg.Value.String()); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func (l *Loader) setFieldData(field *fieldData, value string) error {
-	return setFieldDataHelper(field, value)
 }
