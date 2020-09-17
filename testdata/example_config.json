@@ -1,5 +1,5 @@
 {
-  "Port": 2222,
+  "HTTPPort": 2222,
   "Auth": {
     "User": "json-user",
     "Pass": "json-pass"
