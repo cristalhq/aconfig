@@ -95,14 +95,25 @@ func (f *fieldData) Usage() string {
 }
 
 func (f *fieldData) Tag(tag string) string {
-	return f.field.Tag.Get(tag)
+	switch tag {
+	case defaultValueTag:
+		return f.defaultValue
+	case usageTag:
+		return f.usage
+	case envNameTag:
+		return f.envName
+	case flagNameTag:
+		return f.flagName
+	default:
+		return f.field.Tag.Get(tag)
+	}
 }
 
 func (f *fieldData) Parent() (Field, bool) {
 	return f.parent, f.parent != nil
 }
 
-func setFieldDataHelper(field *fieldData, value string) error {
+func setFieldData(field *fieldData, value string) error {
 	// unwrap pointers
 	for field.value.Type().Kind() == reflect.Ptr {
 		if field.value.IsNil() {
@@ -212,7 +223,7 @@ func setSlice(field *fieldData, value string) error {
 		val = strings.TrimSpace(val)
 
 		fd := newFieldData(reflect.StructField{}, slice.Index(i), nil)
-		if err := setFieldDataHelper(fd, val); err != nil {
+		if err := setFieldData(fd, val); err != nil {
 			return fmt.Errorf("incorrect slice item %q: %w", val, err)
 		}
 	}
@@ -233,12 +244,12 @@ func setMap(field *fieldData, value string) error {
 		val := strings.TrimSpace(entry[1])
 
 		fdk := newSimpleFieldData(reflect.New(field.field.Type.Key()).Elem())
-		if err := setFieldDataHelper(fdk, key); err != nil {
+		if err := setFieldData(fdk, key); err != nil {
 			return fmt.Errorf("incorrect map key %q: %w", key, err)
 		}
 
 		fdv := newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
-		if err := setFieldDataHelper(fdv, val); err != nil {
+		if err := setFieldData(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
 		}
 		mapField.SetMapIndex(fdk.value, fdv.value)

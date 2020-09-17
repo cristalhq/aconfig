@@ -9,14 +9,14 @@ import (
 )
 
 type MyConfig struct {
-	HTTPPort int `default:"1111"`
+	HTTPPort int `default:"1111" usage:"just a number"`
 	Auth     struct {
-		User string `default:"def-user"`
-		Pass string `default:"def-pass"`
+		User string `default:"def-user" usage:"your user"`
+		Pass string `default:"def-pass" usage:"make it strong"`
 	}
 }
 
-func Example_NewApi() {
+func Example_SimpleUsage() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg).
 		SkipDefaults().SkipFiles().SkipEnvironment().SkipFlags().
@@ -38,6 +38,25 @@ func Example_NewApi() {
 	// HTTPPort:  0
 	// Auth.User: ""
 	// Auth.Pass: ""
+}
+
+func Example_WalkFields() {
+	var cfg MyConfig
+	loader := aconfig.LoaderFor(&cfg).
+		SkipFiles().
+		SkipEnvironment().
+		SkipFlags().
+		Build()
+
+	loader.WalkFields(func(f aconfig.Field) bool {
+		fmt.Printf("%v: %q %q %q %q\n", f.Name(), f.Tag("env"), f.Tag("flag"), f.Tag("default"), f.Tag("usage"))
+		return true
+	})
+
+	// Output:
+	// HTTPPort: "HTTP_PORT" "http_port" "1111" "just a number"
+	// Auth.User: "AUTH_USER" "auth.user" "def-user" "your user"
+	// Auth.Pass: "AUTH_PASS" "auth.pass" "def-pass" "make it strong"
 }
 
 // Just load defaults from struct defenition.
