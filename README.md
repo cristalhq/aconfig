@@ -15,6 +15,9 @@ There are more than 2000 repositories on Github regarding configuration in Go. I
 
 * Simple API.
 * Automates a lot of things.
+  * config params names
+  * config loading
+  * generates documentation
 * Opinionated.
 * Supports different sources:
   * defaults in code
@@ -44,7 +47,8 @@ type MyConfig struct {
 	Pass string `default:"" env:"SECRET" flag:"sec_ret"`
 }
 
-loader := aconfig.LoaderFor(&MyConfig{}).
+var cfg MyConfig
+loader := aconfig.LoaderFor(&cfg).
 	// feel free to skip some steps :)
 	// SkipDefaults().
 	// SkipFiles().
@@ -55,10 +59,9 @@ loader := aconfig.LoaderFor(&MyConfig{}).
 	WithFlagPrefix("app").
 	Build()
 
-flagSet := loader.Flags() // now use exactly this flags to define your own
+flagSet := loader.Flags() // Important: use exactly this flags to define your own
 
-var cfg MyConfig
-if err := loader.Load(&cfg); err != nil {
+if err := loader.Load(); err != nil {
 	panic(err)
 }
 
@@ -66,11 +69,13 @@ if err := loader.Load(&cfg); err != nil {
 //
 // 1. defaults set in structure tags (see structure defenition)
 // 2. loaded from files `file.json` if not `ouch.yaml` will be used
-// 3. from corresponding environment variables with prefix `APP`
-// 4. and command-line flags if they are
+// 3. from corresponding environment variables with the prefix `APP_`
+// 4. command-line flags with the prefix `app.` if they are 
 ```
 
-Also see examples: [examples_test.go](https://github.com/cristalhq/aconfig/blob/master/example_test.go) or integration with `spf13/Cobra` using `AddGoFlagSet` [playground](https://play.golang.org/p/OsCR8qTCN0H)
+Also see examples: [examples_test.go](https://github.com/cristalhq/aconfig/blob/master/example_test.go).
+
+Integration with `spf13/cobra` [playground](https://play.golang.org/p/OsCR8qTCN0H).
 
 ## Documentation
 
