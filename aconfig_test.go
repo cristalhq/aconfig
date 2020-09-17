@@ -15,6 +15,7 @@ import (
 
 type TestConfig struct {
 	Str      string `default:"str-def"`
+	Bytes    []byte `default:"bytes-def"`
 	Int      *int32 `default:"123"`
 	HTTPPort int    `default:"8080"`
 	Param    int    // no default tag, so default value
@@ -220,6 +221,7 @@ func TestLoadFile_WithFiles(t *testing.T) {
 
 func TestLoadEnv(t *testing.T) {
 	setEnv(t, "TST_STR", "str-env")
+	setEnv(t, "TST_BYTES", "bytes-env")
 	setEnv(t, "TST_INT", "121")
 	setEnv(t, "TST_HTTP_PORT", "3000")
 	setEnv(t, "TST_SUB_FLOAT", "222.333")
@@ -258,6 +260,7 @@ func TestLoadFlag(t *testing.T) {
 
 	flags := []string{
 		"-tst.str=str-flag",
+		"-tst.bytes=bytes-flag",
 		"-tst.int=1001",
 		"-tst.int=1001",
 		"-tst.http_port=30000",
