@@ -221,9 +221,9 @@ func TestLoadFile_WithFiles(t *testing.T) {
 func TestLoadEnv(t *testing.T) {
 	setEnv(t, "TST_STR", "str-env")
 	setEnv(t, "TST_INT", "121")
-	setEnv(t, "TST_HTTPPORT", "3000")
+	setEnv(t, "TST_HTTP_PORT", "3000")
 	setEnv(t, "TST_SUB_FLOAT", "222.333")
-	setEnv(t, "TST_ANON_ISANON", "true")
+	setEnv(t, "TST_ANON_IS_ANON", "true")
 	setEnv(t, "TST_EM", "em-env")
 	defer os.Clearenv()
 
@@ -231,7 +231,7 @@ func TestLoadEnv(t *testing.T) {
 		SkipDefaults().
 		SkipFiles().
 		SkipFlags().
-		WithEnvPrefix("tst").
+		WithEnvPrefix("TST").
 		Build()
 
 	var cfg TestConfig
@@ -259,9 +259,9 @@ func TestLoadFlag(t *testing.T) {
 		"-tst.str=str-flag",
 		"-tst.int=1001",
 		"-tst.int=1001",
-		"-tst.httpport=30000",
+		"-tst.http_port=30000",
 		"-tst.sub.float=123.321",
-		"-tst.anon.isanon=true",
+		"-tst.anon.is_anon=true",
 		"-tst.em=em-flag",
 	}
 
@@ -448,14 +448,14 @@ func TestBadFiles(t *testing.T) {
 }
 
 func TestBadEnvs(t *testing.T) {
-	setEnv(t, "TST_HTTPPORT", "30a00")
+	setEnv(t, "TST_HTTP_PORT", "30a00")
 	defer os.Clearenv()
 
 	loader := LoaderFor(&TestConfig{}).
 		SkipDefaults().
 		SkipFiles().
 		SkipFlags().
-		WithEnvPrefix("tst").
+		WithEnvPrefix("TST").
 		Build()
 
 	var cfg TestConfig
