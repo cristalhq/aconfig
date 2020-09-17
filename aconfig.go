@@ -303,27 +303,11 @@ func (l *Loader) assertBuilt() {
 }
 
 func (l *Loader) getEnvName(field *fieldData) string {
-	// fmt.Printf("env: %v\n", l.config.EnvPrefix+field.envName)
 	return strings.ToUpper(l.config.EnvPrefix + field.envName)
-
-	// name := field.name
-	// if field.envName != "" {
-	// 	name = field.envName
-	// }
-	// return strings.ToUpper(l.config.EnvPrefix + strings.ReplaceAll(name, ".", "_"))
 }
 
 func (l *Loader) getFlagName(field *fieldData) string {
-	// fmt.Printf("flag: %v\n", l.config.FlagPrefix+field.flagName)
 	return l.config.FlagPrefix + field.flagName
-
-	// name := field.name
-	// if field.flagName != "" {
-	// 	name = field.flagName
-	// }
-	// s := strings.ToLower(l.config.FlagPrefix + name)
-	// fmt.Printf("flagname: %v, kek: %v, will: %v\n", field.name, field.flagName, s)
-	// return s
 }
 
 func (l *Loader) setFieldData(field *fieldData, value string) error {
