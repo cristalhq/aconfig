@@ -301,6 +301,22 @@ func TestUsage(t *testing.T) {
 	}
 }
 
+func TestBadTypes(t *testing.T) {
+	loader := LoaderFor(&EmbeddedConfig{}).Build()
+
+	defer func() {
+		t.Helper()
+
+		if err := recover(); err == nil {
+			t.Fatal()
+		}
+	}()
+
+	if err := loader.Load(&TestConfig{}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestBadDefauts(t *testing.T) {
 	f := func(cfg interface{}) {
 		t.Helper()

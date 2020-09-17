@@ -173,6 +173,9 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 // Load configuration into a given param.
 func (l *Loader) Load(into interface{}) error {
 	l.assertBuilt()
+	if reflect.TypeOf(l.src) != reflect.TypeOf(into) {
+		panic(fmt.Sprintf("aconfig: loader was build for another type (%T vs %T)", l.src, into))
+	}
 	// we need to get fields once more, 'cause `into` is new for us
 	l.fields = getFields(into)
 
