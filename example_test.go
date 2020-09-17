@@ -17,15 +17,15 @@ type MyConfig struct {
 }
 
 func Example_NewApi() {
-	loader := aconfig.LoaderFor(&MyConfig{}).
+	var cfg MyConfig
+	loader := aconfig.LoaderFor(&cfg).
 		SkipDefaults().SkipFiles().SkipEnvironment().SkipFlags().
 		WithFiles([]string{"/var/opt/myapp/config.json"}).
 		WithEnvPrefix("APP").
 		WithFlagPrefix("app").
 		Build()
 
-	var cfg MyConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		log.Panic(err)
 	}
 
@@ -43,14 +43,14 @@ func Example_NewApi() {
 // Just load defaults from struct defenition.
 //
 func Example_Defaults() {
-	loader := aconfig.LoaderFor(&MyConfig{}).
+	var cfg MyConfig
+	loader := aconfig.LoaderFor(&cfg).
 		SkipFiles().
 		SkipEnvironment().
 		SkipFlags().
 		Build()
 
-	var cfg MyConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		log.Panic(err)
 	}
 
@@ -68,14 +68,14 @@ func Example_Defaults() {
 // Load defaults from struct defenition and overwrite with a file.
 //
 func Example_File() {
-	loader := aconfig.LoaderFor(&MyConfig{}).
+	var cfg MyConfig
+	loader := aconfig.LoaderFor(&cfg).
 		SkipEnvironment().
 		SkipFlags().
 		WithFiles([]string{"testdata/example_config.json"}).
 		Build()
 
-	var cfg MyConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		log.Panic(err)
 	}
 
@@ -99,14 +99,14 @@ func Example_Env() {
 	os.Setenv("EXAMPLE_AUTH_PASS", "env-pass")
 	defer os.Clearenv()
 
-	loader := aconfig.LoaderFor(&MyConfig{}).
+	var cfg MyConfig
+	loader := aconfig.LoaderFor(&cfg).
 		SkipFlags().
 		WithEnvPrefix("EXAMPLE").
 		WithFiles([]string{"testdata/example_config.json"}).
 		Build()
 
-	var cfg MyConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		log.Panic(err)
 	}
 
@@ -126,17 +126,24 @@ func Example_Env() {
 // Finally read command line flags.
 //
 func Example_Flag() {
-	loader := aconfig.LoaderFor(&MyConfig{}).
-		WithEnvPrefix("EXAMPLE").
+	var cfg MyConfig
+	loader := aconfig.LoaderFor(&cfg).
 		WithFlagPrefix("ex").
-		WithFiles([]string{"testdata/example_config.json"})
+		WithFiles([]string{"testdata/example_config.json"}).
+		Build()
 
-	flags := loader.Flags() // <- USE THIS TO DEFINE YOUR NON-CONFIG(!!) FLAGS
-
+	flags := loader.Flags() // <- IMPORTANT: use this to define your non-config flags
 	flags.String("my.other.port", "1234", "debug port")
 
-	var cfg MyConfig
-	if err := loader.Load(&cfg); err != nil {
+	// IMPORTANT: next statement is made only to hack flag params
+	// to make test example work
+	// feel free to remove it completely during copy-paste :)
+	os.Args = append([]string{}, os.Args[0],
+		"-ex.http_port=4444",
+		"-ex.auth.user=flag-user",
+		"-ex.auth.pass=flag-pass")
+
+	if err := loader.Load(); err != nil {
 		log.Panic(err)
 	}
 
@@ -144,11 +151,7 @@ func Example_Flag() {
 	fmt.Printf("Auth.User: %v\n", cfg.Auth.User)
 	fmt.Printf("Auth.Pass: %v\n", cfg.Auth.Pass)
 
-	// Next comment doesn't have `:` after `Output`
-	// it's disabled due to additional flags passed via `go test` command
-	// but it works, trust me :)
-
-	// Output
+	// Output:
 	//
 	// HTTPPort:  4444
 	// Auth.User: flag-user

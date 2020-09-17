@@ -45,14 +45,14 @@ func (m MyDuration) Duration() (time.Duration, error) {
 }
 
 func TestLoadDefaults(t *testing.T) {
-	loader := LoaderFor(&TestConfig{}).
+	var cfg TestConfig
+	loader := LoaderFor(&cfg).
 		SkipFiles().
 		SkipEnvironment().
 		SkipFlags().
 		Build()
 
-	var cfg TestConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -88,14 +88,14 @@ func TestLoadDefault_AllTypesConfig(t *testing.T) {
 		Time time.Time     `default:"2000-04-05 10:20:30 +0000 UTC"`
 	}
 
-	loader := LoaderFor(&AllTypesConfig{}).
+	var cfg AllTypesConfig
+	loader := LoaderFor(&cfg).
 		SkipFiles().
 		SkipEnvironment().
 		SkipFlags().
 		Build()
 
-	var cfg AllTypesConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -112,14 +112,14 @@ func TestLoadDefault_DurationConfig(t *testing.T) {
 		MyDur MyDuration `default:"1h2m3s" json:"my_dur"`
 	}
 
-	loader := LoaderFor(&DurationConfig{}).
+	var cfg DurationConfig
+	loader := LoaderFor(&cfg).
 		SkipFiles().
 		SkipEnvironment().
 		SkipFlags().
 		Build()
 
-	var cfg DurationConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -144,14 +144,14 @@ func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
 		Uint32 uint32 `default:"0x123"`
 	}
 
-	loader := LoaderFor(&OtherNumbersConfig{}).
+	var cfg OtherNumbersConfig
+	loader := LoaderFor(&cfg).
 		SkipFiles().
 		SkipEnvironment().
 		SkipFlags().
 		Build()
 
-	var cfg OtherNumbersConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -167,15 +167,15 @@ func TestLoadFile(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
 
-		loader := LoaderFor(&TestConfig{}).
+		var cfg, want TestConfig
+		loader := LoaderFor(&cfg).
 			SkipDefaults().
 			SkipEnvironment().
 			SkipFlags().
 			WithFiles([]string{filepath}).
 			Build()
 
-		var cfg, want TestConfig
-		if err := loader.Load(&cfg); err != nil {
+		if err := loader.Load(); err != nil {
 			t.Fatal(err)
 		}
 
@@ -195,14 +195,14 @@ func TestLoadFile_WithFiles(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
 
-		loader := LoaderFor(&TestConfig{}).
+		var cfg, want TestConfig
+		loader := LoaderFor(&cfg).
 			SkipDefaults().
 			SkipEnvironment().
 			SkipFlags().
 			Build()
 
-		var cfg, want TestConfig
-		if err := loader.LoadWithFile(&cfg, filepath); err != nil {
+		if err := loader.LoadWithFile(filepath); err != nil {
 			t.Fatal(err)
 		}
 
@@ -227,15 +227,15 @@ func TestLoadEnv(t *testing.T) {
 	setEnv(t, "TST_EM", "em-env")
 	defer os.Clearenv()
 
-	loader := LoaderFor(&TestConfig{}).
+	var cfg TestConfig
+	loader := LoaderFor(&cfg).
 		SkipDefaults().
 		SkipFiles().
 		SkipFlags().
 		WithEnvPrefix("TST").
 		Build()
 
-	var cfg TestConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -248,7 +248,8 @@ func TestLoadEnv(t *testing.T) {
 }
 
 func TestLoadFlag(t *testing.T) {
-	loader := LoaderFor(&TestConfig{}).
+	var cfg TestConfig
+	loader := LoaderFor(&cfg).
 		SkipDefaults().
 		SkipFiles().
 		SkipEnvironment().
@@ -270,8 +271,7 @@ func TestLoadFlag(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var cfg TestConfig
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -301,22 +301,6 @@ func TestUsage(t *testing.T) {
 	}
 }
 
-func TestBadTypes(t *testing.T) {
-	loader := LoaderFor(&EmbeddedConfig{}).Build()
-
-	defer func() {
-		t.Helper()
-
-		if err := recover(); err == nil {
-			t.Fatal()
-		}
-	}()
-
-	if err := loader.Load(&TestConfig{}); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestBadDefauts(t *testing.T) {
 	f := func(cfg interface{}) {
 		t.Helper()
@@ -327,7 +311,7 @@ func TestBadDefauts(t *testing.T) {
 			SkipFlags().
 			Build()
 
-		if err := loader.Load(cfg); err == nil {
+		if err := loader.Load(); err == nil {
 			t.Fatal(err)
 		}
 	}
@@ -417,7 +401,8 @@ func TestBadFiles(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
 
-		loader := LoaderFor(&TestConfig{}).
+		var cfg TestConfig
+		loader := LoaderFor(&cfg).
 			SkipDefaults().
 			SkipEnvironment().
 			SkipFlags().
@@ -425,8 +410,7 @@ func TestBadFiles(t *testing.T) {
 			WithFiles([]string{filepath}).
 			Build()
 
-		var cfg TestConfig
-		if err := loader.Load(&cfg); err == nil {
+		if err := loader.Load(); err == nil {
 			t.Fatal(err)
 		}
 	}
@@ -440,15 +424,15 @@ func TestBadEnvs(t *testing.T) {
 	setEnv(t, "TST_HTTP_PORT", "30a00")
 	defer os.Clearenv()
 
-	loader := LoaderFor(&TestConfig{}).
+	var cfg TestConfig
+	loader := LoaderFor(&cfg).
 		SkipDefaults().
 		SkipFiles().
 		SkipFlags().
 		WithEnvPrefix("TST").
 		Build()
 
-	var cfg TestConfig
-	if err := loader.Load(&cfg); err == nil {
+	if err := loader.Load(); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -458,7 +442,8 @@ func TestBadFlags(t *testing.T) {
 		Field int
 	}
 
-	loader := LoaderFor(&Config{}).
+	var cfg Config
+	loader := LoaderFor(&cfg).
 		SkipDefaults().
 		SkipFiles().
 		SkipEnvironment().
@@ -470,8 +455,7 @@ func TestBadFlags(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var cfg Config
-	if err := loader.Load(&cfg); err == nil {
+	if err := loader.Load(); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -483,7 +467,8 @@ func TestCustomNames(t *testing.T) {
 		C int `default:"-1" env:"three" flag:"four"`
 	}
 
-	loader := LoaderFor(&Config{}).Build()
+	var cfg Config
+	loader := LoaderFor(&cfg).Build()
 
 	setEnv(t, "ONE", "1")
 	setEnv(t, "three", "3")
@@ -493,8 +478,7 @@ func TestCustomNames(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var cfg Config
-	if err := loader.Load(&cfg); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -614,7 +598,7 @@ func TestPassNonStructs(t *testing.T) {
 			}
 		}()
 
-		if err := LoaderFor(nil).Build().Load(cfg); err != nil {
+		if err := LoaderFor(nil).Build().Load(); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -641,10 +625,10 @@ func TestPanicWhenNotBuilt(t *testing.T) {
 
 	// ok to pass nils
 	f(func() {
-		_ = LoaderFor(nil).Load(nil)
+		_ = LoaderFor(nil).Load()
 	})
 	f(func() {
-		_ = LoaderFor(nil).LoadWithFile(nil, "")
+		_ = LoaderFor(nil).LoadWithFile("")
 	})
 	f(func() {
 		_ = LoaderFor(nil).Flags()
