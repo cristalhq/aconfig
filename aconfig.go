@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/BurntSushi/toml"
 	"gopkg.in/yaml.v2"
@@ -302,19 +303,27 @@ func (l *Loader) assertBuilt() {
 }
 
 func (l *Loader) getEnvName(field *fieldData) string {
-	name := field.name
-	if field.envName != "" {
-		name = field.envName
-	}
-	return strings.ToUpper(l.config.EnvPrefix + strings.ReplaceAll(name, ".", "_"))
+	// fmt.Printf("env: %v\n", l.config.EnvPrefix+field.envName)
+	return strings.ToUpper(l.config.EnvPrefix + field.envName)
+
+	// name := field.name
+	// if field.envName != "" {
+	// 	name = field.envName
+	// }
+	// return strings.ToUpper(l.config.EnvPrefix + strings.ReplaceAll(name, ".", "_"))
 }
 
 func (l *Loader) getFlagName(field *fieldData) string {
-	name := field.name
-	if field.flagName != "" {
-		name = field.flagName
-	}
-	return strings.ToLower(l.config.FlagPrefix + name)
+	// fmt.Printf("flag: %v\n", l.config.FlagPrefix+field.flagName)
+	return l.config.FlagPrefix + field.flagName
+
+	// name := field.name
+	// if field.flagName != "" {
+	// 	name = field.flagName
+	// }
+	// s := strings.ToLower(l.config.FlagPrefix + name)
+	// fmt.Printf("flagname: %v, kek: %v, will: %v\n", field.name, field.flagName, s)
+	// return s
 }
 
 func (l *Loader) setFieldData(field *fieldData, value string) error {
@@ -377,14 +386,16 @@ type fieldData struct {
 }
 
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
+	words := splitNameByWords(field.Name)
+
 	return &fieldData{
 		name:         makeName(field.Name, parent),
 		parent:       parent,
 		value:        value,
 		field:        field,
 		defaultValue: field.Tag.Get(defaultValueTag),
-		envName:      field.Tag.Get(envNameTag),
-		flagName:     field.Tag.Get(flagNameTag),
+		envName:      makeEnvName(field, parent, words),
+		flagName:     makeFlagName(field, parent, words),
 		usage:        field.Tag.Get(usageTag),
 	}
 }
@@ -398,6 +409,39 @@ func makeName(name string, parent *fieldData) string {
 		return name
 	}
 	return parent.name + "." + name
+}
+
+func makeEnvName(field reflect.StructField, parent *fieldData, words []string) string {
+	envName := field.Tag.Get(envNameTag)
+	if envName == "" {
+		for i, w := range words {
+			if i > 0 {
+				envName += "_"
+			}
+			envName += strings.ToUpper(w)
+		}
+	}
+
+	if parent == nil {
+		return envName
+	}
+	return parent.envName + "_" + envName
+}
+
+func makeFlagName(field reflect.StructField, parent *fieldData, words []string) string {
+	flagName := field.Tag.Get(flagNameTag)
+	if flagName == "" {
+		for i, w := range words {
+			if i > 0 {
+				flagName += "."
+			}
+			flagName += strings.ToLower(w)
+		}
+	}
+	if parent == nil {
+		return flagName
+	}
+	return parent.flagName + "." + flagName
 }
 
 func (f *fieldData) Name() string {
@@ -556,4 +600,47 @@ func setMap(field *fieldData, value string) error {
 	}
 	field.value.Set(mapField)
 	return nil
+}
+
+// based on https://github.com/fatih/camelcase
+func splitNameByWords(src string) []string {
+	var runes [][]rune
+	lastClass, class := 0, 0
+
+	// split into fields based on class of unicode character
+	for _, r := range src {
+		switch true {
+		case unicode.IsLower(r):
+			class = 1
+		case unicode.IsUpper(r):
+			class = 2
+		case unicode.IsDigit(r):
+			class = 3
+		default:
+			class = 4
+		}
+		if class == lastClass {
+			runes[len(runes)-1] = append(runes[len(runes)-1], r)
+		} else {
+			runes = append(runes, []rune{r})
+		}
+		lastClass = class
+	}
+
+	// handle upper case -> lower case sequences, e.g.
+	// "PDFL", "oader" -> "PDF", "Loader"
+	for i := 0; i < len(runes)-1; i++ {
+		if unicode.IsUpper(runes[i][0]) && unicode.IsLower(runes[i+1][0]) {
+			runes[i+1] = append([]rune{runes[i][len(runes[i])-1]}, runes[i+1]...)
+			runes[i] = runes[i][:len(runes[i])-1]
+		}
+	}
+
+	words := []string{}
+	for _, s := range runes {
+		if len(s) > 0 {
+			words = append(words, string(s))
+		}
+	}
+	return words
 }
