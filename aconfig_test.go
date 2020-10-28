@@ -190,6 +190,7 @@ func TestLoadFile(t *testing.T) {
 	f("testdata/config1.json")
 	f("testdata/config1.yaml")
 	f("testdata/config1.toml")
+	f("testdata/config1.hcl")
 }
 
 func TestLoadFile_WithFiles(t *testing.T) {
@@ -217,6 +218,7 @@ func TestLoadFile_WithFiles(t *testing.T) {
 	f("testdata/config1.json")
 	f("testdata/config1.yaml")
 	f("testdata/config1.toml")
+	f("testdata/config1.hcl")
 }
 
 func TestLoadEnv(t *testing.T) {
