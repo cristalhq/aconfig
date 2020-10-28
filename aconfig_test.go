@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/hashicorp/hcl/v2/hclsimple"
 	"gopkg.in/yaml.v2"
 )
 
@@ -656,6 +657,8 @@ func loadFile(t *testing.T, file string, dst interface{}) {
 		err = json.NewDecoder(f).Decode(dst)
 	case ".toml":
 		_, err = toml.DecodeReader(f, dst)
+	case ".hcl":
+		err = hclsimple.DecodeFile(file, nil, dst)
 	}
 	if err != nil {
 		t.Fatal(err)
