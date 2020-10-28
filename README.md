@@ -21,7 +21,7 @@ There are more than 2000 repositories on Github regarding configuration in Go. I
 * Opinionated.
 * Supports different sources:
   * defaults in code
-  * files (JSON, YAML, TOML)
+  * files (JSON, YAML, TOML, HCL)
   * environment variables
   * command-line flags
 * Dependency-free (except file parsers).

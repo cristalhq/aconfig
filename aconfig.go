@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/hashicorp/hcl/v2/hclsimple"
 	"gopkg.in/yaml.v2"
 )
 
@@ -230,6 +231,8 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 			err = json.NewDecoder(f).Decode(dst)
 		case ".toml":
 			_, err = toml.DecodeReader(f, dst)
+		case ".hcl":
+			err = hclsimple.DecodeFile(file, nil, dst)
 		default:
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
