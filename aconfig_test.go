@@ -8,19 +8,15 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/BurntSushi/toml"
-	"github.com/hashicorp/hcl/v2/hclsimple"
-	"gopkg.in/yaml.v2"
 )
 
 type TestConfig struct {
-	Str      string `default:"str-def" hcl:"Str"`
-	Bytes    []byte `default:"bytes-def" hcl:"Bytes"`
-	Int      *int32 `default:"123" hcl:"Int"`
-	HTTPPort int    `default:"8080" hcl:"HTTPPort"`
-	Param    int     // no default tag, so default value
-	Sub      SubConfig `hcl:"Sub,block"`
+	Str      string `default:"str-def"`
+	Bytes    []byte `default:"bytes-def"`
+	Int      *int32 `default:"123"`
+	HTTPPort int    `default:"8080"`
+	Param    int    // no default tag, so default value
+	Sub      SubConfig
 	Anon     struct {
 		IsAnon bool `default:"true"`
 	}
@@ -37,7 +33,7 @@ type EmbeddedConfig struct {
 }
 
 type SubConfig struct {
-	Float float64 `default:"123.123" hcl:"Float"`
+	Float float64 `default:"123.123"`
 }
 
 type MyDuration string
@@ -189,9 +185,6 @@ func TestLoadFile(t *testing.T) {
 	}
 
 	f("testdata/config1.json")
-	f("testdata/config1.yaml")
-	f("testdata/config1.toml")
-	f("testdata/config1.hcl")
 }
 
 func TestLoadFile_WithFiles(t *testing.T) {
@@ -217,9 +210,6 @@ func TestLoadFile_WithFiles(t *testing.T) {
 	}
 
 	f("testdata/config1.json")
-	f("testdata/config1.yaml")
-	f("testdata/config1.toml")
-	f("testdata/config1.hcl")
 }
 
 func TestLoadEnv(t *testing.T) {
@@ -650,16 +640,10 @@ func loadFile(t *testing.T, file string, dst interface{}) {
 		t.Fatal(err)
 	}
 	ext := strings.ToLower(filepath.Ext(file))
-	switch ext {
-	case ".yaml", ".yml":
-		err = yaml.NewDecoder(f).Decode(dst)
-	case ".json":
-		err = json.NewDecoder(f).Decode(dst)
-	case ".toml":
-		_, err = toml.DecodeReader(f, dst)
-	case ".hcl":
-		err = hclsimple.DecodeFile(file, nil, dst)
+	if ext != ".json" {
+		t.Fatal()
 	}
+	err = json.NewDecoder(f).Decode(dst)
 	if err != nil {
 		t.Fatal(err)
 	}

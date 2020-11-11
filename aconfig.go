@@ -7,10 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/BurntSushi/toml"
-	"github.com/hashicorp/hcl/v2/hclsimple"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -41,6 +37,12 @@ type loaderConfig struct {
 
 	ShouldStopOnFileError bool
 	Files                 []string
+	FileDecoders          map[string]FileDecoder
+}
+
+// FileDecoder is used to read config from files. See aconfig submodules.
+type FileDecoder interface {
+	DecodeFile(filename string, dst interface{}) error
 }
 
 // Field of the user configuration structure.
@@ -91,6 +93,12 @@ func (l *Loader) SkipFlags() *Loader {
 	return l
 }
 
+// WithFileDecoders to decode other than JSON files.
+func (l *Loader) WithFileDecoders(decoders map[string]FileDecoder) *Loader {
+	l.config.FileDecoders = decoders
+	return l
+}
+
 // WithFiles for a configuration.
 func (l *Loader) WithFiles(files []string) *Loader {
 	l.config.Files = files
@@ -123,6 +131,14 @@ func (l *Loader) StopOnFileError() *Loader {
 
 // Build to initialize flags for a given configuration.
 func (l *Loader) Build() *Loader {
+	_, ok := l.config.FileDecoders[".json"]
+	if !ok {
+		if l.config.FileDecoders == nil {
+			l.config.FileDecoders = map[string]FileDecoder{}
+		}
+		l.config.FileDecoders[".json"] = &jsonDecoder{}
+	}
+
 	l.parseFields(l.dst)
 	l.isBuilt = true
 	return l
@@ -224,19 +240,12 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 		defer func() { _ = f.Close() }()
 
 		ext := strings.ToLower(filepath.Ext(file))
-		switch ext {
-		case ".yaml", ".yml":
-			err = yaml.NewDecoder(f).Decode(dst)
-		case ".json":
-			err = json.NewDecoder(f).Decode(dst)
-		case ".toml":
-			_, err = toml.DecodeReader(f, dst)
-		case ".hcl":
-			err = hclsimple.DecodeFile(file, nil, dst)
-		default:
+		d, ok := l.config.FileDecoders[ext]
+		if !ok {
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 
+		err = d.DecodeFile(file, dst)
 		if err == nil {
 			return nil
 		}
@@ -284,4 +293,15 @@ func (l *Loader) loadFlags() error {
 		}
 	}
 	return nil
+}
+
+type jsonDecoder struct{}
+
+// DecodeFile implements FileDecoder.
+func (d *jsonDecoder) DecodeFile(filename string, dst interface{}) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	return json.NewDecoder(f).Decode(dst)
 }
