@@ -66,7 +66,12 @@ type Field interface {
 
 // LoaderFor creates a new Loader based on a given configuration structure.
 func LoaderFor(dst interface{}) *Loader {
-	return &Loader{dst: dst}
+	return &Loader{
+		dst: dst,
+		config: loaderConfig{
+			FileDecoders: map[string]FileDecoder{},
+		},
+	}
 }
 
 // SkipDefaults if you don't want to use them.
@@ -93,9 +98,9 @@ func (l *Loader) SkipFlags() *Loader {
 	return l
 }
 
-// WithFileDecoders to decode other than JSON files.
-func (l *Loader) WithFileDecoders(decoders map[string]FileDecoder) *Loader {
-	l.config.FileDecoders = decoders
+// WithFileDecoder to decode files with a given extension (".json" is already added).
+func (l *Loader) WithFileDecoder(ext string, decoder FileDecoder) *Loader {
+	l.config.FileDecoders[ext] = decoder
 	return l
 }
 
@@ -133,9 +138,6 @@ func (l *Loader) StopOnFileError() *Loader {
 func (l *Loader) Build() *Loader {
 	_, ok := l.config.FileDecoders[".json"]
 	if !ok {
-		if l.config.FileDecoders == nil {
-			l.config.FileDecoders = map[string]FileDecoder{}
-		}
 		l.config.FileDecoders[".json"] = &jsonDecoder{}
 	}
 

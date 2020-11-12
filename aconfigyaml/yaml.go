@@ -13,6 +13,9 @@ var _ aconfig.FileDecoder = &Decoder{}
 // Decoder of YAML files for aconfig.
 type Decoder struct{}
 
+// New YAML decoder for aconfig.
+func New() *Decoder { return &Decoder{} }
+
 // DecodeFile implements aconfig.FileDecoder.
 func (d *Decoder) DecodeFile(filename string, dst interface{}) error {
 	f, err := os.Open(filename)
