@@ -69,7 +69,9 @@ func LoaderFor(dst interface{}) *Loader {
 	return &Loader{
 		dst: dst,
 		config: loaderConfig{
-			FileDecoders: map[string]FileDecoder{},
+			FileDecoders: map[string]FileDecoder{
+				".json": &jsonDecoder{},
+			},
 		},
 	}
 }
@@ -136,11 +138,6 @@ func (l *Loader) StopOnFileError() *Loader {
 
 // Build to initialize flags for a given configuration.
 func (l *Loader) Build() *Loader {
-	_, ok := l.config.FileDecoders[".json"]
-	if !ok {
-		l.config.FileDecoders[".json"] = &jsonDecoder{}
-	}
-
 	l.parseFields(l.dst)
 	l.isBuilt = true
 	return l
