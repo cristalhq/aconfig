@@ -1,12 +1,8 @@
 package aconfighcl
 
 import (
-	"github.com/cristalhq/aconfig"
-
 	"github.com/hashicorp/hcl/v2/hclsimple"
 )
-
-var _ aconfig.FileDecoder = &Decoder{}
 
 // Decoder of HCL files for aconfig.
 type Decoder struct{}
