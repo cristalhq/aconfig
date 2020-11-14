@@ -176,7 +176,7 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 // Load configuration into a given param.
 func (l *Loader) Load() error {
 	l.assertBuilt()
-	if err := l.loadSources(l.dst); err != nil {
+	if err := l.loadSources(); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
 	return nil
@@ -194,14 +194,14 @@ func (l *Loader) assertBuilt() {
 	}
 }
 
-func (l *Loader) loadSources(into interface{}) error {
+func (l *Loader) loadSources() error {
 	if !l.config.SkipDefaults {
 		if err := l.loadDefaults(); err != nil {
 			return err
 		}
 	}
 	if !l.config.SkipFile {
-		if err := l.loadFromFile(into); err != nil {
+		if err := l.loadFromFile(); err != nil {
 			return err
 		}
 	}
@@ -227,7 +227,7 @@ func (l *Loader) loadDefaults() error {
 	return nil
 }
 
-func (l *Loader) loadFromFile(dst interface{}) error {
+func (l *Loader) loadFromFile() error {
 	for _, file := range l.config.Files {
 		f, err := os.Open(file)
 		if err != nil {
@@ -244,7 +244,7 @@ func (l *Loader) loadFromFile(dst interface{}) error {
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 
-		err = d.DecodeFile(file, dst)
+		err = d.DecodeFile(file, l.dst)
 		if err == nil {
 			return nil
 		}
