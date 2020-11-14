@@ -3,12 +3,8 @@ package aconfigyaml
 import (
 	"os"
 
-	"github.com/cristalhq/aconfig"
-
 	"gopkg.in/yaml.v2"
 )
-
-var _ aconfig.FileDecoder = &Decoder{}
 
 // Decoder of YAML files for aconfig.
 type Decoder struct{}

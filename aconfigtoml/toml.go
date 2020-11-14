@@ -3,12 +3,8 @@ package aconfigtoml
 import (
 	"os"
 
-	"github.com/cristalhq/aconfig"
-
 	"github.com/BurntSushi/toml"
 )
-
-var _ aconfig.FileDecoder = &Decoder{}
 
 // Decoder of TOML files for aconfig.
 type Decoder struct{}
