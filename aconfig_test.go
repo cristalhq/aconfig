@@ -11,8 +11,8 @@ import (
 )
 
 type TestConfig struct {
-	Str      string `default:"str-def"`
-	Bytes    []byte `default:"bytes-def"`
+	Str string `default:"str-def"`
+	// Bytes    []byte `default:"bytes-def"`
 	Int      *int32 `default:"123"`
 	HTTPPort int    `default:"8080"`
 	Param    int    // no default tag, so default value
@@ -253,7 +253,7 @@ func TestLoadFlag(t *testing.T) {
 
 	flags := []string{
 		"-tst.str=str-flag",
-		"-tst.bytes=bytes-flag",
+		// "-tst.bytes=bytes-flag",
 		"-tst.int=1001",
 		"-tst.int=1001",
 		"-tst.http_port=30000",

@@ -56,6 +56,7 @@ type fieldData struct {
 	field        reflect.StructField
 	value        reflect.Value
 	defaultValue string
+	jsonName     string
 	envName      string
 	flagName     string
 	usage        string
@@ -70,6 +71,7 @@ func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldD
 		value:        value,
 		field:        field,
 		defaultValue: field.Tag.Get(defaultValueTag),
+		jsonName:     makeFlagName(field, parent, words),
 		envName:      makeEnvName(field, parent, words),
 		flagName:     makeFlagName(field, parent, words),
 		usage:        field.Tag.Get(usageTag),
@@ -98,6 +100,8 @@ func (f *fieldData) Tag(tag string) string {
 		return f.defaultValue
 	case usageTag:
 		return f.usage
+	case jsonNameTag:
+		return f.jsonName
 	case envNameTag:
 		return f.envName
 	case flagNameTag:

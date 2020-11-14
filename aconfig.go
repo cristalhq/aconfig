@@ -1,16 +1,16 @@
 package aconfig
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
 const (
 	defaultValueTag = "default"
 	usageTag        = "usage"
+	jsonNameTag     = "json"
 	envNameTag      = "env"
 	flagNameTag     = "flag"
 )
@@ -176,10 +176,9 @@ func (l *Loader) loadFromFile() error {
 		}
 		defer func() { _ = f.Close() }()
 
-		ext := strings.ToLower(filepath.Ext(file))
-		d, ok := l.config.FileDecoders[ext]
-		if !ok {
-			return fmt.Errorf("file format '%q' isn't supported", ext)
+		m := map[string]interface{}{}
+		if err := json.NewDecoder(f).Decode(&m); err != nil {
+			return err
 		}
 
 		err = d.DecodeFile(file, l.dst)
@@ -189,6 +188,7 @@ func (l *Loader) loadFromFile() error {
 		if l.config.StopOnFileError {
 			return fmt.Errorf("file parsing error: %w", err)
 		}
+		return nil
 	}
 	return nil
 }
