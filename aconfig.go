@@ -5,12 +5,19 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/BurntSushi/toml"
+	"gopkg.in/yaml.v2"
 )
 
 const (
 	defaultValueTag = "default"
 	usageTag        = "usage"
 	jsonNameTag     = "json"
+	yamlNameTag     = "yaml"
+	tomlNameTag     = "toml"
 	envNameTag      = "env"
 	flagNameTag     = "flag"
 )
@@ -177,8 +184,21 @@ func (l *Loader) loadFromFile() error {
 		defer func() { _ = f.Close() }()
 
 		m := map[string]interface{}{}
-		if err := json.NewDecoder(f).Decode(&m); err != nil {
-			return err
+		var tag string
+
+		ext := strings.ToLower(filepath.Ext(file))
+		switch ext {
+		case ".yaml", ".yml":
+			err = yaml.NewDecoder(f).Decode(&m)
+			tag = "yaml"
+		case ".json":
+			err = json.NewDecoder(f).Decode(&m)
+			tag = "json"
+		case ".toml":
+			_, err = toml.DecodeReader(f, &m)
+			tag = "toml"
+		default:
+			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 
 		err = d.DecodeFile(file, l.dst)
