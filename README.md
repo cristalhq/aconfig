@@ -55,6 +55,8 @@ loader := aconfig.LoaderFor(&cfg).
 	// SkipEnvironment().
 	// SkipFlags().
 	WithFiles([]string{"file.json", "ouch.yaml"}).
+	// see submodules in repo for more formats
+	WithFileDecoder(".yaml", aconfigyaml.New()). 
 	WithEnvPrefix("APP").
 	WithFlagPrefix("app").
 	Build()
