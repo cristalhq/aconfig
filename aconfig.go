@@ -1,15 +1,11 @@
 package aconfig
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/BurntSushi/toml"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -47,7 +43,7 @@ type Config struct {
 
 // FileDecoder is used to read config from files. See aconfig submodules.
 type FileDecoder interface {
-	DecodeFile(filename string, dst interface{}) error
+	DecodeFile(filename string) (map[string]interface{}, error)
 }
 
 // Field of the user configuration structure.
@@ -187,17 +183,8 @@ func (l *Loader) loadFromFile() error {
 		var tag string
 
 		ext := strings.ToLower(filepath.Ext(file))
-		switch ext {
-		case ".yaml", ".yml":
-			err = yaml.NewDecoder(f).Decode(&m)
-			tag = "yaml"
-		case ".json":
-			err = json.NewDecoder(f).Decode(&m)
-			tag = "json"
-		case ".toml":
-			_, err = toml.DecodeReader(f, &m)
-			tag = "toml"
-		default:
+		d, ok := l.config.FileDecoders[ext]
+		if !ok {
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 

@@ -67,6 +67,8 @@ type fieldData struct {
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
 	words := splitNameByWords(field.Name)
 	name := makeFlagName(field, parent, words) // it's ok to use flagName, fields have `_` and nesting is via `.`
+	println(name)
+
 	return &fieldData{
 		name:         makeName(field.Name, parent),
 		parent:       parent,
@@ -99,17 +101,24 @@ func (f *fieldData) Usage() string {
 }
 
 func (f *fieldData) Tag(tag string) string {
+	value := f.field.Tag.Get(tag)
 	switch tag {
 	case defaultValueTag:
 		return f.defaultValue
 	case usageTag:
 		return f.usage
 	case jsonNameTag:
-		return f.jsonName
+		if value == "" {
+			return f.jsonName
+		}
 	case yamlNameTag:
-		return f.yamlName
+		if value == "" {
+			return f.yamlName
+		}
 	case tomlNameTag:
-		return f.tomlName
+		if value == "" {
+			return f.tomlName
+		}
 	case envNameTag:
 		return f.envName
 	case flagNameTag:
@@ -117,6 +126,7 @@ func (f *fieldData) Tag(tag string) string {
 	default:
 		return f.field.Tag.Get(tag)
 	}
+	return value
 }
 
 func (f *fieldData) Parent() (Field, bool) {

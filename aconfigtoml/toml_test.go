@@ -43,7 +43,7 @@ func createFile(t *testing.T) string {
 	}
 	defer file.Close()
 
-	file.WriteString(`Str = "str-json"
+	file.WriteString(`Str = "str-toml"
 Int = 101
 HTTPPort = 65000
 [Sub]
@@ -66,12 +66,12 @@ func loadFile(t *testing.T, file string, dst interface{}) {
 }
 
 type TestConfig struct {
-	Str      string    `toml:"str"`
-	Bytes    []byte    `toml:"bytes"`
-	Int      *int32    `toml:"int"`
-	HTTPPort int       `toml:"http_port"`
-	Param    int       `toml:"param"` // no default tag, so default value
-	Sub      SubConfig `toml:"sub"`
+	Str      string    `toml:"Str"`
+	Bytes    []byte    `toml:"Bytes"`
+	Int      *int32    `toml:"Int"`
+	HTTPPort int       `toml:"HTTPPort"`
+	Param    int       `toml:"Param"` // no default tag, so default value
+	Sub      SubConfig `toml:"Sub"`
 	Anon     struct {
 		IsAnon bool `default:"true"`
 	}
@@ -88,5 +88,5 @@ type EmbeddedConfig struct {
 }
 
 type SubConfig struct {
-	Float float64 `toml:"float"`
+	Float float64 `toml:"Float"`
 }

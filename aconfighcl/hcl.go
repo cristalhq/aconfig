@@ -11,6 +11,10 @@ type Decoder struct{}
 func New() *Decoder { return &Decoder{} }
 
 // DecodeFile implements aconfig.FileDecoder.
-func (d *Decoder) DecodeFile(filename string, dst interface{}) error {
-	return hclsimple.DecodeFile(filename, nil, dst)
+func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
+	var dst map[string]interface{}
+	if err := hclsimple.DecodeFile(filename, nil, &dst); err != nil {
+		return nil, err
+	}
+	return dst, nil
 }

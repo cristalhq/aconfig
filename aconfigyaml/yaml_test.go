@@ -43,12 +43,11 @@ func createFile(t *testing.T) string {
 	}
 	defer file.Close()
 
-	file.WriteString(`Str: "str-yaml"
-Bytes: "Ynl0ZXMteWFtbA=="
-Int: 101
-HTTPPort": 65000
-Sub:
-  Float: 999.111`)
+	file.WriteString(`str: "str-yaml"
+int: 101
+http_port": 65000
+sub:
+  float: 999.111`)
 
 	return filename
 }

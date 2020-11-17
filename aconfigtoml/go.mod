@@ -6,3 +6,5 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/cristalhq/aconfig v0.8.0
 )
+
+replace github.com/cristalhq/aconfig => ../
