@@ -138,21 +138,20 @@ func (l *Loader) StopOnFileError() *Loader {
 
 // Build to initialize flags for a given configuration.
 func (l *Loader) Build() *Loader {
-	l.parseFields(l.dst)
+	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
+	l.parseFields()
 	l.isBuilt = true
 	return l
 }
 
-func (l *Loader) parseFields(cfg interface{}) {
-	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
-	l.fields = getFields(cfg)
+func (l *Loader) parseFields() {
+	l.fields = getFields(l.dst)
 
-	if l.config.SkipFlag {
-		return
-	}
-	for _, field := range l.fields {
-		flagName := l.config.FlagPrefix + field.flagName
-		l.flagSet.String(flagName, field.defaultValue, field.usage)
+	if !l.config.SkipFlag {
+		for _, field := range l.fields {
+			flagName := l.config.FlagPrefix + field.flagName
+			l.flagSet.String(flagName, field.defaultValue, field.usage)
+		}
 	}
 }
 

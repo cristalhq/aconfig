@@ -32,11 +32,9 @@ func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData 
 			continue
 		}
 
-		// TODO: pointers
-
 		fd := newFieldData(field, value, parent)
 
-		// if just a field - add and process next, else expand struct
+		// if it's a struct - expand and process it's fields
 		if field.Type.Kind() == reflect.Struct {
 			var subFieldParent *fieldData
 			if field.Anonymous {

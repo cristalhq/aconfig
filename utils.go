@@ -53,7 +53,7 @@ func splitNameByWords(src string) []string {
 
 	// split into fields based on class of unicode character
 	for _, r := range src {
-		switch true {
+		switch {
 		case unicode.IsLower(r):
 			class = 1
 		case unicode.IsUpper(r):
@@ -64,7 +64,8 @@ func splitNameByWords(src string) []string {
 			class = 4
 		}
 		if class == lastClass {
-			runes[len(runes)-1] = append(runes[len(runes)-1], r)
+			sz := len(runes) - 1
+			runes[sz] = append(runes[sz], r)
 		} else {
 			runes = append(runes, []rune{r})
 		}
