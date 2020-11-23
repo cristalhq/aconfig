@@ -1,6 +1,8 @@
 package aconfig
 
 import (
+	"encoding/json"
+	"os"
 	"reflect"
 	"strings"
 	"unicode"
@@ -88,4 +90,15 @@ func splitNameByWords(src string) []string {
 		}
 	}
 	return words
+}
+
+type jsonDecoder struct{}
+
+// DecodeFile implements FileDecoder.
+func (d *jsonDecoder) DecodeFile(filename string, dst interface{}) error {
+	f, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	return json.NewDecoder(f).Decode(dst)
 }
