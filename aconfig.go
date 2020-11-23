@@ -170,30 +170,31 @@ func (l *Loader) loadDefaults() error {
 
 func (l *Loader) loadFromFile() error {
 	for _, file := range l.config.Files {
-		f, err := os.Open(file)
-		if err != nil {
-			if l.config.StopOnFileError {
-				return err
-			}
-			continue
-		}
-		defer func() { _ = f.Close() }()
-
-		m := map[string]interface{}{}
-		var tag string
-
 		ext := strings.ToLower(filepath.Ext(file))
-		d, ok := l.config.FileDecoders[ext]
+		decoder, ok := l.config.FileDecoders[ext]
 		if !ok {
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 
-		err = d.DecodeFile(file, l.dst)
-		if err == nil {
-			return nil
+		mappedFields, err := decoder.DecodeFile(file)
+		if err != nil {
+			return err
 		}
-		if l.config.StopOnFileError {
-			return fmt.Errorf("file parsing error: %w", err)
+
+		tag := ext[1:]
+
+		for _, field := range l.fields {
+			name := field.Tag(tag)
+			value, ok := mappedFields[name]
+			if !ok {
+				continue
+			}
+
+			if value, ok := value.(string); ok {
+				if err := setFieldData(field, value); err != nil {
+					return err
+				}
+			}
 		}
 		return nil
 	}
