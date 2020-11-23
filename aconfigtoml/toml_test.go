@@ -12,20 +12,18 @@ import (
 )
 
 func TestTOML(t *testing.T) {
-	var want TestConfig
+	var cfg, want TestConfig
 
 	filename := createFile(t)
 	loadFile(t, filename, &want)
 
-	var cfg TestConfig
 	loader := aconfig.LoaderFor(&cfg).
-		SkipDefaults().
-		SkipEnvironment().
-		SkipFlags().
+		SkipDefaults().SkipEnvironment().SkipFlags().
 		WithFileDecoder(".toml", aconfigtoml.New()).
+		WithFiles([]string{filename}).
 		Build()
 
-	if err := loader.LoadWithFile(filename); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 

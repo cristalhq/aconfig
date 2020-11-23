@@ -48,7 +48,7 @@ bytes    = [89,110,108,48,90,88,77,116,90,87,53,50]
 int      = 101
 http_port = 65000
 sub {
-  float = 999.111
+	float = 999.111
 }`)
 
 	return filename

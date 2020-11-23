@@ -12,20 +12,18 @@ import (
 )
 
 func TestYAML(t *testing.T) {
-	var want TestConfig
+	var cfg, want TestConfig
 
 	filename := createFile(t)
 	loadFile(t, filename, &want)
 
-	var cfg TestConfig
 	loader := aconfig.LoaderFor(&cfg).
-		SkipDefaults().
-		SkipEnvironment().
-		SkipFlags().
+		SkipDefaults().SkipEnvironment().SkipFlags().
 		WithFileDecoder(".yaml", aconfigyaml.New()).
+		WithFiles([]string{filename}).
 		Build()
 
-	if err := loader.LoadWithFile(filename); err != nil {
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -45,9 +43,9 @@ func createFile(t *testing.T) string {
 
 	file.WriteString(`str: "str-yaml"
 int: 101
-http_port": 65000
+http_port: 65000
 sub:
-  float: 999.111`)
+  float: 999`)
 
 	return filename
 }
