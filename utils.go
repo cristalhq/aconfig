@@ -1,6 +1,9 @@
 package aconfig
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"unicode"
@@ -94,5 +97,37 @@ type jsonDecoder struct{}
 
 // DecodeFile implements FileDecoder.
 func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error) {
-	return nil, nil
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	var raw map[string]interface{}
+	if err := json.NewDecoder(f).Decode(&raw); err != nil {
+		return nil, err
+	}
+
+	res := map[string]interface{}{}
+
+	for key, value := range raw {
+		// fmt.Printf("k: %s, v: %v %[2]T\n", key, value)
+		flatten("", key, value, res)
+	}
+	// fmt.Printf("map: %#v\n\n", res)
+	return res, nil
+}
+
+func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
+	switch curr := curr.(type) {
+	case map[string]interface{}:
+		for k, v := range curr {
+			flatten(prefix+key+".", k, v, res)
+		}
+	case []interface{}:
+		res[prefix+key] = curr
+	case string:
+		res[prefix+key] = curr
+	case float64:
+		res[prefix+key] = fmt.Sprintf("%v", curr)
+	}
 }

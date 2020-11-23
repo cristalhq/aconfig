@@ -101,24 +101,18 @@ func (f *fieldData) Usage() string {
 }
 
 func (f *fieldData) Tag(tag string) string {
-	value := f.field.Tag.Get(tag)
+	// value := f.field.Tag.Get(tag)
 	switch tag {
 	case defaultValueTag:
 		return f.defaultValue
 	case usageTag:
 		return f.usage
 	case jsonNameTag:
-		// if value == "" {
 		return f.jsonName
-		// }
 	case yamlNameTag:
-		// if value == "" {
 		return f.yamlName
-		// }
 	case tomlNameTag:
-		// if value == "" {
 		return f.tomlName
-		// }
 	case envNameTag:
 		return f.envName
 	case flagNameTag:
@@ -126,7 +120,6 @@ func (f *fieldData) Tag(tag string) string {
 	default:
 		return f.field.Tag.Get(tag)
 	}
-	return value
 }
 
 func (f *fieldData) Parent() (Field, bool) {

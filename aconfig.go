@@ -185,6 +185,7 @@ func (l *Loader) loadFromFile() error {
 
 		for _, field := range l.fields {
 			name := field.Tag(tag)
+			// fmt.Printf("search %#v\n", name)
 			value, ok := mappedFields[name]
 			if !ok {
 				continue
