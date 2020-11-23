@@ -44,11 +44,11 @@ func (m MyDuration) Duration() (time.Duration, error) {
 
 func TestLoadDefaults(t *testing.T) {
 	var cfg TestConfig
-	loader := LoaderFor(&cfg).
-		SkipFiles().
-		SkipEnvironment().
-		SkipFlags().
-		Build()
+	loader := LoaderFor(&cfg, Config{
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+	})
 
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -87,11 +87,11 @@ func TestLoadDefault_AllTypesConfig(t *testing.T) {
 	}
 
 	var cfg AllTypesConfig
-	loader := LoaderFor(&cfg).
-		SkipFiles().
-		SkipEnvironment().
-		SkipFlags().
-		Build()
+	loader := LoaderFor(&cfg, Config{
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+	})
 
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -111,11 +111,11 @@ func TestLoadDefault_DurationConfig(t *testing.T) {
 	}
 
 	var cfg DurationConfig
-	loader := LoaderFor(&cfg).
-		SkipFiles().
-		SkipEnvironment().
-		SkipFlags().
-		Build()
+	loader := LoaderFor(&cfg, Config{
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+	})
 
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -143,11 +143,11 @@ func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
 	}
 
 	var cfg OtherNumbersConfig
-	loader := LoaderFor(&cfg).
-		SkipFiles().
-		SkipEnvironment().
-		SkipFlags().
-		Build()
+	loader := LoaderFor(&cfg, Config{
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+	})
 
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -166,12 +166,12 @@ func TestLoadFile(t *testing.T) {
 		t.Helper()
 
 		var cfg, want TestConfig
-		loader := LoaderFor(&cfg).
-			SkipDefaults().
-			SkipEnvironment().
-			SkipFlags().
-			WithFiles([]string{filepath}).
-			Build()
+		loader := LoaderFor(&cfg, Config{
+			SkipDefaults:    true,
+			SkipEnvironment: true,
+			SkipFlags:       true,
+			Files:           []string{filepath},
+		})
 
 		if err := loader.Load(); err != nil {
 			t.Fatal(err)
@@ -192,11 +192,11 @@ func TestLoadFile_WithFiles(t *testing.T) {
 		t.Helper()
 
 		var cfg, want TestConfig
-		loader := LoaderFor(&cfg).
-			SkipDefaults().
-			SkipEnvironment().
-			SkipFlags().
-			Build()
+		loader := LoaderFor(&cfg, Config{
+			SkipDefaults:    true,
+			SkipEnvironment: true,
+			SkipFlags:       true,
+		})
 
 		if err := loader.LoadWithFile(filepath); err != nil {
 			t.Fatal(err)
@@ -223,12 +223,12 @@ func TestLoadEnv(t *testing.T) {
 	defer os.Clearenv()
 
 	var cfg TestConfig
-	loader := LoaderFor(&cfg).
-		SkipDefaults().
-		SkipFiles().
-		SkipFlags().
-		WithEnvPrefix("TST").
-		Build()
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipFlags:    true,
+		EnvPrefix:    "TST",
+	})
 
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -244,12 +244,12 @@ func TestLoadEnv(t *testing.T) {
 
 func TestLoadFlag(t *testing.T) {
 	var cfg TestConfig
-	loader := LoaderFor(&cfg).
-		SkipDefaults().
-		SkipFiles().
-		SkipEnvironment().
-		WithFlagPrefix("tst").
-		Build()
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:    true,
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		FlagPrefix:      "tst",
+	})
 
 	flags := []string{
 		"-tst.str=str-flag",
@@ -262,7 +262,6 @@ func TestLoadFlag(t *testing.T) {
 		"-tst.em=em-flag",
 	}
 
-	// hack for test :(
 	if err := loader.Flags().Parse(flags); err != nil {
 		t.Fatal(err)
 	}
@@ -280,7 +279,7 @@ func TestLoadFlag(t *testing.T) {
 }
 
 func TestUsage(t *testing.T) {
-	loader := LoaderFor(&EmbeddedConfig{}).Build()
+	loader := LoaderFor(&EmbeddedConfig{}, Config{})
 
 	var builder strings.Builder
 	flags := loader.Flags()
@@ -301,12 +300,11 @@ func TestBadDefauts(t *testing.T) {
 	f := func(cfg interface{}) {
 		t.Helper()
 
-		loader := LoaderFor(cfg).
-			SkipFiles().
-			SkipEnvironment().
-			SkipFlags().
-			Build()
-
+		loader := LoaderFor(cfg, Config{
+			SkipFiles:       true,
+			SkipEnvironment: true,
+			SkipFlags:       true,
+		})
 		if err := loader.Load(); err == nil {
 			t.Fatal(err)
 		}
@@ -398,13 +396,13 @@ func TestBadFiles(t *testing.T) {
 		t.Helper()
 
 		var cfg TestConfig
-		loader := LoaderFor(&cfg).
-			SkipDefaults().
-			SkipEnvironment().
-			SkipFlags().
-			StopOnFileError().
-			WithFiles([]string{filepath}).
-			Build()
+		loader := LoaderFor(&cfg, Config{
+			SkipDefaults:    true,
+			SkipEnvironment: true,
+			SkipFlags:       true,
+			StopOnFileError: true,
+			Files:           []string{filepath},
+		})
 
 		if err := loader.Load(); err == nil {
 			t.Fatal(err)
@@ -421,12 +419,12 @@ func TestBadEnvs(t *testing.T) {
 	defer os.Clearenv()
 
 	var cfg TestConfig
-	loader := LoaderFor(&cfg).
-		SkipDefaults().
-		SkipFiles().
-		SkipFlags().
-		WithEnvPrefix("TST").
-		Build()
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipFlags:    true,
+		EnvPrefix:    "TST",
+	})
 
 	if err := loader.Load(); err == nil {
 		t.Fatal(err)
@@ -434,17 +432,17 @@ func TestBadEnvs(t *testing.T) {
 }
 
 func TestBadFlags(t *testing.T) {
-	type Config struct {
+	type TestConfig struct {
 		Field int
 	}
 
-	var cfg Config
-	loader := LoaderFor(&cfg).
-		SkipDefaults().
-		SkipFiles().
-		SkipEnvironment().
-		WithFlagPrefix("tst").
-		Build()
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:    true,
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		FlagPrefix:      "tst",
+	})
 
 	// hack for test :(
 	if err := loader.Flags().Parse([]string{"-tst.field=10a01"}); err != nil {
@@ -457,14 +455,14 @@ func TestBadFlags(t *testing.T) {
 }
 
 func TestCustomNames(t *testing.T) {
-	type Config struct {
+	type TestConfig struct {
 		A int `default:"-1" env:"one"`
 		B int `default:"-1" flag:"two"`
 		C int `default:"-1" env:"three" flag:"four"`
 	}
 
-	var cfg Config
-	loader := LoaderFor(&cfg).Build()
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{})
 
 	setEnv(t, "ONE", "1")
 	setEnv(t, "three", "3")
@@ -490,7 +488,7 @@ func TestCustomNames(t *testing.T) {
 }
 
 func TestWalkFields(t *testing.T) {
-	type Config struct {
+	type TestConfig struct {
 		A int `default:"-1" env:"one" marco:"polo"`
 		B struct {
 			C int `default:"-1" flag:"two" usage:"pretty simple usage duh"`
@@ -530,7 +528,7 @@ func TestWalkFields(t *testing.T) {
 
 	i := 0
 
-	LoaderFor(&Config{}).Build().WalkFields(func(f Field) bool {
+	LoaderFor(&TestConfig{}, Config{}).WalkFields(func(f Field) bool {
 		wantFields := fields[i]
 		if f.Name() != wantFields.Name {
 			t.Fatalf("got name %v, want %v", f.Name(), wantFields.Name)
@@ -554,7 +552,7 @@ func TestWalkFields(t *testing.T) {
 	}
 
 	i = 0
-	LoaderFor(&Config{}).Build().WalkFields(func(f Field) bool {
+	LoaderFor(&TestConfig{}, Config{}).WalkFields(func(f Field) bool {
 		if i > 0 {
 			return false
 		}
@@ -570,13 +568,13 @@ func TestWalkFields(t *testing.T) {
 }
 
 func TestDontFillFlagsIfDisabled(t *testing.T) {
-	type Config struct {
+	type TestConfig struct {
 		A int `default:"1"`
 	}
 
-	loader := LoaderFor(&Config{}).
-		SkipFlags().
-		Build()
+	loader := LoaderFor(&TestConfig{}, Config{
+		SkipFlags: true,
+	})
 
 	if flags := loader.Flags().NFlag(); flags != 0 {
 		t.Errorf("want empty, got %v", flags)
@@ -594,7 +592,7 @@ func TestPassNonStructs(t *testing.T) {
 			}
 		}()
 
-		if err := LoaderFor(nil).Build().Load(); err != nil {
+		if err := LoaderFor(nil, Config{}).Load(); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -621,16 +619,16 @@ func TestPanicWhenNotBuilt(t *testing.T) {
 
 	// ok to pass nils
 	f(func() {
-		_ = LoaderFor(nil).Load()
+		_ = LoaderFor(nil, Config{}).Load()
 	})
 	f(func() {
-		_ = LoaderFor(nil).LoadWithFile("")
+		_ = LoaderFor(nil, Config{}).LoadWithFile("")
 	})
 	f(func() {
-		_ = LoaderFor(nil).Flags()
+		_ = LoaderFor(nil, Config{}).Flags()
 	})
 	f(func() {
-		LoaderFor(nil).WalkFields(nil)
+		LoaderFor(nil, Config{}).WalkFields(nil)
 	})
 }
 

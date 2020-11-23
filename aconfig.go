@@ -1,7 +1,6 @@
 package aconfig
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -18,26 +17,25 @@ const (
 
 // Loader of user configuration.
 type Loader struct {
-	config  loaderConfig
+	config  Config
 	dst     interface{}
 	fields  []*fieldData
 	flagSet *flag.FlagSet
-	isBuilt bool
 }
 
-// loaderConfig to configure configuration loader.
-type loaderConfig struct {
-	SkipDefaults bool
-	SkipFile     bool
-	SkipEnv      bool
-	SkipFlag     bool
+// Config to configure configuration loader.
+type Config struct {
+	SkipDefaults    bool
+	SkipFiles       bool
+	SkipEnvironment bool
+	SkipFlags       bool
 
 	EnvPrefix  string
 	FlagPrefix string
 
-	ShouldStopOnFileError bool
-	Files                 []string
-	FileDecoders          map[string]FileDecoder
+	StopOnFileError bool
+	Files           []string
+	FileDecoders    map[string]FileDecoder
 }
 
 // FileDecoder is used to read config from files. See aconfig submodules.
@@ -65,89 +63,39 @@ type Field interface {
 }
 
 // LoaderFor creates a new Loader based on a given configuration structure.
-func LoaderFor(dst interface{}) *Loader {
-	return &Loader{
-		dst: dst,
-		config: loaderConfig{
-			FileDecoders: map[string]FileDecoder{
-				".json": &jsonDecoder{},
-			},
-		},
+func LoaderFor(dst interface{}, cfg Config) *Loader {
+	l := &Loader{
+		dst:    dst,
+		config: cfg,
 	}
-}
-
-// SkipDefaults if you don't want to use them.
-func (l *Loader) SkipDefaults() *Loader {
-	l.config.SkipDefaults = true
+	l.init()
 	return l
 }
 
-// SkipFiles if you don't want to use them.
-func (l *Loader) SkipFiles() *Loader {
-	l.config.SkipFile = true
-	return l
-}
-
-// SkipEnvironment if you don't want to use it.
-func (l *Loader) SkipEnvironment() *Loader {
-	l.config.SkipEnv = true
-	return l
-}
-
-// SkipFlags if you don't want to use them.
-func (l *Loader) SkipFlags() *Loader {
-	l.config.SkipFlag = true
-	return l
-}
-
-// WithFileDecoder to decode files with a given extension (".json" is already added).
-func (l *Loader) WithFileDecoder(ext string, decoder FileDecoder) *Loader {
-	l.config.FileDecoders[ext] = decoder
-	return l
-}
-
-// WithFiles for a configuration.
-func (l *Loader) WithFiles(files []string) *Loader {
-	l.config.Files = files
-	return l
-}
-
-// WithEnvPrefix to specify environment prefix.
-func (l *Loader) WithEnvPrefix(prefix string) *Loader {
-	l.config.EnvPrefix = prefix
+func (l *Loader) init() {
 	if l.config.EnvPrefix != "" {
 		l.config.EnvPrefix += "_"
 	}
-	return l
-}
 
-// WithFlagPrefix to specify command-line flags prefix.
-func (l *Loader) WithFlagPrefix(prefix string) *Loader {
-	l.config.FlagPrefix = prefix
 	if l.config.FlagPrefix != "" {
 		l.config.FlagPrefix += "."
 	}
-	return l
-}
 
-// StopOnFileError to stop configuration loading on file error.
-func (l *Loader) StopOnFileError() *Loader {
-	l.config.ShouldStopOnFileError = true
-	return l
-}
+	if _, ok := l.config.FileDecoders[".json"]; !ok {
+		if l.config.FileDecoders == nil {
+			l.config.FileDecoders = map[string]FileDecoder{}
+		}
+		l.config.FileDecoders[".json"] = &jsonDecoder{}
+	}
 
-// Build to initialize flags for a given configuration.
-func (l *Loader) Build() *Loader {
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	l.parseFields()
-	l.isBuilt = true
-	return l
 }
 
 func (l *Loader) parseFields() {
 	l.fields = getFields(l.dst)
 
-	if !l.config.SkipFlag {
+	if !l.config.SkipFlags {
 		for _, field := range l.fields {
 			flagName := l.config.FlagPrefix + field.flagName
 			l.flagSet.String(flagName, field.defaultValue, field.usage)
@@ -157,14 +105,12 @@ func (l *Loader) parseFields() {
 
 // Flags returngs flag.FlagSet to create your own flags.
 func (l *Loader) Flags() *flag.FlagSet {
-	l.assertBuilt()
 	return l.flagSet
 }
 
 // WalkFields iterates over configuration fields.
 // Easy way to create documentation or other stuff.
 func (l *Loader) WalkFields(fn func(f Field) bool) {
-	l.assertBuilt()
 	for _, f := range l.fields {
 		if !fn(f) {
 			return
@@ -174,7 +120,6 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 
 // Load configuration into a given param.
 func (l *Loader) Load() error {
-	l.assertBuilt()
 	if err := l.loadSources(); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
@@ -187,29 +132,23 @@ func (l *Loader) LoadWithFile(file string) error {
 	return l.Load()
 }
 
-func (l *Loader) assertBuilt() {
-	if !l.isBuilt {
-		panic("aconfig: you must run Build method before using the loader")
-	}
-}
-
 func (l *Loader) loadSources() error {
 	if !l.config.SkipDefaults {
 		if err := l.loadDefaults(); err != nil {
 			return err
 		}
 	}
-	if !l.config.SkipFile {
+	if !l.config.SkipFiles {
 		if err := l.loadFromFile(); err != nil {
 			return err
 		}
 	}
-	if !l.config.SkipEnv {
+	if !l.config.SkipEnvironment {
 		if err := l.loadEnvironment(); err != nil {
 			return err
 		}
 	}
-	if !l.config.SkipFlag {
+	if !l.config.SkipFlags {
 		if err := l.loadFlags(); err != nil {
 			return err
 		}
@@ -230,7 +169,7 @@ func (l *Loader) loadFromFile() error {
 	for _, file := range l.config.Files {
 		f, err := os.Open(file)
 		if err != nil {
-			if l.config.ShouldStopOnFileError {
+			if l.config.StopOnFileError {
 				return err
 			}
 			continue
@@ -247,7 +186,7 @@ func (l *Loader) loadFromFile() error {
 		if err == nil {
 			return nil
 		}
-		if l.config.ShouldStopOnFileError {
+		if l.config.StopOnFileError {
 			return fmt.Errorf("file parsing error: %w", err)
 		}
 	}
@@ -291,15 +230,4 @@ func (l *Loader) loadFlags() error {
 		}
 	}
 	return nil
-}
-
-type jsonDecoder struct{}
-
-// DecodeFile implements FileDecoder.
-func (d *jsonDecoder) DecodeFile(filename string, dst interface{}) error {
-	f, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	return json.NewDecoder(f).Decode(dst)
 }
