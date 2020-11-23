@@ -41,11 +41,11 @@ func createFile(t *testing.T) string {
 	}
 	defer file.Close()
 
-	file.WriteString(`Str = "str-toml"
-Int = 101
-HTTPPort = 65000
-[Sub]
-Float = 999.111 `)
+	file.WriteString(`str = "str-toml"
+int = 101
+http_port = 65000
+[sub]
+float = 999.111 `)
 
 	return filename
 }
@@ -64,12 +64,12 @@ func loadFile(t *testing.T, file string, dst interface{}) {
 }
 
 type TestConfig struct {
-	Str      string    `toml:"Str"`
-	Bytes    []byte    `toml:"Bytes"`
-	Int      *int32    `toml:"Int"`
-	HTTPPort int       `toml:"HTTPPort"`
-	Param    int       `toml:"Param"` // no default tag, so default value
-	Sub      SubConfig `toml:"Sub"`
+	Str      string    `toml:"str"`
+	Bytes    []byte    `toml:"bytes"`
+	Int      *int32    `toml:"int"`
+	HTTPPort int       `toml:"http_port"`
+	Param    int       `toml:"param"` // no default tag, so default value
+	Sub      SubConfig `toml:"sub"`
 	Anon     struct {
 		IsAnon bool `default:"true"`
 	}
@@ -86,5 +86,5 @@ type EmbeddedConfig struct {
 }
 
 type SubConfig struct {
-	Float float64 `toml:"Float"`
+	Float float64 `toml:"float"`
 }

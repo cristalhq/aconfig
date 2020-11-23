@@ -19,9 +19,7 @@ func TestHCL(t *testing.T) {
 
 	var cfg TestConfig
 	loader := aconfig.LoaderFor(&cfg).
-		SkipDefaults().
-		SkipEnvironment().
-		SkipFlags().
+		SkipDefaults().SkipEnvironment().SkipFlags().
 		WithFileDecoder(".hcl", aconfighcl.New()).
 		Build()
 
@@ -43,13 +41,15 @@ func createFile(t *testing.T) string {
 	}
 	defer file.Close()
 
-	file.WriteString(`str      = "str-hcl"
+	file.WriteString(`
+str      = "str-hcl"
 bytes    = [89,110,108,48,90,88,77,116,90,87,53,50]
 int      = 101
 http_port = 65000
-sub {
-	float = 999.111
-}`)
+`)
+	// sub {
+	// 	float = 999.111
+	// }
 
 	return filename
 }
@@ -64,13 +64,13 @@ func loadFile(t *testing.T, file string, dst interface{}) {
 }
 
 type TestConfig struct {
-	Str      string    `hcl:"str"`
-	Bytes    []byte    `hcl:"bytes"`
-	Int      *int32    `hcl:"int"`
-	HTTPPort int       `hcl:"http_port"`
-	Param    int       // no default tag, so default value
-	Sub      SubConfig `hcl:"sub,block"`
-	Anon     struct {
+	Str      string `hcl:"str"`
+	Bytes    []byte `hcl:"bytes"`
+	Int      *int32 `hcl:"int"`
+	HTTPPort int    `hcl:"http_port"`
+	Param    int    // no default tag, so default value
+	// Sub      SubConfig `hcl:"sub,block"`
+	Anon struct {
 		IsAnon bool `default:"true"`
 	}
 
