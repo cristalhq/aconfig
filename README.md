@@ -1,9 +1,9 @@
 # aconfig
 
-[![Build Status][build-img]][build-url]
-[![GoDoc][pkg-img]][pkg-url]
-[![Go Report Card][reportcard-img]][reportcard-url]
-[![Coverage][coverage-img]][coverage-url]
+[![build-img]][build-url]
+[![pkg-img]][pkg-url]
+[![reportcard-img]][reportcard-url]
+[![coverage-img]][coverage-url]
 
 Simple, useful and opinionated config loader.
 
@@ -14,18 +14,15 @@ There are more than 2000 repositories on Github regarding configuration in Go. I
 ## Features
 
 * Simple API.
-* Automates a lot of things.
-  * config params names
-  * config loading
-  * generates documentation
-* Opinionated.
+* Clean and tested code.
+* Automatic naming.
 * Supports different sources:
-  * defaults in code
-  * files (JSON, YAML, TOML, HCL)
+  * defaults in the code
+  * files (JSON, YAML, TOML)
   * environment variables
   * command-line flags
-* Dependency-free (except file parsers).
-* Walk over configuration fields.
+* Dependency-free (even file-parsers are optional).
+* Walk over configuration fields (automate what you want)
 
 ## Install
 
@@ -48,20 +45,24 @@ type MyConfig struct {
 }
 
 var cfg MyConfig
-loader := aconfig.LoaderFor(&cfg).
+loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 	// feel free to skip some steps :)
-	// SkipDefaults().
-	// SkipFiles().
-	// SkipEnvironment().
-	// SkipFlags().
-	WithFiles([]string{"file.json", "ouch.yaml"}).
-	// see submodules in repo for more formats
-	WithFileDecoder(".yaml", aconfigyaml.New()). 
-	WithEnvPrefix("APP").
-	WithFlagPrefix("app").
-	Build()
+	// SkipDefaults:    true,
+	// SkipFiles:       true,
+	// SkipEnvironment: true,
+	// SkipFlags:       true,
+	Files:           []string{"/var/opt/myapp/config.json", "ouch.yaml"},
+	EnvPrefix:       "APP",
+	FlagPrefix:      "app",
+	FileDecoders: map[string]aconfig.FileDecoder{
+		// from `aconfigyaml` submodule
+		// see submodules in repo for more formats
+		".yaml": aconfigyaml.New(),
+	},
+})
 
-flagSet := loader.Flags() // Important: use exactly this flags to define your own
+// IMPORTANT: define your own flags with `flagSet`
+flagSet := loader.Flags()
 
 if err := loader.Load(); err != nil {
 	panic(err)
@@ -81,7 +82,7 @@ Integration with `spf13/cobra` [playground](https://play.golang.org/p/OsCR8qTCN0
 
 ## Documentation
 
-See here: [pkg.go.dev][pkg-url].
+See [these docs][pkg-url].
 
 ## License
 
