@@ -33,7 +33,7 @@ func makeFlagName(field reflect.StructField, parent *fieldData, words []string) 
 		flagName = makeParsingName(words)
 	}
 	if parent != nil {
-		flagName = parent.flagName + "." + flagName
+		// flagName = parent.flagName + "." + flagName
 	}
 	return strings.ToLower(flagName)
 }
@@ -130,4 +130,11 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 	case float64:
 		res[prefix+key] = fmt.Sprintf("%v", curr)
 	}
+}
+
+func ifNotEmpty(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a
 }

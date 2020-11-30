@@ -2,7 +2,9 @@ package aconfigtoml
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -35,7 +37,10 @@ func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 	return res, nil
 }
 
+// copied from aconfig/utils.go
+//
 func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
+	log.Printf("%s::%s got %T %v", prefix, key, curr, curr)
 	switch curr := curr.(type) {
 	case map[string]interface{}:
 		for k, v := range curr {
@@ -49,6 +54,13 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 			}
 		}
 	case []interface{}:
+		b := &strings.Builder{}
+		for i, v := range curr {
+			if i > 0 {
+				b.WriteByte(',')
+			}
+			b.WriteString(fmt.Sprint(v))
+		}
 		res[prefix+key] = curr
 	case string:
 		res[prefix+key] = curr

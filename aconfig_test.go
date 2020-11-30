@@ -491,11 +491,11 @@ func TestWalkFields(t *testing.T) {
 	type TestConfig struct {
 		A int `default:"-1" env:"one" marco:"polo"`
 		B struct {
-			C int `default:"-1" flag:"two" usage:"pretty simple usage duh"`
+			C int `default:"-1" flag:"two" usage:"pretty simple usage duh" json:"kek" yaml:"lel" toml:"mde"`
 			D struct {
-				E int `default:"-1" env:"three"`
+				E int `default:"-1" env:"three" json:"kek" yaml:"lel" toml:"mde"`
 			}
-		}
+		} ``
 	}
 
 	fields := []struct {
@@ -533,6 +533,7 @@ func TestWalkFields(t *testing.T) {
 		if f.Name() != wantFields.Name {
 			t.Fatalf("got name %v, want %v", f.Name(), wantFields.Name)
 		}
+		t.Logf("tags %v: %v %v %v", f.Name(), f.Tag("json"), f.Tag("yaml"), f.Tag("toml"))
 
 		if parent, ok := f.Parent(); ok && parent.Name() != wantFields.ParentName {
 			t.Fatalf("got name %v, want %v", parent.Name(), wantFields.ParentName)
