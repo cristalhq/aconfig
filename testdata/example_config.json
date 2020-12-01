@@ -1,7 +1,7 @@
 {
-  "HTTPPort": 2222,
-  "Auth": {
-    "User": "json-user",
-    "Pass": "json-pass"
+  "http_port": 2222,
+  "auth": {
+    "user": "json-user",
+    "pass": "json-pass"
   }
 }

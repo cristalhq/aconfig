@@ -11,8 +11,8 @@ import (
 )
 
 type TestConfig struct {
-	Str      string `default:"str-def"`
-	Bytes    []byte `default:"bytes-def"`
+	Str string `default:"str-def"`
+	// Bytes    []byte `default:"bytes-def"`
 	Int      *int32 `default:"123"`
 	HTTPPort int    `default:"8080"`
 	Param    int    // no default tag, so default value
@@ -161,6 +161,90 @@ func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
 	}
 }
 
+type structY struct {
+	X string
+	Z []string
+	A struct {
+		I bool
+	}
+}
+
+type structA struct {
+	X  string  `json:"x"`
+	BB structB `json:"B"`
+}
+
+type structB struct {
+	CC structC  `json:"C"`
+	DD []string `json:"D"`
+}
+
+type structC struct {
+	MM string `json:"m"`
+}
+
+type StructM struct {
+	M string
+}
+
+func TestJSON(t *testing.T) {
+	type TestConfig struct {
+		A string
+		C int
+		E float64
+		B []byte
+		P *int32
+		Y structY
+
+		AA structA `json:"A"`
+		StructM
+	}
+
+	var cfg, want TestConfig
+
+	i := int32(42)
+	want = TestConfig{
+		A: "b",
+		C: 10,
+		E: 123.456,
+		B: []byte("abc"),
+		P: &i,
+		Y: structY{
+			X: "y",
+			// TODO: Z: []string{"1", "2", "3"},
+		},
+		AA: structA{
+			X: "y",
+			BB: structB{
+				CC: structC{
+					MM: "n",
+				},
+				// TODO: DD: []string{"x", "y", "z"},
+			},
+		},
+		StructM: StructM{
+			M: "n",
+		},
+	}
+
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:    true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+		FileDecoders: map[string]FileDecoder{
+			".json": &jsonDecoder{},
+		},
+		Files: []string{"testfile.json"},
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+	if got := cfg; !reflect.DeepEqual(got, want) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
 func TestLoadFile(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
@@ -253,7 +337,7 @@ func TestLoadFlag(t *testing.T) {
 
 	flags := []string{
 		"-tst.str=str-flag",
-		"-tst.bytes=bytes-flag",
+		// "-tst.bytes=bytes-flag",
 		"-tst.int=1001",
 		"-tst.int=1001",
 		"-tst.http_port=30000",
@@ -456,7 +540,7 @@ func TestBadFlags(t *testing.T) {
 
 func TestCustomNames(t *testing.T) {
 	type TestConfig struct {
-		A int `default:"-1" env:"one"`
+		A int `default:"-1" env:"ONE"`
 		B int `default:"-1" flag:"two"`
 		C int `default:"-1" env:"three" flag:"four"`
 	}
@@ -491,11 +575,11 @@ func TestWalkFields(t *testing.T) {
 	type TestConfig struct {
 		A int `default:"-1" env:"one" marco:"polo"`
 		B struct {
-			C int `default:"-1" flag:"two" usage:"pretty simple usage duh"`
+			C int `default:"-1" flag:"two" usage:"pretty simple usage duh" json:"kek" yaml:"lel" toml:"mde"`
 			D struct {
-				E int `default:"-1" env:"three"`
+				E int `default:"-1" env:"three" json:"kek" yaml:"lel" toml:"mde"`
 			}
-		}
+		} ``
 	}
 
 	fields := []struct {
@@ -533,6 +617,7 @@ func TestWalkFields(t *testing.T) {
 		if f.Name() != wantFields.Name {
 			t.Fatalf("got name %v, want %v", f.Name(), wantFields.Name)
 		}
+		// t.Logf("tags %v: %v %v %v", f.Name(), f.Tag("json"), f.Tag("yaml"), f.Tag("toml"))
 
 		if parent, ok := f.Parent(); ok && parent.Name() != wantFields.ParentName {
 			t.Fatalf("got name %v, want %v", parent.Name(), wantFields.ParentName)

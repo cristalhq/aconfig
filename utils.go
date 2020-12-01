@@ -2,6 +2,7 @@ package aconfig
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -21,7 +22,7 @@ func makeEnvName(field reflect.StructField, parent *fieldData, words []string) s
 		envName = makeParsingName(words)
 	}
 	if parent != nil {
-		envName = parent.envName + "_" + envName
+		// envName = parent.envName + "_" + envName
 	}
 	return strings.ToUpper(envName)
 }
@@ -32,7 +33,7 @@ func makeFlagName(field reflect.StructField, parent *fieldData, words []string) 
 		flagName = makeParsingName(words)
 	}
 	if parent != nil {
-		flagName = parent.flagName + "." + flagName
+		// flagName = parent.flagName + "." + flagName
 	}
 	return strings.ToLower(flagName)
 }
@@ -95,10 +96,56 @@ func splitNameByWords(src string) []string {
 type jsonDecoder struct{}
 
 // DecodeFile implements FileDecoder.
-func (d *jsonDecoder) DecodeFile(filename string, dst interface{}) error {
+func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return json.NewDecoder(f).Decode(dst)
+
+	var raw map[string]interface{}
+	if err := json.NewDecoder(f).Decode(&raw); err != nil {
+		return nil, err
+	}
+
+	res := map[string]interface{}{}
+
+	for key, value := range raw {
+		// fmt.Printf("k: %s, v: %v %[2]T\n", key, value)
+		flatten("", key, value, res)
+	}
+	// fmt.Printf("map: %#v\n\n", res)
+	return res, nil
+}
+
+func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
+	switch curr := curr.(type) {
+	case map[string]interface{}:
+		for k, v := range curr {
+			flatten(prefix+key+".", k, v, res)
+		}
+	case []interface{}:
+		b := &strings.Builder{}
+		for i, v := range curr {
+			if i > 0 {
+				b.WriteByte(',')
+			}
+			b.WriteString(fmt.Sprint(v))
+		}
+		res[prefix+key] = curr
+	case string:
+		res[prefix+key] = curr
+	case float64:
+		res[prefix+key] = fmt.Sprintf("%v", curr)
+	case bool:
+		res[prefix+key] = curr
+	default:
+		panic(fmt.Sprintf("%s::%s got %T %v", prefix, key, curr, curr))
+	}
+}
+
+func ifNotEmpty(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a
 }

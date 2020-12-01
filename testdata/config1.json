@@ -5,5 +5,16 @@
   "HTTPPort": 65000,
   "Sub": {
     "Float": 999.111
+  },
+  
+  "str": "str-json",
+  "bytes": "Ynl0ZXMtZW52",
+  "int": 101,
+  "http_port": 65000,
+  "sub": {
+    "float": 999.111
+  },
+  "anon": {
+    "is_anon": true
   }
 }

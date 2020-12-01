@@ -56,23 +56,32 @@ type fieldData struct {
 	field        reflect.StructField
 	value        reflect.Value
 	defaultValue string
+	usage        string
+	jsonName     string
+	yamlName     string
+	tomlName     string
 	envName      string
 	flagName     string
-	usage        string
 }
 
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
 	words := splitNameByWords(field.Name)
+	name := makeFlagName(field, parent, words) // it's ok to use flagName, fields have `_` and nesting is via `.`
+	// println(ifNotEmpty(field.Tag.Get(yamlNameTag), "::"+name))
 
 	return &fieldData{
-		name:         makeName(field.Name, parent),
-		parent:       parent,
-		value:        value,
-		field:        field,
+		name:   makeName(field.Name, parent),
+		parent: parent,
+		value:  value,
+		field:  field,
+
 		defaultValue: field.Tag.Get(defaultValueTag),
-		envName:      makeEnvName(field, parent, words),
-		flagName:     makeFlagName(field, parent, words),
 		usage:        field.Tag.Get(usageTag),
+		jsonName:     ifNotEmpty(field.Tag.Get(jsonNameTag), name),
+		yamlName:     ifNotEmpty(field.Tag.Get(yamlNameTag), name),
+		tomlName:     ifNotEmpty(field.Tag.Get(tomlNameTag), name),
+		envName:      ifNotEmpty(field.Tag.Get(envNameTag), makeEnvName(field, parent, words)),
+		flagName:     ifNotEmpty(field.Tag.Get(flagNameTag), name),
 	}
 }
 
@@ -92,12 +101,30 @@ func (f *fieldData) Usage() string {
 	return f.usage
 }
 
+func (f *fieldData) fullTag(tag string) string {
+	sep := "."
+	if tag == envNameTag {
+		sep = "_"
+	}
+	res := f.Tag(tag)
+	for p := f.parent; p != nil; p = p.parent {
+		res = p.Tag(tag) + sep + res
+	}
+	return res
+}
+
 func (f *fieldData) Tag(tag string) string {
 	switch tag {
 	case defaultValueTag:
 		return f.defaultValue
 	case usageTag:
 		return f.usage
+	case jsonNameTag:
+		return f.jsonName
+	case yamlNameTag:
+		return f.yamlName
+	case tomlNameTag:
+		return f.tomlName
 	case envNameTag:
 		return f.envName
 	case flagNameTag:

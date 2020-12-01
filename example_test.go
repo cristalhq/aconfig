@@ -56,8 +56,8 @@ func Example_WalkFields() {
 
 	// Output:
 	// HTTPPort: "HTTP_PORT" "http_port" "1111" "just a number"
-	// Auth.User: "AUTH_USER" "auth.user" "def-user" "your user"
-	// Auth.Pass: "AUTH_PASS" "auth.pass" "def-pass" "make it strong"
+	// Auth.User: "USER" "user" "def-user" "your user"
+	// Auth.Pass: "PASS" "pass" "def-pass" "make it strong"
 }
 
 // Just load defaults from struct defenition.

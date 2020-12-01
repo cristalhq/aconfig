@@ -11,6 +11,9 @@ import (
 const (
 	defaultValueTag = "default"
 	usageTag        = "usage"
+	jsonNameTag     = "json"
+	yamlNameTag     = "yaml"
+	tomlNameTag     = "toml"
 	envNameTag      = "env"
 	flagNameTag     = "flag"
 )
@@ -40,7 +43,7 @@ type Config struct {
 
 // FileDecoder is used to read config from files. See aconfig submodules.
 type FileDecoder interface {
-	DecodeFile(filename string, dst interface{}) error
+	DecodeFile(filename string) (map[string]interface{}, error)
 }
 
 // Field of the user configuration structure.
@@ -97,7 +100,7 @@ func (l *Loader) parseFields() {
 
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
-			flagName := l.config.FlagPrefix + field.flagName
+			flagName := l.config.FlagPrefix + field.fullTag(flagNameTag)
 			l.flagSet.String(flagName, field.defaultValue, field.usage)
 		}
 	}
@@ -167,35 +170,42 @@ func (l *Loader) loadDefaults() error {
 
 func (l *Loader) loadFromFile() error {
 	for _, file := range l.config.Files {
-		f, err := os.Open(file)
-		if err != nil {
-			if l.config.StopOnFileError {
-				return err
-			}
-			continue
-		}
-		defer func() { _ = f.Close() }()
-
 		ext := strings.ToLower(filepath.Ext(file))
-		d, ok := l.config.FileDecoders[ext]
+		decoder, ok := l.config.FileDecoders[ext]
 		if !ok {
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 
-		err = d.DecodeFile(file, l.dst)
-		if err == nil {
-			return nil
+		mappedFields, err := decoder.DecodeFile(file)
+		if err != nil {
+			return err
 		}
-		if l.config.StopOnFileError {
-			return fmt.Errorf("file parsing error: %w", err)
+
+		tag := ext[1:]
+
+		for _, field := range l.fields {
+			name := field.fullTag(tag)
+			// fmt.Printf("search %#v\n", name)
+			value, ok := mappedFields[name]
+			if !ok {
+				continue
+			}
+
+			if value, ok := value.(string); ok {
+				if err := setFieldData(field, value); err != nil {
+					return err
+				}
+			}
 		}
+		return nil
 	}
 	return nil
 }
 
 func (l *Loader) loadEnvironment() error {
 	for _, field := range l.fields {
-		envName := l.config.EnvPrefix + field.envName
+		envName := l.config.EnvPrefix + field.fullTag(envNameTag)
+		// println(envName)
 		v, ok := os.LookupEnv(envName)
 		if !ok {
 			continue
@@ -220,7 +230,7 @@ func (l *Loader) loadFlags() error {
 	})
 
 	for _, field := range l.fields {
-		flagName := l.config.FlagPrefix + field.flagName
+		flagName := l.config.FlagPrefix + field.fullTag(flagNameTag)
 		flg, ok := actualFlags[flagName]
 		if !ok {
 			continue
