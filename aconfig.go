@@ -100,7 +100,7 @@ func (l *Loader) parseFields() {
 
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
-			flagName := l.config.FlagPrefix + field.flagName
+			flagName := l.config.FlagPrefix + field.fullTag(flagNameTag)
 			l.flagSet.String(flagName, field.defaultValue, field.usage)
 		}
 	}
@@ -204,7 +204,8 @@ func (l *Loader) loadFromFile() error {
 
 func (l *Loader) loadEnvironment() error {
 	for _, field := range l.fields {
-		envName := l.config.EnvPrefix + field.envName
+		envName := l.config.EnvPrefix + field.fullTag(envNameTag)
+		// println(envName)
 		v, ok := os.LookupEnv(envName)
 		if !ok {
 			continue
@@ -229,7 +230,7 @@ func (l *Loader) loadFlags() error {
 	})
 
 	for _, field := range l.fields {
-		flagName := l.config.FlagPrefix + field.flagName
+		flagName := l.config.FlagPrefix + field.fullTag(flagNameTag)
 		flg, ok := actualFlags[flagName]
 		if !ok {
 			continue

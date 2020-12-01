@@ -56,8 +56,8 @@ func Example_WalkFields() {
 
 	// Output:
 	// HTTPPort: "HTTP_PORT" "http_port" "1111" "just a number"
-	// Auth.User: "AUTH_USER" "user" "def-user" "your user"
-	// Auth.Pass: "AUTH_PASS" "pass" "def-pass" "make it strong"
+	// Auth.User: "USER" "user" "def-user" "your user"
+	// Auth.Pass: "PASS" "pass" "def-pass" "make it strong"
 }
 
 // Just load defaults from struct defenition.
@@ -157,8 +157,8 @@ func Example_Flag() {
 	// feel free to remove it completely during copy-paste :)
 	os.Args = append([]string{}, os.Args[0],
 		"-ex.http_port=4444",
-		"-ex.user=flag-user", // TODO
-		"-ex.pass=flag-pass", // TODO
+		"-ex.auth.user=flag-user",
+		"-ex.auth.pass=flag-pass",
 	)
 
 	if err := loader.Load(); err != nil {

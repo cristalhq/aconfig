@@ -341,8 +341,8 @@ func TestLoadFlag(t *testing.T) {
 		"-tst.int=1001",
 		"-tst.int=1001",
 		"-tst.http_port=30000",
-		"-tst.float=123.321", // TODO
-		"-tst.is_anon=true",  // TODO
+		"-tst.sub.float=123.321",
+		"-tst.anon.is_anon=true",
 		"-tst.em=em-flag",
 	}
 
@@ -540,7 +540,7 @@ func TestBadFlags(t *testing.T) {
 
 func TestCustomNames(t *testing.T) {
 	type TestConfig struct {
-		A int `default:"-1" env:"one"`
+		A int `default:"-1" env:"ONE"`
 		B int `default:"-1" flag:"two"`
 		C int `default:"-1" env:"three" flag:"four"`
 	}
@@ -561,8 +561,7 @@ func TestCustomNames(t *testing.T) {
 	}
 
 	if want := 1; cfg.A != want {
-		// TODO
-		// t.Errorf("got %#v, want %#v", cfg.A, want)
+		t.Errorf("got %#v, want %#v", cfg.A, want)
 	}
 	if want := 2; cfg.B != want {
 		t.Errorf("got %#v, want %#v", cfg.B, want)

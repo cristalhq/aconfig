@@ -22,7 +22,7 @@ func makeEnvName(field reflect.StructField, parent *fieldData, words []string) s
 		envName = makeParsingName(words)
 	}
 	if parent != nil {
-		envName = parent.envName + "_" + envName
+		// envName = parent.envName + "_" + envName
 	}
 	return strings.ToUpper(envName)
 }

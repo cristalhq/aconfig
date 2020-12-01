@@ -102,9 +102,13 @@ func (f *fieldData) Usage() string {
 }
 
 func (f *fieldData) fullTag(tag string) string {
+	sep := "."
+	if tag == envNameTag {
+		sep = "_"
+	}
 	res := f.Tag(tag)
 	for p := f.parent; p != nil; p = p.parent {
-		res = p.Tag(tag) + "." + res
+		res = p.Tag(tag) + sep + res
 	}
 	return res
 }
