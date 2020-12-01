@@ -10,10 +10,14 @@ import (
 
 func TestYAML(t *testing.T) {
 	var cfg, want TestConfig
+
+	i := int32(42)
 	want = TestConfig{
 		A: "b",
 		C: 10,
 		E: 123.456,
+		B: []byte("abc"),
+		P: &i,
 		Y: structY{
 			X: "y",
 			Z: []string{"1", "2", "3"},
@@ -26,6 +30,9 @@ func TestYAML(t *testing.T) {
 				},
 				DD: []string{"x", "y", "z"},
 			},
+		},
+		StructM: StructM{
+			M: "n",
 		},
 	}
 
@@ -51,14 +58,20 @@ type TestConfig struct {
 	A string
 	C int
 	E float64
+	B []byte
+	P *int32
 	Y structY
 
 	AA structA `yaml:"A"`
+	StructM
 }
 
 type structY struct {
 	X string
 	Z []string
+	A struct {
+		I bool
+	}
 }
 
 type structA struct {
@@ -73,4 +86,8 @@ type structB struct {
 
 type structC struct {
 	MM string `yaml:"m"`
+}
+
+type StructM struct {
+	M string
 }

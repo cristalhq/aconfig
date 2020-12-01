@@ -2,7 +2,6 @@ package aconfigyaml
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -40,7 +39,7 @@ func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 // copied from aconfig/utils.go
 //
 func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
-	log.Printf("%s::%s got %T %v", prefix, key, curr, curr)
+	// log.Printf("%s::%s got %T %v", prefix, key, curr, curr)
 	switch curr := curr.(type) {
 	case map[string]interface{}:
 		for k, v := range curr {

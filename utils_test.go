@@ -26,7 +26,7 @@ func TestFlatten(t *testing.T) {
 		flatten("", key, value, res)
 	}
 
-	t.Log(res)
+	// t.Log(res)
 }
 
 func Test_splitNameByWords(t *testing.T) {
@@ -56,27 +56,27 @@ func Test_splitNameByWords(t *testing.T) {
 	}
 }
 
-func TestJSONDecoder(t *testing.T) {
-	got, err := (&jsonDecoder{}).DecodeFile("testfile.json")
-	if err != nil {
-		t.Fatal(err)
-	}
+// func TestJSONDecoder(t *testing.T) {
+// 	got, err := (&jsonDecoder{}).DecodeFile("testfile.json")
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	want := map[string]interface{}{
-		"A.B.C.a": "b",
-		"A.B.D":   []interface{}{"x", "y", "z"},
-		"a":       "b",
-		"c":       "10",
-		"d.x":     "y",
-		"d.z":     []interface{}{"1", "2", "3"},
-	}
+// 	want := map[string]interface{}{
+// 		"A.B.C.a": "b",
+// 		"A.B.D":   []interface{}{"x", "y", "z"},
+// 		"a":       "b",
+// 		"c":       "10",
+// 		"d.x":     "y",
+// 		"d.z":     []interface{}{"1", "2", "3"},
+// 	}
 
-	if len(want) != len(got) {
-		t.Fatalf("got %v, want %v", len(got), len(want))
-	}
-	for k, v := range want {
-		if kv, ok := got[k]; !ok || !reflect.DeepEqual(kv, v) {
-			t.Errorf("for %v got %v, want %v %T %T", k, kv, v, kv, v)
-		}
-	}
-}
+// 	if len(want) != len(got) {
+// 		t.Fatalf("got %v, want %v", len(got), len(want))
+// 	}
+// 	for k, v := range want {
+// 		if kv, ok := got[k]; !ok || !reflect.DeepEqual(kv, v) {
+// 			t.Errorf("for %v got %v, want %v %T %T", k, kv, v, kv, v)
+// 		}
+// 	}
+// }

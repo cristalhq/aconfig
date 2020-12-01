@@ -124,11 +124,22 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 			flatten(prefix+key+".", k, v, res)
 		}
 	case []interface{}:
+		b := &strings.Builder{}
+		for i, v := range curr {
+			if i > 0 {
+				b.WriteByte(',')
+			}
+			b.WriteString(fmt.Sprint(v))
+		}
 		res[prefix+key] = curr
 	case string:
 		res[prefix+key] = curr
 	case float64:
 		res[prefix+key] = fmt.Sprintf("%v", curr)
+	case bool:
+		res[prefix+key] = curr
+	default:
+		panic(fmt.Sprintf("%s::%s got %T %v", prefix, key, curr, curr))
 	}
 }
 
