@@ -1,6 +1,6 @@
 {
   "Str": "str-json",
-  "Bytes": "Ynl0ZXMtZW52",
+  "Bytes": "Ynl0ZXMtanNvbg==",
   "Int": 101,
   "HTTPPort": 65000,
   "Sub": {
@@ -8,7 +8,7 @@
   },
   
   "str": "str-json",
-  "bytes": "Ynl0ZXMtZW52",
+  "bytes": "Ynl0ZXMtanNvbg==",
   "int": 101,
   "http_port": 65000,
   "sub": {

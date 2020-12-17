@@ -8,13 +8,23 @@ import (
 	"time"
 )
 
-func getFields(x interface{}) []*fieldData {
+func assertStruct(x interface{}) {
+	if x == nil {
+		panic("aconfig: nil should not be passed to the Loader")
+	}
 	value := reflect.ValueOf(x)
 	for value.Type().Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
 	if value.Kind() != reflect.Struct {
-		panic("aconfig: only struct can be passed to the loader")
+		panic("aconfig: only struct can be passed to the Loader")
+	}
+}
+
+func getFields(x interface{}) []*fieldData {
+	value := reflect.ValueOf(x)
+	for value.Type().Kind() == reflect.Ptr {
+		value = value.Elem()
 	}
 	return getFieldsHelper(value, nil)
 }
@@ -67,7 +77,6 @@ type fieldData struct {
 func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
 	words := splitNameByWords(field.Name)
 	name := makeFlagName(field, parent, words) // it's ok to use flagName, fields have `_` and nesting is via `.`
-	// println(ifNotEmpty(field.Tag.Get(yamlNameTag), "::"+name))
 
 	return &fieldData{
 		name:   makeName(field.Name, parent),

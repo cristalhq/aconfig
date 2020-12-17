@@ -10,59 +10,44 @@ import (
 	"time"
 )
 
-type TestConfig struct {
-	Str string `default:"str-def"`
-	// Bytes    []byte `default:"bytes-def"`
-	Int      *int32 `default:"123"`
-	HTTPPort int    `default:"8080"`
-	Param    int    // no default tag, so default value
-	Sub      SubConfig
-	Anon     struct {
-		IsAnon bool `default:"true"`
-	}
-
-	Slice []int          `default:"1,2,3" usage:"just pass elements"`
-	Map1  map[string]int `default:"a:1,b:2,c:3"`
-	Map2  map[int]string `default:"1:a,2:b,3:c"`
-
-	EmbeddedConfig
-}
-
-type EmbeddedConfig struct {
-	Em string `default:"em-def" usage:"use... em...field."`
-}
-
-type SubConfig struct {
-	Float float64 `default:"123.123"`
-}
-
-type MyDuration string
-
-func (m MyDuration) Duration() (time.Duration, error) {
-	return time.ParseDuration(string(m))
-}
-
-func TestLoadDefaults(t *testing.T) {
+func TestDefaults(t *testing.T) {
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
 		SkipFiles:       true,
 		SkipEnvironment: true,
 		SkipFlags:       true,
 	})
-
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
-	var want TestConfig
-	loadFile(t, "testdata/test_config_def.json", &want)
+	want := TestConfig{
+		Str:      "str-def",
+		Bytes:    []byte("bytes-def"),
+		Int:      int32Ptr(123),
+		HTTPPort: 8080,
+		Sub: SubConfig{
+			Float: 123.123,
+		},
+		Anon: struct {
+			IsAnon bool `default:"true"`
+		}{
+			IsAnon: true,
+		},
+		Slice: []int{1, 2, 3},
+		Map1:  map[string]int{"a": 1, "b": 2, "c": 3},
+		Map2:  map[int]string{1: "a", 2: "b", 3: "c"},
+		EmbeddedConfig: EmbeddedConfig{
+			Em: "em-def",
+		},
+	}
 
-	if got := cfg; !reflect.DeepEqual(got, want) {
+	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
 
-func TestLoadDefault_AllTypesConfig(t *testing.T) {
+func TestDefaults_AllTypes(t *testing.T) {
 	type AllTypesConfig struct {
 		Bool   bool   `default:"true"`
 		String string `default:"str"`
@@ -92,45 +77,37 @@ func TestLoadDefault_AllTypesConfig(t *testing.T) {
 		SkipEnvironment: true,
 		SkipFlags:       true,
 	})
-
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
-	var want AllTypesConfig
-	loadFile(t, "testdata/all_types_config.json", &want)
+	want := AllTypesConfig{
+		Bool:    true,
+		String:  "str",
+		Int:     1,
+		Int8:    12,
+		Int16:   123,
+		Int32:   13,
+		Int64:   23,
+		Uint:    1234,
+		Uint8:   124,
+		Uint16:  134,
+		Uint32:  234,
+		Uint64:  24,
+		Float32: 1234.213,
+		Float64: 1234.234,
+		Dur:     time.Hour + 2*time.Minute + 3*time.Second,
+		// TODO
+		// Time :2000-04-05 10:20:30 +0000 UTC,
+	}
 
 	if got := cfg; got != want {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
 
-func TestLoadDefault_DurationConfig(t *testing.T) {
-	type DurationConfig struct {
-		MyDur MyDuration `default:"1h2m3s" json:"my_dur"`
-	}
-
-	var cfg DurationConfig
-	loader := LoaderFor(&cfg, Config{
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
-	})
-
-	if err := loader.Load(); err != nil {
-		t.Fatal(err)
-	}
-
-	var want DurationConfig
-	loadFile(t, "testdata/my_duration_config.json", &want)
-
-	if got := cfg; got != want {
-		t.Fatalf("want %v, got %v", want, got)
-	}
-}
-
-func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
-	type OtherNumbersConfig struct {
+func TestDefaults_OtherNumberFormats(t *testing.T) {
+	type OtherNumberFormats struct {
 		Int    int   `default:"0b111"`
 		Int8   int8  `default:"0o123"`
 		Int8x2 int8  `default:"0123"`
@@ -142,91 +119,35 @@ func TestLoadDefault_OtherNumbersConfig(t *testing.T) {
 		Uint32 uint32 `default:"0x123"`
 	}
 
-	var cfg OtherNumbersConfig
+	var cfg OtherNumberFormats
 	loader := LoaderFor(&cfg, Config{
 		SkipFiles:       true,
 		SkipEnvironment: true,
 		SkipFlags:       true,
 	})
-
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
-	var want OtherNumbersConfig
-	loadFile(t, "testdata/other_numbers_config.json", &want)
+	want := OtherNumberFormats{
+		Int:    7,
+		Int8:   83,
+		Int8x2: 83,
+		Int16:  291,
+
+		Uint:   7,
+		Uint8:  83,
+		Uint16: 83,
+		Uint32: 291,
+	}
 
 	if got := cfg; got != want {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
 
-type structY struct {
-	X string
-	Z []string
-	A struct {
-		I bool
-	}
-}
-
-type structA struct {
-	X  string  `json:"x"`
-	BB structB `json:"B"`
-}
-
-type structB struct {
-	CC structC  `json:"C"`
-	DD []string `json:"D"`
-}
-
-type structC struct {
-	MM string `json:"m"`
-}
-
-type StructM struct {
-	M string
-}
-
 func TestJSON(t *testing.T) {
-	type TestConfig struct {
-		A string
-		C int
-		E float64
-		B []byte
-		P *int32
-		Y structY
-
-		AA structA `json:"A"`
-		StructM
-	}
-
-	var cfg, want TestConfig
-
-	i := int32(42)
-	want = TestConfig{
-		A: "b",
-		C: 10,
-		E: 123.456,
-		B: []byte("abc"),
-		P: &i,
-		Y: structY{
-			X: "y",
-			// TODO: Z: []string{"1", "2", "3"},
-		},
-		AA: structA{
-			X: "y",
-			BB: structB{
-				CC: structC{
-					MM: "n",
-				},
-				// TODO: DD: []string{"x", "y", "z"},
-			},
-		},
-		StructM: StructM{
-			M: "n",
-		},
-	}
-
+	var cfg structConfig
 	loader := LoaderFor(&cfg, Config{
 		SkipDefaults:    true,
 		SkipEnvironment: true,
@@ -236,67 +157,106 @@ func TestJSON(t *testing.T) {
 		},
 		Files: []string{"testfile.json"},
 	})
-
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
-	if got := cfg; !reflect.DeepEqual(got, want) {
+
+	want := structConfig{
+		A: "b",
+		C: 10,
+		E: 123.456,
+		B: []byte("abc"),
+		P: int32Ptr(42),
+		Y: structY{
+			X: "y",
+			Z: []int{1, 2, 3},
+		},
+		AA: structA{
+			X: "y",
+			BB: structB{
+				CC: structC{
+					MM: "n",
+				},
+				DD: []string{"x", "y", "z"},
+			},
+		},
+		StructM: StructM{
+			M: "n",
+		},
+	}
+	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
 
-func TestLoadFile(t *testing.T) {
-	f := func(filepath string) {
-		t.Helper()
+func TestFile(t *testing.T) {
+	filepath := "testdata/config1.json"
 
-		var cfg, want TestConfig
-		loader := LoaderFor(&cfg, Config{
-			SkipDefaults:    true,
-			SkipEnvironment: true,
-			SkipFlags:       true,
-			Files:           []string{filepath},
-		})
-
-		if err := loader.Load(); err != nil {
-			t.Fatal(err)
-		}
-
-		loadFile(t, filepath, &want)
-
-		if got := cfg; !reflect.DeepEqual(got, want) {
-			t.Fatalf("want %v, got %v", want, got)
-		}
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:    true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+		Files:           []string{filepath},
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
 	}
 
-	f("testdata/config1.json")
-}
-
-func TestLoadFile_WithFiles(t *testing.T) {
-	f := func(filepath string) {
-		t.Helper()
-
-		var cfg, want TestConfig
-		loader := LoaderFor(&cfg, Config{
-			SkipDefaults:    true,
-			SkipEnvironment: true,
-			SkipFlags:       true,
-		})
-
-		if err := loader.LoadWithFile(filepath); err != nil {
-			t.Fatal(err)
-		}
-
-		loadFile(t, filepath, &want)
-
-		if got := cfg; !reflect.DeepEqual(got, want) {
-			t.Fatalf("want %v, got %v", want, got)
-		}
+	want := TestConfig{
+		Str:      "str-json",
+		Bytes:    []byte("Ynl0ZXMtanNvbg=="),
+		Int:      int32Ptr(101),
+		HTTPPort: 65000,
+		Sub: SubConfig{
+			Float: 999.111,
+		},
+		Anon: struct {
+			IsAnon bool `default:"true"`
+		}{
+			IsAnon: true,
+		},
 	}
 
-	f("testdata/config1.json")
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
 }
 
-func TestLoadEnv(t *testing.T) {
+func TestFile_WithFile(t *testing.T) {
+	filepath := "testdata/config1.json"
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:    true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+	})
+	if err := loader.LoadWithFile(filepath); err != nil {
+		t.Fatal(err)
+	}
+
+	want := TestConfig{
+		Str:      "str-json",
+		Bytes:    []byte("Ynl0ZXMtanNvbg=="),
+		Int:      int32Ptr(101),
+		HTTPPort: 65000,
+		Sub: SubConfig{
+			Float: 999.111,
+		},
+		Anon: struct {
+			IsAnon bool `default:"true"`
+		}{
+			IsAnon: true,
+		},
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func TestEnv(t *testing.T) {
 	setEnv(t, "TST_STR", "str-env")
 	setEnv(t, "TST_BYTES", "bytes-env")
 	setEnv(t, "TST_INT", "121")
@@ -313,20 +273,34 @@ func TestLoadEnv(t *testing.T) {
 		SkipFlags:    true,
 		EnvPrefix:    "TST",
 	})
-
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
-	var want TestConfig
-	loadFile(t, "testdata/test_config_env.json", &want)
+	want := TestConfig{
+		Str:      "str-env",
+		Bytes:    []byte("bytes-env"),
+		Int:      int32Ptr(121),
+		HTTPPort: 3000,
+		Sub: SubConfig{
+			Float: 222.333,
+		},
+		Anon: struct {
+			IsAnon bool `default:"true"`
+		}{
+			IsAnon: true,
+		},
+		EmbeddedConfig: EmbeddedConfig{
+			Em: "em-env",
+		},
+	}
 
-	if got := cfg; !reflect.DeepEqual(got, want) {
+	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
 
-func TestLoadFlag(t *testing.T) {
+func TestFlag(t *testing.T) {
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
 		SkipDefaults:    true,
@@ -337,8 +311,8 @@ func TestLoadFlag(t *testing.T) {
 
 	flags := []string{
 		"-tst.str=str-flag",
+		// TODO
 		// "-tst.bytes=bytes-flag",
-		"-tst.int=1001",
 		"-tst.int=1001",
 		"-tst.http_port=30000",
 		"-tst.sub.float=123.321",
@@ -354,10 +328,24 @@ func TestLoadFlag(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var want TestConfig
-	loadFile(t, "testdata/test_config_flag.json", &want)
+	want := TestConfig{
+		Str:      "str-flag",
+		Int:      int32Ptr(1001),
+		HTTPPort: 30000,
+		Sub: SubConfig{
+			Float: 123.321,
+		},
+		Anon: struct {
+			IsAnon bool `default:"true"`
+		}{
+			IsAnon: true,
+		},
+		EmbeddedConfig: EmbeddedConfig{
+			Em: "em-flag",
+		},
+	}
 
-	if got := cfg; !reflect.DeepEqual(got, want) {
+	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
@@ -502,8 +490,7 @@ func TestBadEnvs(t *testing.T) {
 	setEnv(t, "TST_HTTP_PORT", "30a00")
 	defer os.Clearenv()
 
-	var cfg TestConfig
-	loader := LoaderFor(&cfg, Config{
+	loader := LoaderFor(&TestConfig{}, Config{
 		SkipDefaults: true,
 		SkipFiles:    true,
 		SkipFlags:    true,
@@ -516,23 +503,16 @@ func TestBadEnvs(t *testing.T) {
 }
 
 func TestBadFlags(t *testing.T) {
-	type TestConfig struct {
-		Field int
-	}
-
-	var cfg TestConfig
-	loader := LoaderFor(&cfg, Config{
+	loader := LoaderFor(&TestConfig{}, Config{
 		SkipDefaults:    true,
 		SkipFiles:       true,
 		SkipEnvironment: true,
 		FlagPrefix:      "tst",
 	})
 
-	// hack for test :(
-	if err := loader.Flags().Parse([]string{"-tst.field=10a01"}); err != nil {
+	if err := loader.Flags().Parse([]string{"-tst.param=10a01"}); err != nil {
 		t.Fatal(err)
 	}
-
 	if err := loader.Load(); err == nil {
 		t.Fatal(err)
 	}
@@ -579,7 +559,7 @@ func TestWalkFields(t *testing.T) {
 			D struct {
 				E int `default:"-1" env:"three" json:"kek" yaml:"lel" toml:"mde"`
 			}
-		} ``
+		}
 	}
 
 	fields := []struct {
@@ -617,7 +597,6 @@ func TestWalkFields(t *testing.T) {
 		if f.Name() != wantFields.Name {
 			t.Fatalf("got name %v, want %v", f.Name(), wantFields.Name)
 		}
-		// t.Logf("tags %v: %v %v %v", f.Name(), f.Tag("json"), f.Tag("yaml"), f.Tag("toml"))
 
 		if parent, ok := f.Parent(); ok && parent.Name() != wantFields.ParentName {
 			t.Fatalf("got name %v, want %v", parent.Name(), wantFields.ParentName)
@@ -677,9 +656,7 @@ func TestPassNonStructs(t *testing.T) {
 			}
 		}()
 
-		if err := LoaderFor(nil, Config{}).Load(); err != nil {
-			t.Fatal(err)
-		}
+		_ = LoaderFor(cfg, Config{})
 	}
 
 	f(nil)
@@ -687,34 +664,6 @@ func TestPassNonStructs(t *testing.T) {
 	f([]string{})
 	f([4]string{})
 	f(func() {})
-}
-
-func TestPanicWhenNotBuilt(t *testing.T) {
-	f := func(fn func()) {
-		t.Helper()
-
-		defer func() {
-			t.Helper()
-			if err := recover(); err == nil {
-				t.Fatal()
-			}
-		}()
-		fn()
-	}
-
-	// ok to pass nils
-	f(func() {
-		_ = LoaderFor(nil, Config{}).Load()
-	})
-	f(func() {
-		_ = LoaderFor(nil, Config{}).LoadWithFile("")
-	})
-	f(func() {
-		_ = LoaderFor(nil, Config{}).Flags()
-	})
-	f(func() {
-		LoaderFor(nil, Config{}).WalkFields(nil)
-	})
 }
 
 func loadFile(t *testing.T, file string, dst interface{}) {
@@ -736,4 +685,72 @@ func setEnv(t *testing.T, key, value string) {
 	if err := os.Setenv(key, value); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func int32Ptr(a int32) *int32 {
+	return &a
+}
+
+type TestConfig struct {
+	Str      string `default:"str-def"`
+	Bytes    []byte `default:"bytes-def"`
+	Int      *int32 `default:"123"`
+	HTTPPort int    `default:"8080"`
+	Param    int    // no default tag, so default value
+	Sub      SubConfig
+	Anon     struct {
+		IsAnon bool `default:"true"`
+	}
+
+	Slice []int          `default:"1,2,3" usage:"just pass elements"`
+	Map1  map[string]int `default:"a:1,b:2,c:3"`
+	Map2  map[int]string `default:"1:a,2:b,3:c"`
+
+	EmbeddedConfig
+}
+
+type EmbeddedConfig struct {
+	Em string `default:"em-def" usage:"use... em...field."`
+}
+
+type SubConfig struct {
+	Float float64 `default:"123.123"`
+}
+
+type structConfig struct {
+	A string
+	C int
+	E float64
+	B []byte
+	P *int32
+	Y structY
+
+	AA structA `json:"A"`
+	StructM
+}
+
+type structY struct {
+	X string
+	Z []int
+	A struct {
+		I bool
+	}
+}
+
+type structA struct {
+	X  string  `json:"x"`
+	BB structB `json:"B"`
+}
+
+type structB struct {
+	CC structC  `json:"C"`
+	DD []string `json:"D"`
+}
+
+type structC struct {
+	MM string `json:"m"`
+}
+
+type StructM struct {
+	M string
 }
