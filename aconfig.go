@@ -36,9 +36,14 @@ type Config struct {
 	EnvPrefix  string
 	FlagPrefix string
 
-	StopOnFileError bool
-	Files           []string
-	FileDecoders    map[string]FileDecoder
+	AllowUnknownFields bool
+	AllowUnknownFlags  bool
+	AllowUnknownEnvs   bool
+
+	FailOnFileNotFound      bool
+	AllowFileUnmarshalError bool
+	Files                   []string
+	FileDecoders            map[string]FileDecoder
 }
 
 // FileDecoder is used to read config from files. See aconfig submodules.
@@ -178,7 +183,7 @@ func (l *Loader) loadFromFile() error {
 			return fmt.Errorf("file format '%q' isn't supported", ext)
 		}
 
-		mappedFields, err := decoder.DecodeFile(file)
+		actualFields, err := decoder.DecodeFile(file)
 		if err != nil {
 			return err
 		}
@@ -187,13 +192,20 @@ func (l *Loader) loadFromFile() error {
 
 		for _, field := range l.fields {
 			name := field.fullTag(tag)
-			value, ok := mappedFields[name]
+			value, ok := actualFields[name]
 			if !ok {
 				continue
 			}
 
 			if err := setFieldData(field, fmt.Sprint(value)); err != nil {
 				return err
+			}
+			delete(actualFields, name)
+		}
+
+		if !l.config.AllowUnknownFields && len(actualFields) != 0 {
+			for env, value := range actualFields {
+				return fmt.Errorf("unknown environment var %s : %s", env, value)
 			}
 		}
 		return nil
@@ -202,14 +214,25 @@ func (l *Loader) loadFromFile() error {
 }
 
 func (l *Loader) loadEnvironment() error {
+	actualEnv := getEnv()
+
 	for _, field := range l.fields {
 		envName := l.config.EnvPrefix + field.fullTag(envNameTag)
-		v, ok := os.LookupEnv(envName)
+		v, ok := actualEnv[envName]
 		if !ok {
 			continue
 		}
 		if err := setFieldData(field, v); err != nil {
 			return err
+		}
+		delete(actualEnv, envName)
+	}
+
+	if !l.config.AllowUnknownEnvs && len(actualEnv) != 0 {
+		for env, value := range actualEnv {
+			if strings.HasPrefix(env, l.config.EnvPrefix) {
+				return fmt.Errorf("unknown environment var %s : %s", env, value)
+			}
 		}
 	}
 	return nil
@@ -235,6 +258,15 @@ func (l *Loader) loadFlags() error {
 		}
 		if err := setFieldData(field, flg.Value.String()); err != nil {
 			return err
+		}
+		delete(actualFlags, flagName)
+	}
+
+	if !l.config.AllowUnknownFlags && len(actualFlags) != 0 {
+		for flag, value := range actualFlags {
+			if strings.HasPrefix(flag, l.config.FlagPrefix) {
+				return fmt.Errorf("unknown flag %s : %s", flag, value)
+			}
 		}
 	}
 	return nil

@@ -9,6 +9,23 @@ import (
 	"unicode"
 )
 
+func getEnv() map[string]string {
+	env := os.Environ()
+	res := make(map[string]string, len(env))
+
+	for _, s := range env {
+		for j := 0; j < len(s); j++ {
+			if s[j] != '=' {
+				continue
+			}
+
+			key, value := s[:j], s[j+1:]
+			res[key] = value
+		}
+	}
+	return res
+}
+
 func makeName(name string, parent *fieldData) string {
 	if parent == nil {
 		return name
