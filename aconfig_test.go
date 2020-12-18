@@ -2,6 +2,7 @@ package aconfig
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -515,6 +516,152 @@ func TestBadFlags(t *testing.T) {
 	}
 	if err := loader.Load(); err == nil {
 		t.Fatal(err)
+	}
+}
+
+func TestUnknownFields(t *testing.T) {
+	filepath := "testdata/with_additional_fields.json"
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:    true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+		Files:           []string{filepath},
+	})
+
+	err := loader.Load()
+	if err == nil {
+		t.Fatal("must not be nil")
+	}
+	if !strings.Contains(err.Error(), "unknown field in file") {
+		t.Fatalf("got %s", err.Error())
+	}
+}
+
+func TestUnknownEnvs(t *testing.T) {
+	setEnv(t, "TST_STR", "defined")
+	setEnv(t, "TST_UNKNOWN", "42")
+	setEnv(t, "JUST_ENV", "JUST_VALUE")
+	defer os.Clearenv()
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipFlags:    true,
+		EnvPrefix:    "TST",
+	})
+
+	err := loader.Load()
+	if err == nil {
+		t.Fatal("must not be nil")
+	}
+	if !strings.Contains(err.Error(), "unknown environment var") {
+		t.Fatalf("got %s", err.Error())
+	}
+}
+
+func TestUnknownEnvsWithEmptyPrefix(t *testing.T) {
+	setEnv(t, "STR", "defined")
+	setEnv(t, "UNKNOWN", "42")
+	defer os.Clearenv()
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipFlags:    true,
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestUnknownFlags(t *testing.T) {
+	loader := LoaderFor(&TestConfig{}, Config{
+		SkipDefaults:    true,
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		FlagPrefix:      "tst",
+	})
+
+	flags := []string{
+		"-tst.str=str-flag",
+		"-tst.unknown=1001",
+		"-just_env=just_value",
+	}
+
+	// just for tests
+	flagSet := loader.Flags()
+	flagSet.SetOutput(ioutil.Discard)
+
+	// define flag with a loader's prefix which is unknown
+	flagSet.Int("tst.unknown", 42, "")
+	flagSet.String("just_env", "just_def", "")
+
+	if err := flagSet.Parse(flags); err != nil {
+		t.Fatal(err)
+	}
+
+	err := loader.Load()
+	if err == nil {
+		t.Fatal("must not be nil")
+	}
+	if !strings.Contains(err.Error(), "unknown flag") {
+		t.Fatalf("got %s", err.Error())
+	}
+}
+
+func TestUnknownFlagsWithEmptyPrefix(t *testing.T) {
+	loader := LoaderFor(&TestConfig{}, Config{
+		SkipDefaults:    true,
+		SkipFiles:       true,
+		SkipEnvironment: true,
+	})
+
+	flags := []string{
+		"-str=str-flag",
+		"-unknown=1001",
+	}
+
+	// just for tests
+	flagSet := loader.Flags()
+	flagSet.SetOutput(ioutil.Discard)
+
+	// define flag with a loader's prefix which is unknown
+	flagSet.Int("unknown", 42, "")
+
+	if err := flagSet.Parse(flags); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// flag.FlagSet already fails on undefined flag
+func TestUnknownFlagsStdlib(t *testing.T) {
+	loader := LoaderFor(&TestConfig{}, Config{
+		SkipDefaults:    true,
+		SkipFiles:       true,
+		SkipEnvironment: true,
+		FlagPrefix:      "tst",
+	})
+
+	flags := []string{
+		"-tst.str=str-flag",
+		"-tst.unknown=1001",
+	}
+
+	// just for tests
+	flagSet := loader.Flags()
+	flagSet.SetOutput(ioutil.Discard)
+
+	if err := flagSet.Parse(flags); err == nil {
+		t.Fatal("must not be nil")
 	}
 }
 
