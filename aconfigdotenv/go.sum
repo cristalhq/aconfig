@@ -1,6 +1,11 @@
-github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
-github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/cristalhq/aconfig/aconfigtoml v0.10.0-alpha h1:cvrI905+rv79eXMkFeno1fgbp23rGO3z39+1gAHtDEA=
-github.com/cristalhq/aconfig/aconfigtoml v0.10.0-alpha/go.mod h1:dc+wffYSZuag0pdrqSciazhiTE1CHmxVi7qTZ0hETmI=
+github.com/cristalhq/aconfig v0.8.0/go.mod h1:0ZBp7dUf0F2Jr7YbLjw8OVlAD0eeV2bU3NwmVgeUReo=
+github.com/cristalhq/aconfig v0.9.0 h1:Pi1XD2ugshdMUP1bzxFGjEekZ1IbwEFvURklUiPCw+A=
+github.com/cristalhq/aconfig v0.10.0-beta h1:LrMGPySGkxVkAbc+Utim7f8dndUGXCQ00h2VS7L6lEw=
+github.com/cristalhq/aconfig v0.10.0-beta/go.mod h1:0ZBp7dUf0F2Jr7YbLjw8OVlAD0eeV2bU3NwmVgeUReo=
+github.com/cristalhq/aconfig/aconfigyaml v0.8.0 h1:KvFdUGHiei0Fim0x3ANlUY7UHJTbNyLEvVJ/zMo2C/8=
+github.com/cristalhq/aconfig/aconfigyaml v0.8.0/go.mod h1:HMPRePCK9YmL74UuPSyDU6qVuw0K7ot+87dx2KgyIZU=
 github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v2 v2.3.0 h1:clyUAQHOM3G0M3f5vQj7LuJrETvjVot3Z5el9nffUtU=
+gopkg.in/yaml.v2 v2.3.0/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=

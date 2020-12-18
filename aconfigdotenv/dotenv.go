@@ -4,7 +4,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Decoder of .ENV files for aconfig.
+// Decoder of DotENV files for aconfig.
 type Decoder struct{}
 
 // New .ENV decoder for aconfig.
