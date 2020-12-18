@@ -205,7 +205,7 @@ func (l *Loader) loadFromFile() error {
 
 		if !l.config.AllowUnknownFields && len(actualFields) != 0 {
 			for env, value := range actualFields {
-				return fmt.Errorf("unknown environment var %s : %s", env, value)
+				return fmt.Errorf("unknown field in file %s: %s:%s", file, env, value)
 			}
 		}
 		return nil
