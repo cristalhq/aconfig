@@ -470,11 +470,11 @@ func TestBadFiles(t *testing.T) {
 
 		var cfg TestConfig
 		loader := LoaderFor(&cfg, Config{
-			SkipDefaults:       true,
-			SkipEnvironment:    true,
-			SkipFlags:          true,
-			FailOnFileNotFound: true,
-			Files:              []string{filepath},
+			SkipDefaults:    true,
+			SkipEnvironment: true,
+			SkipFlags:       true,
+			StopOnFileError: true,
+			Files:           []string{filepath},
 		})
 
 		if err := loader.Load(); err == nil {
@@ -524,11 +524,10 @@ func TestUnknownFields(t *testing.T) {
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults:       true,
-		SkipEnvironment:    true,
-		SkipFlags:          true,
-		FailOnFileNotFound: true,
-		Files:              []string{filepath},
+		SkipDefaults:    true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+		Files:           []string{filepath},
 	})
 
 	err := loader.Load()

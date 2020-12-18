@@ -40,10 +40,9 @@ type Config struct {
 	AllowUnknownFlags  bool
 	AllowUnknownEnvs   bool
 
-	FailOnFileNotFound      bool
-	AllowFileUnmarshalError bool
-	Files                   []string
-	FileDecoders            map[string]FileDecoder
+	StopOnFileError bool
+	Files           []string
+	FileDecoders    map[string]FileDecoder
 }
 
 // FileDecoder is used to read config from files. See aconfig submodules.
