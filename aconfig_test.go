@@ -542,6 +542,7 @@ func TestUnknownFields(t *testing.T) {
 func TestUnknownEnvs(t *testing.T) {
 	setEnv(t, "TST_STR", "defined")
 	setEnv(t, "TST_UNKNOWN", "42")
+	setEnv(t, "JUST_ENV", "JUST_VALUE")
 	defer os.Clearenv()
 
 	var cfg TestConfig
@@ -561,6 +562,23 @@ func TestUnknownEnvs(t *testing.T) {
 	}
 }
 
+func TestUnknownEnvsWithEmptyPrefix(t *testing.T) {
+	setEnv(t, "STR", "defined")
+	setEnv(t, "UNKNOWN", "42")
+	defer os.Clearenv()
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipFlags:    true,
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestUnknownFlags(t *testing.T) {
 	loader := LoaderFor(&TestConfig{}, Config{
 		SkipDefaults:    true,
@@ -572,6 +590,7 @@ func TestUnknownFlags(t *testing.T) {
 	flags := []string{
 		"-tst.str=str-flag",
 		"-tst.unknown=1001",
+		"-just_env=just_value",
 	}
 
 	// just for tests
@@ -580,6 +599,7 @@ func TestUnknownFlags(t *testing.T) {
 
 	// define flag with a loader's prefix which is unknown
 	flagSet.Int("tst.unknown", 42, "")
+	flagSet.String("just_env", "just_def", "")
 
 	if err := flagSet.Parse(flags); err != nil {
 		t.Fatal(err)
@@ -591,6 +611,34 @@ func TestUnknownFlags(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unknown flag") {
 		t.Fatalf("got %s", err.Error())
+	}
+}
+
+func TestUnknownFlagsWithEmptyPrefix(t *testing.T) {
+	loader := LoaderFor(&TestConfig{}, Config{
+		SkipDefaults:    true,
+		SkipFiles:       true,
+		SkipEnvironment: true,
+	})
+
+	flags := []string{
+		"-str=str-flag",
+		"-unknown=1001",
+	}
+
+	// just for tests
+	flagSet := loader.Flags()
+	flagSet.SetOutput(ioutil.Discard)
+
+	// define flag with a loader's prefix which is unknown
+	flagSet.Int("unknown", 42, "")
+
+	if err := flagSet.Parse(flags); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
 	}
 }
 
