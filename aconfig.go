@@ -227,7 +227,7 @@ func (l *Loader) loadEnvironment() error {
 		delete(actualEnv, envName)
 	}
 
-	if !l.config.AllowUnknownEnvs && len(actualEnv) != 0 {
+	if !l.config.AllowUnknownEnvs && l.config.EnvPrefix != "" && len(actualEnv) != 0 {
 		for env, value := range actualEnv {
 			if strings.HasPrefix(env, l.config.EnvPrefix) {
 				return fmt.Errorf("unknown environment var %s : %s", env, value)
@@ -261,7 +261,7 @@ func (l *Loader) loadFlags() error {
 		delete(actualFlags, flagName)
 	}
 
-	if !l.config.AllowUnknownFlags && len(actualFlags) != 0 {
+	if !l.config.AllowUnknownFlags && l.config.FlagPrefix != "" && len(actualFlags) != 0 {
 		for flag, value := range actualFlags {
 			if strings.HasPrefix(flag, l.config.FlagPrefix) {
 				return fmt.Errorf("unknown flag %s : %s", flag, value)
