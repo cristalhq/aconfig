@@ -108,12 +108,9 @@ func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error
 	}
 
 	res := map[string]interface{}{}
-
 	for key, value := range raw {
-		// fmt.Printf("k: %s, v: %v %[2]T\n", key, value)
 		flatten("", key, value, res)
 	}
-	// fmt.Printf("map: %#v\n\n", res)
 	return res, nil
 }
 
@@ -131,13 +128,15 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 			}
 			b.WriteString(fmt.Sprint(v))
 		}
+		res[prefix+key] = b.String()
+	case []string:
 		res[prefix+key] = curr
 	case string:
 		res[prefix+key] = curr
 	case float64:
-		res[prefix+key] = fmt.Sprintf("%v", curr)
+		res[prefix+key] = fmt.Sprint(curr)
 	case bool:
-		res[prefix+key] = curr
+		res[prefix+key] = fmt.Sprint(curr)
 	default:
 		panic(fmt.Sprintf("%s::%s got %T %v", prefix, key, curr, curr))
 	}

@@ -67,6 +67,8 @@ type Field interface {
 
 // LoaderFor creates a new Loader based on a given configuration structure.
 func LoaderFor(dst interface{}, cfg Config) *Loader {
+	assertStruct(dst)
+
 	l := &Loader{
 		dst:    dst,
 		config: cfg,
@@ -185,16 +187,13 @@ func (l *Loader) loadFromFile() error {
 
 		for _, field := range l.fields {
 			name := field.fullTag(tag)
-			// fmt.Printf("search %#v\n", name)
 			value, ok := mappedFields[name]
 			if !ok {
 				continue
 			}
 
-			if value, ok := value.(string); ok {
-				if err := setFieldData(field, value); err != nil {
-					return err
-				}
+			if err := setFieldData(field, fmt.Sprint(value)); err != nil {
+				return err
 			}
 		}
 		return nil
@@ -205,7 +204,6 @@ func (l *Loader) loadFromFile() error {
 func (l *Loader) loadEnvironment() error {
 	for _, field := range l.fields {
 		envName := l.config.EnvPrefix + field.fullTag(envNameTag)
-		// println(envName)
 		v, ok := os.LookupEnv(envName)
 		if !ok {
 			continue
