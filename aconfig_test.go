@@ -517,6 +517,27 @@ func TestBadFiles(t *testing.T) {
 	f("testdata/unknown.ext")
 }
 
+func TestFileNotFound(t *testing.T) {
+	f := func(filepath string) {
+		t.Helper()
+
+		loader := LoaderFor(&TestConfig{}, Config{
+			SkipDefaults:       true,
+			SkipEnvironment:    true,
+			SkipFlags:          true,
+			FailOnFileNotFound: false,
+			Files:              []string{filepath},
+		})
+
+		if err := loader.Load(); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	f("testdata/config.json")
+	f("testdata/not_found.json")
+}
+
 func TestBadEnvs(t *testing.T) {
 	setEnv(t, "TST_HTTP_PORT", "30a00")
 	defer os.Clearenv()
