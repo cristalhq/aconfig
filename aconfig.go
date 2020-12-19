@@ -40,9 +40,11 @@ type Config struct {
 	AllowUnknownFlags  bool
 	AllowUnknownEnvs   bool
 
-	StopOnFileError bool
-	Files           []string
-	FileDecoders    map[string]FileDecoder
+	FailOnFileNotFound bool
+	MergeFiles         bool
+
+	Files        []string
+	FileDecoders map[string]FileDecoder
 }
 
 // FileDecoder is used to read config from files. See aconfig submodules.
@@ -178,6 +180,13 @@ func (l *Loader) loadDefaults() error {
 
 func (l *Loader) loadFromFile() error {
 	for _, file := range l.config.Files {
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			if l.config.FailOnFileNotFound {
+				return err
+			}
+			continue
+		}
+
 		ext := strings.ToLower(filepath.Ext(file))
 		decoder, ok := l.config.FileDecoders[ext]
 		if !ok {
@@ -208,6 +217,10 @@ func (l *Loader) loadFromFile() error {
 			for env, value := range actualFields {
 				return fmt.Errorf("unknown field in file %s: %s:%s", file, env, value)
 			}
+		}
+
+		if l.config.MergeFiles {
+			continue
 		}
 		return nil
 	}

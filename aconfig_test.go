@@ -191,7 +191,7 @@ func TestJSON(t *testing.T) {
 }
 
 func TestFile(t *testing.T) {
-	filepath := "testdata/config1.json"
+	filepath := "testdata/config.json"
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
@@ -225,7 +225,7 @@ func TestFile(t *testing.T) {
 }
 
 func TestFile_WithFile(t *testing.T) {
-	filepath := "testdata/config1.json"
+	filepath := "testdata/config.json"
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
@@ -249,6 +249,36 @@ func TestFile_WithFile(t *testing.T) {
 			IsAnon bool `default:"true"`
 		}{
 			IsAnon: true,
+		},
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func TestFileMerging(t *testing.T) {
+	file1 := "testdata/config1.json"
+	file2 := "testdata/config2.json"
+	file3 := "testdata/config3.json"
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:    true,
+		SkipEnvironment: true,
+		SkipFlags:       true,
+		MergeFiles:      true,
+		Files:           []string{file1, file2, file3},
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := TestConfig{
+		Str:      "111",
+		HTTPPort: 222,
+		Sub: SubConfig{
+			Float: 333.333,
 		},
 	}
 
@@ -470,11 +500,11 @@ func TestBadFiles(t *testing.T) {
 
 		var cfg TestConfig
 		loader := LoaderFor(&cfg, Config{
-			SkipDefaults:    true,
-			SkipEnvironment: true,
-			SkipFlags:       true,
-			StopOnFileError: true,
-			Files:           []string{filepath},
+			SkipDefaults:       true,
+			SkipEnvironment:    true,
+			SkipFlags:          true,
+			FailOnFileNotFound: true,
+			Files:              []string{filepath},
 		})
 
 		if err := loader.Load(); err == nil {
@@ -485,6 +515,27 @@ func TestBadFiles(t *testing.T) {
 	f("testdata/no_such_file.json")
 	f("testdata/bad_config.json")
 	f("testdata/unknown.ext")
+}
+
+func TestFileNotFound(t *testing.T) {
+	f := func(filepath string) {
+		t.Helper()
+
+		loader := LoaderFor(&TestConfig{}, Config{
+			SkipDefaults:       true,
+			SkipEnvironment:    true,
+			SkipFlags:          true,
+			FailOnFileNotFound: false,
+			Files:              []string{filepath},
+		})
+
+		if err := loader.Load(); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	f("testdata/config.json")
+	f("testdata/not_found.json")
 }
 
 func TestBadEnvs(t *testing.T) {
