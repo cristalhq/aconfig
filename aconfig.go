@@ -70,6 +70,7 @@ type Field interface {
 }
 
 // LoaderFor creates a new Loader based on a given configuration structure.
+// Supports only non-nil structures.
 func LoaderFor(dst interface{}, cfg Config) *Loader {
 	assertStruct(dst)
 
@@ -113,12 +114,13 @@ func (l *Loader) parseFields() {
 }
 
 // Flags returngs flag.FlagSet to create your own flags.
+// FlagSet name is Config.FlagPrefix and error handling is set to ContinueOnError.
 func (l *Loader) Flags() *flag.FlagSet {
 	return l.flagSet
 }
 
 // WalkFields iterates over configuration fields.
-// Easy way to create documentation or other stuff.
+// Easy way to create documentation or user-friendly help.
 func (l *Loader) WalkFields(fn func(f Field) bool) {
 	for _, f := range l.fields {
 		if !fn(f) {
@@ -202,7 +204,7 @@ func (l *Loader) loadFromFile() error {
 			delete(actualFields, name)
 		}
 
-		if !l.config.AllowUnknownFields && len(actualFields) != 0 {
+		if !l.config.AllowUnknownFields {
 			for env, value := range actualFields {
 				return fmt.Errorf("unknown field in file %s: %s:%s", file, env, value)
 			}
@@ -227,7 +229,7 @@ func (l *Loader) loadEnvironment() error {
 		delete(actualEnv, envName)
 	}
 
-	if !l.config.AllowUnknownEnvs && l.config.EnvPrefix != "" && len(actualEnv) != 0 {
+	if !l.config.AllowUnknownEnvs && l.config.EnvPrefix != "" {
 		for env, value := range actualEnv {
 			if strings.HasPrefix(env, l.config.EnvPrefix) {
 				return fmt.Errorf("unknown environment var %s : %s", env, value)
@@ -261,7 +263,7 @@ func (l *Loader) loadFlags() error {
 		delete(actualFlags, flagName)
 	}
 
-	if !l.config.AllowUnknownFlags && l.config.FlagPrefix != "" && len(actualFlags) != 0 {
+	if !l.config.AllowUnknownFlags && l.config.FlagPrefix != "" {
 		for flag, value := range actualFlags {
 			if strings.HasPrefix(flag, l.config.FlagPrefix) {
 				return fmt.Errorf("unknown flag %s : %s", flag, value)
