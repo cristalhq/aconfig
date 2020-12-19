@@ -146,8 +146,6 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 			b.WriteString(fmt.Sprint(v))
 		}
 		res[prefix+key] = b.String()
-	case []string:
-		res[prefix+key] = curr
 	case string:
 		res[prefix+key] = curr
 	case float64:

@@ -148,26 +148,28 @@ func TestDefaults_OtherNumberFormats(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
+	filepath := createTestFile(t)
+
 	var cfg structConfig
 	loader := LoaderFor(&cfg, Config{
 		SkipDefaults:    true,
 		SkipEnvironment: true,
 		SkipFlags:       true,
-		FileDecoders: map[string]FileDecoder{
-			".json": &jsonDecoder{},
-		},
-		Files: []string{"testfile.json"},
+		Files:           []string{filepath},
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
+	i := int32(42)
+	j := int64(420)
 	want := structConfig{
 		A: "b",
 		C: 10,
 		E: 123.456,
 		B: []byte("abc"),
-		P: int32Ptr(42),
+		I: &i,
+		J: &j,
 		Y: structY{
 			X: "y",
 			Z: []int{1, 2, 3},
@@ -177,6 +179,7 @@ func TestJSON(t *testing.T) {
 			BB: structB{
 				CC: structC{
 					MM: "n",
+					BB: []byte("boo"),
 				},
 				DD: []string{"x", "y", "z"},
 			},
@@ -571,7 +574,7 @@ func TestBadFlags(t *testing.T) {
 }
 
 func TestUnknownFields(t *testing.T) {
-	filepath := "testdata/with_additional_fields.json"
+	filepath := "testdata/unknown_fields.json"
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
@@ -889,6 +892,26 @@ func int32Ptr(a int32) *int32 {
 	return &a
 }
 
+func createTestFile(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	t.Cleanup(func() {
+		os.RemoveAll(dir)
+	})
+
+	filepath := dir + "/testfile.json"
+
+	f, err := os.Create(filepath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = f.WriteString(testfileContent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return filepath
+}
+
 type TestConfig struct {
 	Str      string `default:"str-def"`
 	Bytes    []byte `default:"bytes-def"`
@@ -920,7 +943,8 @@ type structConfig struct {
 	C int
 	E float64
 	B []byte
-	P *int32
+	I *int32
+	J *int64
 	Y structY
 
 	AA structA `json:"A"`
@@ -947,8 +971,34 @@ type structB struct {
 
 type structC struct {
 	MM string `json:"m"`
+	BB []byte `json:"b"`
 }
 
 type StructM struct {
 	M string
 }
+
+const testfileContent = `{
+    "a": "b",
+    "c": 10,
+    "e": 123.456,
+    "b": "abc",
+    "i": 42,
+    "j": 420,
+    "m": "n",
+    "y": {
+        "x": "y",
+        "z": [1, "2", "3"]
+    },
+    "A": {
+        "x": "y",
+        "B": {
+            "C": {
+                "m": "n",
+                "b": "boo"
+            },
+            "D": ["x", "y", "z"]
+        }
+    }
+}
+`
