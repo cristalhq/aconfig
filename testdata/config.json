@@ -1,0 +1,12 @@
+{
+  "str": "str-json",
+  "bytes": "Ynl0ZXMtanNvbg==",
+  "int": 101,
+  "http_port": 65000,
+  "sub": {
+    "float": 999.111
+  },
+  "anon": {
+    "is_anon": true
+  }
+}
