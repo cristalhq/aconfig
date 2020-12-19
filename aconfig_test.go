@@ -802,11 +802,11 @@ func TestWalkFields(t *testing.T) {
 		if parent, ok := f.Parent(); ok && parent.Name() != wantFields.ParentName {
 			t.Fatalf("got name %v, want %v", parent.Name(), wantFields.ParentName)
 		}
-		if f.DefaultValue() != wantFields.DefaultValue {
-			t.Fatalf("got default %#v, want %#v", f.DefaultValue(), wantFields.DefaultValue)
+		if f.Tag("default") != wantFields.DefaultValue {
+			t.Fatalf("got default %#v, want %#v", f.Tag("default"), wantFields.DefaultValue)
 		}
-		if f.Usage() != wantFields.Usage {
-			t.Fatalf("got usage %#v, want %#v", f.Usage(), wantFields.Usage)
+		if f.Tag("usage") != wantFields.Usage {
+			t.Fatalf("got usage %#v, want %#v", f.Tag("usage"), wantFields.Usage)
 		}
 		i++
 		return true

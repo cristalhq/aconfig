@@ -102,14 +102,6 @@ func (f *fieldData) Name() string {
 	return f.name
 }
 
-func (f *fieldData) DefaultValue() string {
-	return f.defaultValue
-}
-
-func (f *fieldData) Usage() string {
-	return f.usage
-}
-
 func (f *fieldData) fullTag(tag string) string {
 	sep := "."
 	if tag == envNameTag {

@@ -38,9 +38,6 @@ func makeEnvName(field reflect.StructField, parent *fieldData, words []string) s
 	if envName == "" {
 		envName = makeParsingName(words)
 	}
-	if parent != nil {
-		// envName = parent.envName + "_" + envName
-	}
 	return strings.ToUpper(envName)
 }
 
@@ -48,9 +45,6 @@ func makeFlagName(field reflect.StructField, parent *fieldData, words []string) 
 	flagName := field.Tag.Get(flagNameTag)
 	if flagName == "" {
 		flagName = makeParsingName(words)
-	}
-	if parent != nil {
-		// flagName = parent.flagName + "." + flagName
 	}
 	return strings.ToLower(flagName)
 }
