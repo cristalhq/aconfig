@@ -58,12 +58,6 @@ type Field interface {
 	// Name of the field.
 	Name() string
 
-	// DefaultValue of the field.
-	DefaultValue() string
-
-	// Usage of the field (set in `usage` tag).
-	Usage() string
-
 	// Tag returns a given tag for a field.
 	Tag(tag string) string
 
