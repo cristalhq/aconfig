@@ -50,12 +50,10 @@ func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []str
 	if v := field.Tag.Get(tag); v != "" {
 		return v
 	}
-	if l.config.DoNotGenerateTags {
-		switch tag {
-		case jsonNameTag, yamlNameTag, tomlNameTag:
+	switch tag {
+	case jsonNameTag, yamlNameTag, tomlNameTag:
+		if l.config.DoNotGenerateTags {
 			return field.Name
-		default:
-			// it's a flagNameTag, so create below
 		}
 	}
 	return strings.ToLower(makeParsingName(words))
