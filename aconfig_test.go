@@ -1,10 +1,8 @@
 package aconfig
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -752,6 +750,40 @@ func TestCustomNames(t *testing.T) {
 	}
 }
 
+func TestDontGenerateTags(t *testing.T) {
+	type testConfig struct {
+		A      string `json:"aaa"`
+		B      string `yaml:"aaa" toml:"bbb"`
+		DooDoo string
+		D      string `env:"aaa"`
+		E      string `flag:"aaa"`
+	}
+
+	want := map[string]string{
+		"A::json":      "aaa",
+		"B::yaml":      "aaa",
+		"C::toml":      "c",
+		"DooDoo::toml": "doo_doo",
+		"D::env":       "aaa",
+		"E::flag":      "aaa",
+		"E::json":      "e",
+	}
+	cfg := Config{
+		DoNotGenerateTags: true,
+	}
+	LoaderFor(&testConfig{}, cfg).WalkFields(func(f Field) bool {
+		for _, tag := range []string{"json", "yaml", "toml", "env", "flag"} {
+
+			k := f.Name() + "::" + tag
+			if v, ok := want[k]; ok && v != f.Tag(tag) {
+				t.Fatalf("got %v, want %v", f.Tag(tag), v)
+				return false
+			}
+		}
+		return true
+	})
+}
+
 func TestWalkFields(t *testing.T) {
 	type TestConfig struct {
 		A int `default:"-1" env:"one" marco:"polo"`
@@ -865,21 +897,6 @@ func TestPassNonStructs(t *testing.T) {
 	f([]string{})
 	f([4]string{})
 	f(func() {})
-}
-
-func loadFile(t *testing.T, file string, dst interface{}) {
-	f, err := os.Open(file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ext := strings.ToLower(filepath.Ext(file))
-	if ext != ".json" {
-		t.Fatal()
-	}
-	err = json.NewDecoder(f).Decode(dst)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func setEnv(t *testing.T, key, value string) {

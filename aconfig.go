@@ -33,6 +33,8 @@ type Config struct {
 	SkipEnvironment bool
 	SkipFlags       bool
 
+	DoNotGenerateTags bool
+
 	EnvPrefix  string
 	FlagPrefix string
 
@@ -99,7 +101,7 @@ func (l *Loader) init() {
 }
 
 func (l *Loader) parseFields() {
-	l.fields = getFields(l.dst)
+	l.fields = l.getFields(l.dst)
 
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
@@ -165,7 +167,7 @@ func (l *Loader) loadSources() error {
 
 func (l *Loader) loadDefaults() error {
 	for _, fd := range l.fields {
-		if err := setFieldData(fd, fd.defaultValue); err != nil {
+		if err := l.setFieldData(fd, fd.defaultValue); err != nil {
 			return err
 		}
 	}
@@ -201,7 +203,7 @@ func (l *Loader) loadFromFile() error {
 				continue
 			}
 
-			if err := setFieldData(field, fmt.Sprint(value)); err != nil {
+			if err := l.setFieldData(field, fmt.Sprint(value)); err != nil {
 				return err
 			}
 			delete(actualFields, name)
@@ -230,7 +232,7 @@ func (l *Loader) loadEnvironment() error {
 		if !ok {
 			continue
 		}
-		if err := setFieldData(field, v); err != nil {
+		if err := l.setFieldData(field, v); err != nil {
 			return err
 		}
 		delete(actualEnv, envName)
@@ -264,7 +266,7 @@ func (l *Loader) loadFlags() error {
 		if !ok {
 			continue
 		}
-		if err := setFieldData(field, flg.Value.String()); err != nil {
+		if err := l.setFieldData(field, flg.Value.String()); err != nil {
 			return err
 		}
 		delete(actualFlags, flagName)
