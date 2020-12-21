@@ -752,21 +752,26 @@ func TestCustomNames(t *testing.T) {
 
 func TestDontGenerateTags(t *testing.T) {
 	type testConfig struct {
-		A      string `json:"aaa"`
-		B      string `yaml:"aaa" toml:"bbb"`
-		DooDoo string
-		D      string `env:"aaa"`
-		E      string `flag:"aaa"`
+		A        string `json:"aaa"`
+		B        string `yaml:"aaa" toml:"bbb"`
+		DooDoo   string
+		HTTPPort int    `yaml:"port"`
+		D        string `env:"aaa"`
+		E        string `flag:"aaa"`
 	}
 
 	want := map[string]string{
-		"A::json":      "aaa",
-		"B::yaml":      "aaa",
-		"C::toml":      "c",
-		"DooDoo::toml": "doo_doo",
-		"D::env":       "aaa",
-		"E::flag":      "aaa",
-		"E::json":      "e",
+		"A::json":        "aaa",
+		"B::yaml":        "aaa",
+		"C::toml":        "c",
+		"DooDoo::toml":   "DooDoo",
+		"DooDoo::flag":   "doo_doo",
+		"HTTPPort::flag": "http_port",
+		"HTTPPort::json": "HTTPPort",
+		"HTTPPort::yaml": "port",
+		"D::env":         "aaa",
+		"E::flag":        "aaa",
+		"E::json":        "E",
 	}
 	cfg := Config{
 		DoNotGenerateTags: true,
@@ -776,7 +781,7 @@ func TestDontGenerateTags(t *testing.T) {
 
 			k := f.Name() + "::" + tag
 			if v, ok := want[k]; ok && v != f.Tag(tag) {
-				t.Fatalf("got %v, want %v", f.Tag(tag), v)
+				t.Fatalf("%v: got %v, want %v", tag, f.Tag(tag), v)
 				return false
 			}
 		}

@@ -46,16 +46,27 @@ func makeName(name string, parent *fieldData) string {
 	return parent.name + "." + name
 }
 
-func makeTagValue(field reflect.StructField, tag string, words []string) string {
+func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []string) string {
 	if v := field.Tag.Get(tag); v != "" {
 		return v
+	}
+	if l.config.DoNotGenerateTags {
+		switch tag {
+		case jsonNameTag, yamlNameTag, tomlNameTag:
+			return field.Name
+		default:
+			// it's a flagNameTag, so create below
+		}
 	}
 	return strings.ToLower(makeParsingName(words))
 }
 
-func makeEnvName(field reflect.StructField, words []string) string {
+func (l *Loader) makeEnvName(field reflect.StructField, words []string) string {
 	if v := field.Tag.Get(envNameTag); v != "" {
 		return v
+	}
+	if l.config.DoNotGenerateTags {
+		return ""
 	}
 	return strings.ToUpper(makeParsingName(words))
 }

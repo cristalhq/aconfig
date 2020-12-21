@@ -37,14 +37,11 @@ func (l *Loader) newFieldData(field reflect.StructField, value reflect.Value, pa
 
 		defaultValue: field.Tag.Get(defaultValueTag),
 		usage:        field.Tag.Get(usageTag),
-		jsonName:     makeTagValue(field, jsonNameTag, words),
-		yamlName:     makeTagValue(field, yamlNameTag, words),
-		tomlName:     makeTagValue(field, tomlNameTag, words),
-		envName:      field.Tag.Get(envNameTag),
-		flagName:     makeTagValue(field, flagNameTag, words),
-	}
-	if fd.envName == "" {
-		fd.envName = makeEnvName(field, words)
+		jsonName:     l.makeTagValue(field, jsonNameTag, words),
+		yamlName:     l.makeTagValue(field, yamlNameTag, words),
+		tomlName:     l.makeTagValue(field, tomlNameTag, words),
+		envName:      l.makeEnvName(field, words),
+		flagName:     l.makeTagValue(field, flagNameTag, words),
 	}
 	return fd
 }
