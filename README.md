@@ -9,20 +9,20 @@ Simple, useful and opinionated config loader.
 
 ## Rationale
 
-There are more than 2000 repositories on Github regarding configuration in Go. I was looking for a simple configuration loader that will automate a lot of things for me. Idea was to load config from 4 common places: defaults (in the code), config files, environment variables, command-line flags. This library works with all of them.
+There are many solutions regarding configuration loading in Go. I was looking for a simple loader that will as much as possible and be easy to use and understand. The goal was to load config from 4 places: defaults (in the code), files, environment variables, command-line flags. This library works with all of this sources.
 
 ## Features
 
 * Simple API.
 * Clean and tested code.
-* Automatic naming.
+* Automatic fields mapping.
 * Supports different sources:
   * defaults in the code
   * files (JSON, YAML, TOML)
   * environment variables
   * command-line flags
-* Dependency-free (even file-parsers are optional).
-* Walk over configuration fields (automate what you want)
+* Dependency-free (file parsers are optional).
+* Ability to walk over configuration fields.
 
 ## Install
 
@@ -51,9 +51,9 @@ loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 	// SkipFiles:    true,
 	// SkipEnv:      true,
 	// SkipFlags:    true,
-	Files:           []string{"/var/opt/myapp/config.json", "ouch.yaml"},
 	EnvPrefix:       "APP",
 	FlagPrefix:      "app",
+	Files:           []string{"/var/opt/myapp/config.json", "ouch.yaml"},
 	FileDecoders: map[string]aconfig.FileDecoder{
 		// from `aconfigyaml` submodule
 		// see submodules in repo for more formats
@@ -70,7 +70,7 @@ if err := loader.Load(); err != nil {
 
 // configuration fields will be loaded from (in order):
 //
-// 1. defaults set in structure tags (see structure defenition)
+// 1. defaults set in structure tags (see MyConfig defenition)
 // 2. loaded from files `file.json` if not `ouch.yaml` will be used
 // 3. from corresponding environment variables with the prefix `APP_`
 // 4. command-line flags with the prefix `app.` if they are 
