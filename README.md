@@ -47,10 +47,10 @@ type MyConfig struct {
 var cfg MyConfig
 loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 	// feel free to skip some steps :)
-	// SkipDefaults:    true,
-	// SkipFiles:       true,
-	// SkipEnvironment: true,
-	// SkipFlags:       true,
+	// SkipDefaults: true,
+	// SkipFiles:    true,
+	// SkipEnv:      true,
+	// SkipFlags:    true,
 	Files:           []string{"/var/opt/myapp/config.json", "ouch.yaml"},
 	EnvPrefix:       "APP",
 	FlagPrefix:      "app",

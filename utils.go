@@ -52,7 +52,7 @@ func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []str
 	}
 	switch tag {
 	case jsonNameTag, yamlNameTag, tomlNameTag:
-		if l.config.DoNotGenerateTags {
+		if l.config.DontGenerateTags {
 			return field.Name
 		}
 	}
@@ -63,7 +63,7 @@ func (l *Loader) makeEnvName(field reflect.StructField, words []string) string {
 	if v := field.Tag.Get(envNameTag); v != "" {
 		return v
 	}
-	if l.config.DoNotGenerateTags {
+	if l.config.DontGenerateTags {
 		return ""
 	}
 	return strings.ToUpper(makeParsingName(words))
