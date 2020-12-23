@@ -8,58 +8,6 @@ import (
 	"time"
 )
 
-func assertStruct(x interface{}) {
-	if x == nil {
-		panic("aconfig: nil should not be passed to the Loader")
-	}
-	value := reflect.ValueOf(x)
-	for value.Type().Kind() == reflect.Ptr {
-		value = value.Elem()
-	}
-	if value.Kind() != reflect.Struct {
-		panic("aconfig: only struct can be passed to the Loader")
-	}
-}
-
-func getFields(x interface{}) []*fieldData {
-	value := reflect.ValueOf(x)
-	for value.Type().Kind() == reflect.Ptr {
-		value = value.Elem()
-	}
-	return getFieldsHelper(value, nil)
-}
-
-func getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData {
-	typeObject := valueObject.Type()
-	count := valueObject.NumField()
-
-	fields := make([]*fieldData, 0, count)
-	for i := 0; i < count; i++ {
-		value := valueObject.Field(i)
-		field := typeObject.Field(i)
-
-		if !value.CanSet() {
-			continue
-		}
-
-		fd := newFieldData(field, value, parent)
-
-		// if it's a struct - expand and process it's fields
-		if field.Type.Kind() == reflect.Struct {
-			var subFieldParent *fieldData
-			if field.Anonymous {
-				subFieldParent = parent
-			} else {
-				subFieldParent = fd
-			}
-			fields = append(fields, getFieldsHelper(value, subFieldParent)...)
-			continue
-		}
-		fields = append(fields, fd)
-	}
-	return fields
-}
-
 type fieldData struct {
 	name         string
 	parent       *fieldData
@@ -74,11 +22,14 @@ type fieldData struct {
 	flagName     string
 }
 
-func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
-	words := splitNameByWords(field.Name)
-	name := makeFlagName(field, parent, words) // it's ok to use flagName, fields have `_` and nesting is via `.`
+func (l *Loader) newSimpleFieldData(value reflect.Value) *fieldData {
+	return l.newFieldData(reflect.StructField{}, value, nil)
+}
 
-	return &fieldData{
+func (l *Loader) newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
+	words := splitNameByWords(field.Name)
+
+	fd := &fieldData{
 		name:   makeName(field.Name, parent),
 		parent: parent,
 		value:  value,
@@ -86,16 +37,13 @@ func newFieldData(field reflect.StructField, value reflect.Value, parent *fieldD
 
 		defaultValue: field.Tag.Get(defaultValueTag),
 		usage:        field.Tag.Get(usageTag),
-		jsonName:     ifNotEmpty(field.Tag.Get(jsonNameTag), name),
-		yamlName:     ifNotEmpty(field.Tag.Get(yamlNameTag), name),
-		tomlName:     ifNotEmpty(field.Tag.Get(tomlNameTag), name),
-		envName:      ifNotEmpty(field.Tag.Get(envNameTag), makeEnvName(field, parent, words)),
-		flagName:     ifNotEmpty(field.Tag.Get(flagNameTag), name),
+		jsonName:     l.makeTagValue(field, jsonNameTag, words),
+		yamlName:     l.makeTagValue(field, yamlNameTag, words),
+		tomlName:     l.makeTagValue(field, tomlNameTag, words),
+		envName:      l.makeEnvName(field, words),
+		flagName:     l.makeTagValue(field, flagNameTag, words),
 	}
-}
-
-func newSimpleFieldData(value reflect.Value) *fieldData {
-	return newFieldData(reflect.StructField{}, value, nil)
+	return fd
 }
 
 func (f *fieldData) Name() string {
@@ -139,7 +87,46 @@ func (f *fieldData) Parent() (Field, bool) {
 	return f.parent, f.parent != nil
 }
 
-func setFieldData(field *fieldData, value string) error {
+func (l *Loader) getFields(x interface{}) []*fieldData {
+	value := reflect.ValueOf(x)
+	for value.Type().Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+	return l.getFieldsHelper(value, nil)
+}
+
+func (l *Loader) getFieldsHelper(valueObject reflect.Value, parent *fieldData) []*fieldData {
+	typeObject := valueObject.Type()
+	count := valueObject.NumField()
+
+	fields := make([]*fieldData, 0, count)
+	for i := 0; i < count; i++ {
+		value := valueObject.Field(i)
+		field := typeObject.Field(i)
+
+		if !value.CanSet() {
+			continue
+		}
+
+		fd := l.newFieldData(field, value, parent)
+
+		// if it's a struct - expand and process it's fields
+		if field.Type.Kind() == reflect.Struct {
+			var subFieldParent *fieldData
+			if field.Anonymous {
+				subFieldParent = parent
+			} else {
+				subFieldParent = fd
+			}
+			fields = append(fields, l.getFieldsHelper(value, subFieldParent)...)
+			continue
+		}
+		fields = append(fields, fd)
+	}
+	return fields
+}
+
+func (l *Loader) setFieldData(field *fieldData, value string) error {
 	// unwrap pointers
 	for field.value.Type().Kind() == reflect.Ptr {
 		if field.value.IsNil() {
@@ -154,35 +141,35 @@ func setFieldData(field *fieldData, value string) error {
 
 	switch kind := field.value.Type().Kind(); kind {
 	case reflect.Bool:
-		return setBool(field, value)
+		return l.setBool(field, value)
 
 	case reflect.String:
-		return setString(field, value)
+		return l.setString(field, value)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-		return setInt(field, value)
+		return l.setInt(field, value)
 
 	case reflect.Int64:
-		return setInt64(field, value)
+		return l.setInt64(field, value)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return setUint(field, value)
+		return l.setUint(field, value)
 
 	case reflect.Float32, reflect.Float64:
-		return setFloat(field, value)
+		return l.setFloat(field, value)
 
 	case reflect.Slice:
-		return setSlice(field, value)
+		return l.setSlice(field, value)
 
 	case reflect.Map:
-		return setMap(field, value)
+		return l.setMap(field, value)
 
 	default:
 		return fmt.Errorf("type kind %q isn't supported", kind)
 	}
 }
 
-func setBool(field *fieldData, value string) error {
+func (l *Loader) setBool(field *fieldData, value string) error {
 	val, err := strconv.ParseBool(value)
 	if err != nil {
 		return err
@@ -191,7 +178,7 @@ func setBool(field *fieldData, value string) error {
 	return nil
 }
 
-func setInt(field *fieldData, value string) error {
+func (l *Loader) setInt(field *fieldData, value string) error {
 	val, err := strconv.ParseInt(value, 0, field.value.Type().Bits())
 	if err != nil {
 		return err
@@ -200,7 +187,7 @@ func setInt(field *fieldData, value string) error {
 	return nil
 }
 
-func setInt64(field *fieldData, value string) error {
+func (l *Loader) setInt64(field *fieldData, value string) error {
 	if field.field.Type == reflect.TypeOf(time.Second) {
 		val, err := time.ParseDuration(value)
 		if err != nil {
@@ -209,10 +196,10 @@ func setInt64(field *fieldData, value string) error {
 		field.value.Set(reflect.ValueOf(val))
 		return nil
 	}
-	return setInt(field, value)
+	return l.setInt(field, value)
 }
 
-func setUint(field *fieldData, value string) error {
+func (l *Loader) setUint(field *fieldData, value string) error {
 	val, err := strconv.ParseUint(value, 0, field.value.Type().Bits())
 	if err != nil {
 		return err
@@ -221,7 +208,7 @@ func setUint(field *fieldData, value string) error {
 	return nil
 }
 
-func setFloat(field *fieldData, value string) error {
+func (l *Loader) setFloat(field *fieldData, value string) error {
 	val, err := strconv.ParseFloat(value, field.value.Type().Bits())
 	if err != nil {
 		return err
@@ -230,12 +217,12 @@ func setFloat(field *fieldData, value string) error {
 	return nil
 }
 
-func setString(field *fieldData, value string) error {
+func (l *Loader) setString(field *fieldData, value string) error {
 	field.value.SetString(value)
 	return nil
 }
 
-func setSlice(field *fieldData, value string) error {
+func (l *Loader) setSlice(field *fieldData, value string) error {
 	// Special case for []byte
 	if field.field.Type.Elem().Kind() == reflect.Uint8 {
 		value := reflect.ValueOf([]byte(value))
@@ -248,8 +235,8 @@ func setSlice(field *fieldData, value string) error {
 	for i, val := range vals {
 		val = strings.TrimSpace(val)
 
-		fd := newFieldData(reflect.StructField{}, slice.Index(i), nil)
-		if err := setFieldData(fd, val); err != nil {
+		fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
+		if err := l.setFieldData(fd, val); err != nil {
 			return fmt.Errorf("incorrect slice item %q: %w", val, err)
 		}
 	}
@@ -257,7 +244,7 @@ func setSlice(field *fieldData, value string) error {
 	return nil
 }
 
-func setMap(field *fieldData, value string) error {
+func (l *Loader) setMap(field *fieldData, value string) error {
 	vals := strings.Split(value, ",")
 	mapField := reflect.MakeMapWithSize(field.field.Type, len(vals))
 
@@ -269,13 +256,13 @@ func setMap(field *fieldData, value string) error {
 		key := strings.TrimSpace(entry[0])
 		val := strings.TrimSpace(entry[1])
 
-		fdk := newSimpleFieldData(reflect.New(field.field.Type.Key()).Elem())
-		if err := setFieldData(fdk, key); err != nil {
+		fdk := l.newSimpleFieldData(reflect.New(field.field.Type.Key()).Elem())
+		if err := l.setFieldData(fdk, key); err != nil {
 			return fmt.Errorf("incorrect map key %q: %w", key, err)
 		}
 
-		fdv := newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
-		if err := setFieldData(fdv, val); err != nil {
+		fdv := l.newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
+		if err := l.setFieldData(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
 		}
 		mapField.SetMapIndex(fdk.value, fdv.value)

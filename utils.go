@@ -9,6 +9,19 @@ import (
 	"unicode"
 )
 
+func assertStruct(x interface{}) {
+	if x == nil {
+		panic("aconfig: nil should not be passed to the Loader")
+	}
+	value := reflect.ValueOf(x)
+	for value.Type().Kind() == reflect.Ptr {
+		value = value.Elem()
+	}
+	if value.Kind() != reflect.Struct {
+		panic("aconfig: only struct can be passed to the Loader")
+	}
+}
+
 func getEnv() map[string]string {
 	env := os.Environ()
 	res := make(map[string]string, len(env))
@@ -33,20 +46,27 @@ func makeName(name string, parent *fieldData) string {
 	return parent.name + "." + name
 }
 
-func makeEnvName(field reflect.StructField, parent *fieldData, words []string) string {
-	envName := field.Tag.Get(envNameTag)
-	if envName == "" {
-		envName = makeParsingName(words)
+func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []string) string {
+	if v := field.Tag.Get(tag); v != "" {
+		return v
 	}
-	return strings.ToUpper(envName)
+	switch tag {
+	case jsonNameTag, yamlNameTag, tomlNameTag:
+		if l.config.DontGenerateTags {
+			return field.Name
+		}
+	}
+	return strings.ToLower(makeParsingName(words))
 }
 
-func makeFlagName(field reflect.StructField, parent *fieldData, words []string) string {
-	flagName := field.Tag.Get(flagNameTag)
-	if flagName == "" {
-		flagName = makeParsingName(words)
+func (l *Loader) makeEnvName(field reflect.StructField, words []string) string {
+	if v := field.Tag.Get(envNameTag); v != "" {
+		return v
 	}
-	return strings.ToLower(flagName)
+	if l.config.DontGenerateTags {
+		return ""
+	}
+	return strings.ToUpper(makeParsingName(words))
 }
 
 func makeParsingName(words []string) string {
@@ -149,11 +169,4 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 	default:
 		panic(fmt.Sprintf("%s::%s got %T %v", prefix, key, curr, curr))
 	}
-}
-
-func ifNotEmpty(a, b string) string {
-	if a == "" {
-		return b
-	}
-	return a
 }

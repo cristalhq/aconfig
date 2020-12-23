@@ -19,13 +19,13 @@ type MyConfig struct {
 func Example_SimpleUsage() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-		SkipDefaults:    true,
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
-		Files:           []string{"/var/opt/myapp/config.json"},
-		EnvPrefix:       "APP",
-		FlagPrefix:      "app",
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{"/var/opt/myapp/config.json"},
+		EnvPrefix:    "APP",
+		FlagPrefix:   "app",
 	})
 	if err := loader.Load(); err != nil {
 		log.Panic(err)
@@ -45,9 +45,9 @@ func Example_SimpleUsage() {
 func Example_WalkFields() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipFiles: true,
+		SkipEnv:   true,
+		SkipFlags: true,
 	})
 	loader.WalkFields(func(f aconfig.Field) bool {
 		fmt.Printf("%v: %q %q %q %q\n", f.Name(), f.Tag("env"), f.Tag("flag"), f.Tag("default"), f.Tag("usage"))
@@ -65,9 +65,9 @@ func Example_WalkFields() {
 func Example_Defaults() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipFiles: true,
+		SkipEnv:   true,
+		SkipFlags: true,
 	})
 	if err := loader.Load(); err != nil {
 		log.Panic(err)
@@ -89,9 +89,9 @@ func Example_Defaults() {
 func Example_File() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-		SkipEnvironment: true,
-		SkipFlags:       true,
-		Files:           []string{"testdata/example_config.json"},
+		SkipEnv:   true,
+		SkipFlags: true,
+		Files:     []string{"testdata/example_config.json"},
 	})
 	if err := loader.Load(); err != nil {
 		log.Panic(err)

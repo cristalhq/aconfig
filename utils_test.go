@@ -24,6 +24,7 @@ func Test_splitNameByWords(t *testing.T) {
 		{"", args{"MarshalJSONStruct"}, []string{"Marshal", "JSON", "Struct"}},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := splitNameByWords(tt.args.src); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("splitNameByWords() = %v, want %v", got, tt.want)

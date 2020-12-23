@@ -1,10 +1,8 @@
 package aconfig
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -14,9 +12,9 @@ import (
 func TestDefaults(t *testing.T) {
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipFiles: true,
+		SkipEnv:   true,
+		SkipFlags: true,
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -74,9 +72,9 @@ func TestDefaults_AllTypes(t *testing.T) {
 
 	var cfg AllTypesConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipFiles: true,
+		SkipEnv:   true,
+		SkipFlags: true,
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -122,9 +120,9 @@ func TestDefaults_OtherNumberFormats(t *testing.T) {
 
 	var cfg OtherNumberFormats
 	loader := LoaderFor(&cfg, Config{
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipFiles: true,
+		SkipEnv:   true,
+		SkipFlags: true,
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -152,10 +150,10 @@ func TestJSON(t *testing.T) {
 
 	var cfg structConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults:    true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
-		Files:           []string{filepath},
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{filepath},
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -198,10 +196,10 @@ func TestFile(t *testing.T) {
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults:    true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
-		Files:           []string{filepath},
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{filepath},
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -232,9 +230,9 @@ func TestFile_WithFile(t *testing.T) {
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults:    true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
 	})
 	if err := loader.LoadWithFile(filepath); err != nil {
 		t.Fatal(err)
@@ -267,11 +265,11 @@ func TestFileMerging(t *testing.T) {
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults:    true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
-		MergeFiles:      true,
-		Files:           []string{file1, file2, file3},
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		MergeFiles:   true,
+		Files:        []string{file1, file2, file3},
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -337,10 +335,10 @@ func TestEnv(t *testing.T) {
 func TestFlag(t *testing.T) {
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults:    true,
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		FlagPrefix:      "tst",
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipEnv:      true,
+		FlagPrefix:   "tst",
 	})
 
 	flags := []string{
@@ -407,9 +405,9 @@ func TestBadDefauts(t *testing.T) {
 		t.Helper()
 
 		loader := LoaderFor(cfg, Config{
-			SkipFiles:       true,
-			SkipEnvironment: true,
-			SkipFlags:       true,
+			SkipFiles: true,
+			SkipEnv:   true,
+			SkipFlags: true,
 		})
 		if err := loader.Load(); err == nil {
 			t.Fatal(err)
@@ -504,7 +502,7 @@ func TestBadFiles(t *testing.T) {
 		var cfg TestConfig
 		loader := LoaderFor(&cfg, Config{
 			SkipDefaults:       true,
-			SkipEnvironment:    true,
+			SkipEnv:            true,
 			SkipFlags:          true,
 			FailOnFileNotFound: true,
 			Files:              []string{filepath},
@@ -526,7 +524,7 @@ func TestFileNotFound(t *testing.T) {
 
 		loader := LoaderFor(&TestConfig{}, Config{
 			SkipDefaults:       true,
-			SkipEnvironment:    true,
+			SkipEnv:            true,
 			SkipFlags:          true,
 			FailOnFileNotFound: false,
 			Files:              []string{filepath},
@@ -559,10 +557,10 @@ func TestBadEnvs(t *testing.T) {
 
 func TestBadFlags(t *testing.T) {
 	loader := LoaderFor(&TestConfig{}, Config{
-		SkipDefaults:    true,
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		FlagPrefix:      "tst",
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipEnv:      true,
+		FlagPrefix:   "tst",
 	})
 
 	if err := loader.Flags().Parse([]string{"-tst.param=10a01"}); err != nil {
@@ -578,10 +576,10 @@ func TestUnknownFields(t *testing.T) {
 
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults:    true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
-		Files:           []string{filepath},
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{filepath},
 	})
 
 	err := loader.Load()
@@ -635,10 +633,10 @@ func TestUnknownEnvsWithEmptyPrefix(t *testing.T) {
 
 func TestUnknownFlags(t *testing.T) {
 	loader := LoaderFor(&TestConfig{}, Config{
-		SkipDefaults:    true,
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		FlagPrefix:      "tst",
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipEnv:      true,
+		FlagPrefix:   "tst",
 	})
 
 	flags := []string{
@@ -670,9 +668,9 @@ func TestUnknownFlags(t *testing.T) {
 
 func TestUnknownFlagsWithEmptyPrefix(t *testing.T) {
 	loader := LoaderFor(&TestConfig{}, Config{
-		SkipDefaults:    true,
-		SkipFiles:       true,
-		SkipEnvironment: true,
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipEnv:      true,
 	})
 
 	flags := []string{
@@ -699,10 +697,10 @@ func TestUnknownFlagsWithEmptyPrefix(t *testing.T) {
 // flag.FlagSet already fails on undefined flag
 func TestUnknownFlagsStdlib(t *testing.T) {
 	loader := LoaderFor(&TestConfig{}, Config{
-		SkipDefaults:    true,
-		SkipFiles:       true,
-		SkipEnvironment: true,
-		FlagPrefix:      "tst",
+		SkipDefaults: true,
+		SkipFiles:    true,
+		SkipEnv:      true,
+		FlagPrefix:   "tst",
 	})
 
 	flags := []string{
@@ -750,6 +748,44 @@ func TestCustomNames(t *testing.T) {
 	if want := 4; cfg.C != want {
 		t.Errorf("got %#v, want %#v", cfg.C, want)
 	}
+}
+
+func TestDontGenerateTags(t *testing.T) {
+	type testConfig struct {
+		A        string `json:"aaa"`
+		B        string `yaml:"aaa" toml:"bbb"`
+		DooDoo   string
+		HTTPPort int    `yaml:"port"`
+		D        string `env:"aaa"`
+		E        string `flag:"aaa"`
+	}
+
+	want := map[string]string{
+		"A::json":        "aaa",
+		"B::yaml":        "aaa",
+		"C::toml":        "c",
+		"DooDoo::toml":   "DooDoo",
+		"DooDoo::flag":   "doo_doo",
+		"HTTPPort::flag": "http_port",
+		"HTTPPort::json": "HTTPPort",
+		"HTTPPort::yaml": "port",
+		"D::env":         "aaa",
+		"E::flag":        "aaa",
+		"E::json":        "E",
+	}
+	cfg := Config{
+		DontGenerateTags: true,
+	}
+	LoaderFor(&testConfig{}, cfg).WalkFields(func(f Field) bool {
+		for _, tag := range []string{"json", "yaml", "toml", "env", "flag"} {
+			k := f.Name() + "::" + tag
+			if v, ok := want[k]; ok && v != f.Tag(tag) {
+				t.Fatalf("%v: got %v, want %v", tag, f.Tag(tag), v)
+				return false
+			}
+		}
+		return true
+	})
 }
 
 func TestWalkFields(t *testing.T) {
@@ -865,21 +901,6 @@ func TestPassNonStructs(t *testing.T) {
 	f([]string{})
 	f([4]string{})
 	f(func() {})
-}
-
-func loadFile(t *testing.T, file string, dst interface{}) {
-	f, err := os.Open(file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ext := strings.ToLower(filepath.Ext(file))
-	if ext != ".json" {
-		t.Fatal()
-	}
-	err = json.NewDecoder(f).Decode(dst)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func setEnv(t *testing.T, key, value string) {

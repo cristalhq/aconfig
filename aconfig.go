@@ -28,22 +28,46 @@ type Loader struct {
 
 // Config to configure configuration loader.
 type Config struct {
-	SkipDefaults    bool
-	SkipFiles       bool
-	SkipEnvironment bool
-	SkipFlags       bool
+	SkipDefaults bool // SkipDefaults set to true will not load config from 'default' tag.
+	SkipFiles    bool // SkipFiles set to true will not load config from files.
+	SkipEnv      bool // SkipEnv set to true will not load config from environment variables.
+	SkipFlags    bool // SkipFlags set to true will not load config from flag parameters.
 
-	EnvPrefix  string
-	FlagPrefix string
+	EnvPrefix  string // EnvPrefix for environment variables.
+	FlagPrefix string // FlagPrefix for flag parameters.
 
+	// AllowUnknownFields set to true will not fail on unknown fields in files.
 	AllowUnknownFields bool
-	AllowUnknownFlags  bool
-	AllowUnknownEnvs   bool
 
+	// AllowUnknownEnvs set to true will not fail on unknown environment variables ().
+	// When false error is returned only when EnvPrefix isn't empty.
+	AllowUnknownEnvs bool
+
+	// AllowUnknownFlags set to true will not fail on unknown flag parameters ().
+	// When false error is returned only when FlagPrefix isn't empty.
+	AllowUnknownFlags bool
+
+	// DontGenerateTags disables tag generation for JSON, YAML, TOML file formats.
+	DontGenerateTags bool
+
+	// FailOnFileNotFound will stop Loader on a first not found file from Files field in this structure.
 	FailOnFileNotFound bool
-	MergeFiles         bool
 
-	Files        []string
+	// MergeFiles set to true will collect all the entries from all the given files.
+	// Easy wat to cobine base.yaml with prod.yaml
+	MergeFiles bool
+
+	// Files from which config should be loaded.
+	Files []string
+
+	// FileDecoders to enable other than JSON file formats and prevent additional dependencies.
+	// Add required submodules to the go.mod and register them in this field.
+	// Example:
+	//	FileDecoders: map[string]aconfig.FileDecoder{
+	//		".yaml": aconfigyaml.New(),
+	//		".toml": aconfigtoml.New(),
+	//		".env": aconfigdotenv.New(),
+	// 	}
 	FileDecoders map[string]FileDecoder
 }
 
@@ -99,7 +123,7 @@ func (l *Loader) init() {
 }
 
 func (l *Loader) parseFields() {
-	l.fields = getFields(l.dst)
+	l.fields = l.getFields(l.dst)
 
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
@@ -150,7 +174,7 @@ func (l *Loader) loadSources() error {
 			return err
 		}
 	}
-	if !l.config.SkipEnvironment {
+	if !l.config.SkipEnv {
 		if err := l.loadEnvironment(); err != nil {
 			return err
 		}
@@ -165,7 +189,7 @@ func (l *Loader) loadSources() error {
 
 func (l *Loader) loadDefaults() error {
 	for _, fd := range l.fields {
-		if err := setFieldData(fd, fd.defaultValue); err != nil {
+		if err := l.setFieldData(fd, fd.defaultValue); err != nil {
 			return err
 		}
 	}
@@ -201,7 +225,7 @@ func (l *Loader) loadFromFile() error {
 				continue
 			}
 
-			if err := setFieldData(field, fmt.Sprint(value)); err != nil {
+			if err := l.setFieldData(field, fmt.Sprint(value)); err != nil {
 				return err
 			}
 			delete(actualFields, name)
@@ -209,7 +233,7 @@ func (l *Loader) loadFromFile() error {
 
 		if !l.config.AllowUnknownFields {
 			for env, value := range actualFields {
-				return fmt.Errorf("unknown field in file %s: %s:%s", file, env, value)
+				return fmt.Errorf("unknown field in file %q: %s=%s (see AllowUnknownFields config param)", file, env, value)
 			}
 		}
 
@@ -230,7 +254,7 @@ func (l *Loader) loadEnvironment() error {
 		if !ok {
 			continue
 		}
-		if err := setFieldData(field, v); err != nil {
+		if err := l.setFieldData(field, v); err != nil {
 			return err
 		}
 		delete(actualEnv, envName)
@@ -239,7 +263,7 @@ func (l *Loader) loadEnvironment() error {
 	if !l.config.AllowUnknownEnvs && l.config.EnvPrefix != "" {
 		for env, value := range actualEnv {
 			if strings.HasPrefix(env, l.config.EnvPrefix) {
-				return fmt.Errorf("unknown environment var %s : %s", env, value)
+				return fmt.Errorf("unknown environment var %s=%s (see AllowUnknownEnvs config param)", env, value)
 			}
 		}
 	}
@@ -264,7 +288,7 @@ func (l *Loader) loadFlags() error {
 		if !ok {
 			continue
 		}
-		if err := setFieldData(field, flg.Value.String()); err != nil {
+		if err := l.setFieldData(field, flg.Value.String()); err != nil {
 			return err
 		}
 		delete(actualFlags, flagName)
@@ -273,7 +297,7 @@ func (l *Loader) loadFlags() error {
 	if !l.config.AllowUnknownFlags && l.config.FlagPrefix != "" {
 		for flag, value := range actualFlags {
 			if strings.HasPrefix(flag, l.config.FlagPrefix) {
-				return fmt.Errorf("unknown flag %s : %s", flag, value)
+				return fmt.Errorf("unknown flag %s=%s (see AllowUnknownFlags config param)", flag, value)
 			}
 		}
 	}
