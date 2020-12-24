@@ -788,6 +788,22 @@ func TestDontGenerateTags(t *testing.T) {
 	})
 }
 
+func TestRequiredFields(t *testing.T) {
+	type testConfig struct {
+		A string `default:"a1" required:"true"`
+		B string `default:"b1" required:"true"`
+		C string `default:"c1" required:"true"`
+		D string `default:"d1" required:"true"`
+	}
+
+	var cfg testConfig
+	loader := LoaderFor(&cfg, Config{})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestWalkFields(t *testing.T) {
 	type TestConfig struct {
 		A int `default:"-1" env:"one" marco:"polo"`

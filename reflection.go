@@ -9,10 +9,13 @@ import (
 )
 
 type fieldData struct {
-	name         string
-	parent       *fieldData
-	field        reflect.StructField
-	value        reflect.Value
+	name       string
+	parent     *fieldData
+	field      reflect.StructField
+	value      reflect.Value
+	isRequired bool
+	isSet      bool
+
 	defaultValue string
 	usage        string
 	jsonName     string
@@ -30,10 +33,12 @@ func (l *Loader) newFieldData(field reflect.StructField, value reflect.Value, pa
 	words := splitNameByWords(field.Name)
 
 	fd := &fieldData{
-		name:   makeName(field.Name, parent),
-		parent: parent,
-		value:  value,
-		field:  field,
+		name:       makeName(field.Name, parent),
+		parent:     parent,
+		field:      field,
+		value:      value,
+		isRequired: field.Tag.Get("required") == "true",
+		isSet:      false,
 
 		defaultValue: field.Tag.Get(defaultValueTag),
 		usage:        field.Tag.Get(usageTag),
