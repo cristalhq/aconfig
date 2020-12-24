@@ -14,9 +14,9 @@ func TestYAML(t *testing.T) {
 
 	var cfg structConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-		SkipDefaults:    true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
 		FileDecoders: map[string]aconfig.FileDecoder{
 			".yaml": aconfigyaml.New(),
 		},
