@@ -14,9 +14,9 @@ func TestTOML(t *testing.T) {
 
 	var cfg structConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
-		SkipDefaults:    true,
-		SkipEnvironment: true,
-		SkipFlags:       true,
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
 		FileDecoders: map[string]aconfig.FileDecoder{
 			".toml": aconfigtoml.New(),
 		},
@@ -186,7 +186,7 @@ z = [ 1, 2, 3 ]
 
 // 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 // 		SkipDefaults:    true,
-// 		SkipEnvironment: true,
+// 		SkipEnv: true,
 // 		SkipFlags:       true,
 // 		FileDecoders: map[string]aconfig.FileDecoder{
 // 			".toml": aconfigtoml.New(),
