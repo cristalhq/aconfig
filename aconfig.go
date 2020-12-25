@@ -208,6 +208,7 @@ func (l *Loader) loadDefaults() error {
 		if err := l.setFieldData(field, field.defaultValue); err != nil {
 			return err
 		}
+		field.isSet = true
 	}
 	return nil
 }
