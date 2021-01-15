@@ -39,6 +39,9 @@ func TestYAML(t *testing.T) {
 		Y: structY{
 			X: "y",
 			Z: []string{"1", "2", "3"},
+			A: structD{
+				I: true,
+			},
 		},
 		AA: structA{
 			X: "y",
@@ -96,9 +99,7 @@ type structConfig struct {
 type structY struct {
 	X string
 	Z []string
-	A struct {
-		I bool
-	}
+	A structD
 }
 
 type structA struct {
@@ -116,6 +117,10 @@ type structC struct {
 	BB []byte `yaml:"b"`
 }
 
+type structD struct {
+	I bool
+}
+
 type StructM struct {
 	M string
 }
@@ -127,21 +132,27 @@ const testfileContent = `
     "e": 123.456,
     "b": "abc",
     "i": 42,
-    "j": 420,
-    "m": "n",
+	"j": 420,
+
     "y": {
-        "x": "y",
-        "z": ["1", "2", "3"]
-    },
+		"x": "y",
+		"z": ["1", "2", "3"],
+		"a": {
+			"i": true
+		}
+	},
+
     "A": {
-        "x": "y",
+		"x": "y",
         "B": {
-            "C": {
-                "m": "n",
+			"C": {
+				"m": "n",
                 "b": "boo",
             },
             "D": ["x", "y", "z"]
         }
-    }
+	},
+
+	"m": "n"
 }
 `

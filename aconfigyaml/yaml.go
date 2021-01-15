@@ -55,6 +55,8 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 		res[prefix+key] = b.String()
 	case string:
 		res[prefix+key] = curr
+	case bool:
+		res[prefix+key] = fmt.Sprint(curr)
 	case float64:
 		res[prefix+key] = fmt.Sprint(curr)
 	case int, int8, int16, int32:

@@ -171,6 +171,9 @@ func TestJSON(t *testing.T) {
 		Y: structY{
 			X: "y",
 			Z: []int{1, 2, 3},
+			A: structD{
+				I: true,
+			},
 		},
 		AA: structA{
 			X: "y",
@@ -975,9 +978,7 @@ type structConfig struct {
 type structY struct {
 	X string
 	Z []int
-	A struct {
-		I bool
-	}
+	A structD
 }
 
 type structA struct {
@@ -995,6 +996,10 @@ type structC struct {
 	BB []byte `json:"b"`
 }
 
+type structD struct {
+	I bool
+}
+
 type StructM struct {
 	M string
 }
@@ -1005,12 +1010,16 @@ const testfileContent = `{
     "e": 123.456,
     "b": "abc",
     "i": 42,
-    "j": 420,
-    "m": "n",
+	"j": 420,
+
     "y": {
         "x": "y",
-        "z": [1, "2", "3"]
+		"z": [1, "2", "3"],
+		"a": {
+			"i": true
+		}
     },
+
     "A": {
         "x": "y",
         "B": {
@@ -1020,6 +1029,8 @@ const testfileContent = `{
             },
             "D": ["x", "y", "z"]
         }
-    }
+	},
+
+	"m": "n"
 }
 `
