@@ -1028,6 +1028,6 @@ const testfileContent = `{
         }
 	},
 
-	"m": "n",
+	"m": "n"
 }
 `
