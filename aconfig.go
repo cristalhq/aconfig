@@ -14,6 +14,7 @@ const (
 	jsonNameTag     = "json"
 	yamlNameTag     = "yaml"
 	tomlNameTag     = "toml"
+	hclNameTag      = "hcl"
 	envNameTag      = "env"
 	flagNameTag     = "flag"
 )

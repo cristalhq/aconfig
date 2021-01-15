@@ -51,7 +51,7 @@ func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []str
 		return v
 	}
 	switch tag {
-	case jsonNameTag, yamlNameTag, tomlNameTag:
+	case jsonNameTag, yamlNameTag, tomlNameTag, hclNameTag:
 		if l.config.DontGenerateTags {
 			return field.Name
 		}

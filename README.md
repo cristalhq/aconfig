@@ -18,7 +18,7 @@ There are many solutions regarding configuration loading in Go. I was looking fo
 * Automatic fields mapping.
 * Supports different sources:
   * defaults in the code
-  * files (JSON, YAML, TOML)
+  * files (JSON, YAML, TOML, DotENV, HCL)
   * environment variables
   * command-line flags
 * Dependency-free (file parsers are optional).
