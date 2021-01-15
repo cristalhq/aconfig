@@ -18,6 +18,7 @@ type fieldData struct {
 	jsonName     string
 	yamlName     string
 	tomlName     string
+	hclName      string
 	envName      string
 	flagName     string
 }
@@ -40,6 +41,7 @@ func (l *Loader) newFieldData(field reflect.StructField, value reflect.Value, pa
 		jsonName:     l.makeTagValue(field, jsonNameTag, words),
 		yamlName:     l.makeTagValue(field, yamlNameTag, words),
 		tomlName:     l.makeTagValue(field, tomlNameTag, words),
+		hclName:      l.makeTagValue(field, hclNameTag, words),
 		envName:      l.makeEnvName(field, words),
 		flagName:     l.makeTagValue(field, flagNameTag, words),
 	}
@@ -74,6 +76,8 @@ func (f *fieldData) Tag(tag string) string {
 		return f.yamlName
 	case tomlNameTag:
 		return f.tomlName
+	case hclNameTag:
+		return f.hclName
 	case envNameTag:
 		return f.envName
 	case flagNameTag:
