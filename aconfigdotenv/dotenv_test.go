@@ -127,7 +127,6 @@ E=123.456
 B=abc
 I=42
 J=420
-M=n
 
 Y_X=y
 Y_Z=1,2,3
@@ -136,4 +135,6 @@ A_x=y
 A_B_C_m=n
 A_B_C_b=boo
 A_B_D=x,y,z
+
+M=n
 `
