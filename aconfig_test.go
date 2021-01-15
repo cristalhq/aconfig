@@ -791,9 +791,8 @@ func TestDontGenerateTags(t *testing.T) {
 func TestRequiredFields(t *testing.T) {
 	type testConfig struct {
 		A string `default:"a1" required:"true"`
-		B string `default:"b1" required:"true"`
-		C string `default:"c1" required:"true"`
-		D string `default:"d1" required:"true"`
+		B string `default:"b1"`
+		C string `required:"true"`
 	}
 
 	var cfg testConfig

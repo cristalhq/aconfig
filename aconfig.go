@@ -36,8 +36,9 @@ type Config struct {
 	EnvPrefix  string // EnvPrefix for environment variables.
 	FlagPrefix string // FlagPrefix for flag parameters.
 
-	// AllFieldsRequired set to true will fail config loading if one of the fields wasn not set.
-	// File, environment, flag must provide a value for the field. Default isn't used.
+	// AllFieldsRequired set to true will fail config loading if one of the fields was not set.
+	// File, environment, flag must provide a value for the field.
+	// If default is set, required is not verified.
 	AllFieldsRequired bool
 
 	// AllowUnknownFields set to true will not fail on unknown fields in files.
@@ -196,8 +197,11 @@ func (l *Loader) loadSources() error {
 
 func (l *Loader) checkRequired() error {
 	for _, fd := range l.fields {
-		if (fd.isRequired || l.config.AllFieldsRequired) && !fd.isSet {
-			return fmt.Errorf("field %s was not set", fd.name)
+		if fd.isSet {
+			continue
+		}
+		if fd.isRequired || l.config.AllFieldsRequired {
+			return fmt.Errorf("field %s was not set (see AllFieldsRequired config param)", fd.name)
 		}
 	}
 	return nil
@@ -209,6 +213,7 @@ func (l *Loader) loadDefaults() error {
 			return err
 		}
 		field.isSet = true
+		field.isRequired = false
 	}
 	return nil
 }
