@@ -70,14 +70,14 @@ func (l *Loader) makeEnvName(field reflect.StructField, words []string) string {
 }
 
 func makeParsingName(words []string) string {
-	name := ""
+	var name strings.Builder
 	for i, w := range words {
 		if i > 0 {
-			name += "_"
+			name.WriteByte('_')
 		}
-		name += strings.ToLower(w)
+		name.WriteString(strings.ToLower(w))
 	}
-	return name
+	return name.String()
 }
 
 // based on https://github.com/fatih/camelcase
@@ -115,7 +115,7 @@ func splitNameByWords(src string) []string {
 		}
 	}
 
-	words := []string{}
+	words := make([]string, 0, len(runes))
 	for _, s := range runes {
 		if len(s) > 0 {
 			words = append(words, string(s))
