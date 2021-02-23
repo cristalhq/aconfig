@@ -73,6 +73,7 @@ func createTestFile(t *testing.T) string {
 	filepath := dir + "/testfile.yaml"
 
 	f, err := os.Create(filepath)
+	defer f.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
