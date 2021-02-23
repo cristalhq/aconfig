@@ -20,6 +20,7 @@ func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	var raw map[string]interface{}
 	if _, err := toml.DecodeReader(f, &raw); err != nil {
