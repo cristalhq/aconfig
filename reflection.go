@@ -13,6 +13,8 @@ type fieldData struct {
 	parent       *fieldData
 	field        reflect.StructField
 	value        reflect.Value
+	isSet        bool
+	isRequired   bool
 	defaultValue string
 	usage        string
 	jsonName     string
@@ -30,11 +32,18 @@ func (l *Loader) newSimpleFieldData(value reflect.Value) *fieldData {
 func (l *Loader) newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
 	words := splitNameByWords(field.Name)
 
+	requiredTag := field.Tag.Get("required")
+	if requiredTag != "" && requiredTag != "true" {
+		panic(fmt.Sprintf("aconfig: incorrect value for 'required' tag: %v", requiredTag))
+	}
+
 	fd := &fieldData{
-		name:   makeName(field.Name, parent),
-		parent: parent,
-		value:  value,
-		field:  field,
+		name:       makeName(field.Name, parent),
+		parent:     parent,
+		value:      value,
+		field:      field,
+		isSet:      false,
+		isRequired: requiredTag == "true",
 
 		defaultValue: field.Tag.Get(defaultValueTag),
 		usage:        field.Tag.Get(usageTag),
