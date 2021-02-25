@@ -37,6 +37,11 @@ type Config struct {
 	EnvPrefix  string // EnvPrefix for environment variables.
 	FlagPrefix string // FlagPrefix for flag parameters.
 
+	// AllFieldsRequired set to true will fail config loading if one of the fields was not set.
+	// File, environment, flag must provide a value for the field.
+	// If default is set and this option is enabled (or required tag is set) there will be an error.
+	AllFieldRequired bool
+
 	// AllowUnknownFields set to true will not fail on unknown fields in files.
 	AllowUnknownFields bool
 
@@ -155,6 +160,9 @@ func (l *Loader) Load() error {
 	if err := l.loadSources(); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
+	if err := l.checkRequired(); err != nil {
+		return fmt.Errorf("aconfig: missing required field: %w", err)
+	}
 	return nil
 }
 
@@ -188,11 +196,24 @@ func (l *Loader) loadSources() error {
 	return nil
 }
 
+func (l *Loader) checkRequired() error {
+	for _, field := range l.fields {
+		if field.isSet {
+			continue
+		}
+		if field.isRequired || l.config.AllFieldRequired {
+			return fmt.Errorf("field %s was not set but it is required", field.name)
+		}
+	}
+	return nil
+}
+
 func (l *Loader) loadDefaults() error {
 	for _, fd := range l.fields {
 		if err := l.setFieldData(fd, fd.defaultValue); err != nil {
 			return err
 		}
+		fd.isSet = true
 	}
 	return nil
 }
@@ -229,6 +250,7 @@ func (l *Loader) loadFromFile() error {
 			if err := l.setFieldData(field, fmt.Sprint(value)); err != nil {
 				return err
 			}
+			field.isSet = true
 			delete(actualFields, name)
 		}
 
@@ -258,6 +280,7 @@ func (l *Loader) loadEnvironment() error {
 		if err := l.setFieldData(field, v); err != nil {
 			return err
 		}
+		field.isSet = true
 		delete(actualEnv, envName)
 	}
 
@@ -292,6 +315,7 @@ func (l *Loader) loadFlags() error {
 		if err := l.setFieldData(field, flg.Value.String()); err != nil {
 			return err
 		}
+		field.isSet = true
 		delete(actualFlags, flagName)
 	}
 

@@ -906,6 +906,27 @@ func TestPassNonStructs(t *testing.T) {
 	f(func() {})
 }
 
+func TestBadRequiredTag(t *testing.T) {
+	type TestConfig struct {
+		Field string `required:"boom"`
+	}
+
+	f := func(cfg interface{}) {
+		t.Helper()
+
+		defer func() {
+			t.Helper()
+			if err := recover(); err == nil {
+				t.Fatal()
+			}
+		}()
+
+		_ = LoaderFor(cfg, Config{})
+	}
+
+	f(&TestConfig{})
+}
+
 func setEnv(t *testing.T, key, value string) {
 	if err := os.Setenv(key, value); err != nil {
 		t.Fatal(err)
