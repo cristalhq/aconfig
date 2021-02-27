@@ -29,6 +29,10 @@ func TestYAML(t *testing.T) {
 
 	i := int32(42)
 	j := int64(420)
+	mInterface := make([]interface{}, 2)
+	for iI, vI := range []string{"q", "w"} {
+		mInterface[iI] = vI
+	}
 	want := structConfig{
 		A: "b",
 		C: 10,
@@ -56,6 +60,7 @@ func TestYAML(t *testing.T) {
 		StructM: StructM{
 			M: "n",
 		},
+		MI: mInterface,
 	}
 
 	if got := cfg; !reflect.DeepEqual(want, got) {
@@ -73,10 +78,10 @@ func createTestFile(t *testing.T) string {
 	filepath := dir + "/testfile.yaml"
 
 	f, err := os.Create(filepath)
-	defer f.Close()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	_, err = f.WriteString(testfileContent)
 	if err != nil {
 		t.Fatal(err)
@@ -95,6 +100,7 @@ type structConfig struct {
 
 	AA structA `yaml:"A"`
 	StructM
+	MI interface{} `yaml:"MI"`
 }
 
 type structY struct {
@@ -127,33 +133,28 @@ type StructM struct {
 }
 
 const testfileContent = `
-{
-    "a": "b",
-    "c": 10,
-    "e": 123.456,
-    "b": "abc",
-    "i": 42,
-	"j": 420,
+a: "b"
+c: 10
+e: 123.456
+b: "abc"
+i: 42
+j: 420
 
-    "y": {
-		"x": "y",
-		"z": ["1", "2", "3"],
-		"a": {
-			"i": true
-		}
-	},
+y:
+    x: "y"
+    z: ["1", "2", "3"]
+    a:
+        "i": true
 
-    "A": {
-		"x": "y",
-        "B": {
-			"C": {
-				"m": "n",
-                "b": "boo",
-            },
-            "D": ["x", "y", "z"]
-        }
-	},
+A:
+    x: "y"
+    B: 
+        C:
+            m: "n"
+            b: "boo"
+        D: ["x", "y", "z"]
 
-	"m": "n"
-}
+m: "n"
+
+MI: ["q", "w"]
 `
