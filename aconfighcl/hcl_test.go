@@ -10,7 +10,6 @@ import (
 )
 
 func TestHCL(t *testing.T) {
-	t.SkipNow()
 	filepath := createTestFile(t)
 
 	var cfg structConfig
@@ -30,6 +29,10 @@ func TestHCL(t *testing.T) {
 
 	i := int32(42)
 	j := int64(420)
+	mInterface := make([]interface{}, 2)
+	for iI, vI := range []string{"q", "w"} {
+		mInterface[iI] = vI
+	}
 	want := structConfig{
 		A: "b",
 		C: 10,
@@ -57,6 +60,7 @@ func TestHCL(t *testing.T) {
 		StructM: StructM{
 			M: "n",
 		},
+		MI: mInterface,
 	}
 
 	if got := cfg; !reflect.DeepEqual(want, got) {
@@ -96,6 +100,7 @@ type structConfig struct {
 
 	AA structA `hcl:"A"`
 	StructM
+	MI interface{} `hcl:"MI"`
 }
 
 type structY struct {
@@ -154,4 +159,5 @@ const testfileContent = `
 }
 
 "M" = "n"
+"MI" = ["q", "w"]
 `

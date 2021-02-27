@@ -53,6 +53,7 @@ func TestDotEnv(t *testing.T) {
 		StructM: StructM{
 			M: "n",
 		},
+		MI: "q,w",
 	}
 
 	if got := cfg; !reflect.DeepEqual(want, got) {
@@ -73,6 +74,7 @@ func createTestFile(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	_, err = f.WriteString(testfileContent)
 	if err != nil {
 		t.Fatal(err)
@@ -91,6 +93,7 @@ type structConfig struct {
 
 	AA structA `env:"A"`
 	StructM
+	MI interface{} `env:"MI"`
 }
 
 type structY struct {
@@ -137,4 +140,5 @@ A_B_C_b=boo
 A_B_D=x,y,z
 
 M=n
+MI=q,w
 `

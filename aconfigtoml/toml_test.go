@@ -29,6 +29,10 @@ func TestTOML(t *testing.T) {
 
 	i := int32(42)
 	j := int64(420)
+	mInterface := make([]interface{}, 2)
+	for iI, vI := range []string{"q", "w"} {
+		mInterface[iI] = vI
+	}
 	want := structConfig{
 		A: "b",
 		C: 10,
@@ -56,6 +60,7 @@ func TestTOML(t *testing.T) {
 		StructM: StructM{
 			M: "n",
 		},
+		MI: mInterface,
 	}
 
 	if got := cfg; !reflect.DeepEqual(want, got) {
@@ -76,6 +81,7 @@ func createTestFile(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	_, err = f.WriteString(testfileContent)
 	if err != nil {
 		t.Fatal(err)
@@ -94,6 +100,7 @@ type structConfig struct {
 
 	AA structA `toml:"A"`
 	StructM
+	MI interface{} `toml:"MI"`
 }
 
 type structY struct {
@@ -133,6 +140,7 @@ b = "abc"
 i = 42
 j = 420
 m = "n"
+MI = ["q", "w"]
 
 [y]
 x = "y"
