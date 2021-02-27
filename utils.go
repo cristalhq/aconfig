@@ -58,34 +58,19 @@ func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []str
 	if v := field.Tag.Get(tag); v != "" {
 		return v
 	}
+
 	switch tag {
 	case jsonNameTag, yamlNameTag, tomlNameTag, hclNameTag:
 		if l.config.DontGenerateTags {
 			return field.Name
 		}
 	}
-	return strings.ToLower(makeParsingName(words))
-}
 
-func (l *Loader) makeEnvName(field reflect.StructField, words []string) string {
-	if v := field.Tag.Get(envNameTag); v != "" {
-		return v
+	name := strings.Join(words, "_")
+	if tag == envNameTag {
+		return strings.ToUpper(name)
 	}
-	if l.config.DontGenerateTags {
-		return ""
-	}
-	return strings.ToUpper(makeParsingName(words))
-}
-
-func makeParsingName(words []string) string {
-	var name strings.Builder
-	for i, w := range words {
-		if i > 0 {
-			name.WriteByte('_')
-		}
-		name.WriteString(strings.ToLower(w))
-	}
-	return name.String()
+	return strings.ToLower(name)
 }
 
 // based on https://github.com/fatih/camelcase

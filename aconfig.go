@@ -143,7 +143,7 @@ func (l *Loader) parseFields() {
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
 			flagName := l.config.FlagPrefix + l.fullTag(field, flagNameTag)
-			l.flagSet.String(flagName, field.defaultValue, field.usage)
+			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
 		}
 	}
 }
@@ -218,11 +218,11 @@ func (l *Loader) checkRequired() error {
 }
 
 func (l *Loader) loadDefaults() error {
-	for _, fd := range l.fields {
-		if err := l.setFieldData(fd, fd.defaultValue); err != nil {
+	for _, field := range l.fields {
+		if err := l.setFieldData(field, field.Tag(defaultValueTag)); err != nil {
 			return err
 		}
-		fd.isSet = true
+		field.isSet = true
 	}
 	return nil
 }

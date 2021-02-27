@@ -9,20 +9,28 @@ import (
 )
 
 type fieldData struct {
-	name         string
-	parent       *fieldData
-	field        reflect.StructField
-	value        reflect.Value
-	isSet        bool
-	isRequired   bool
-	defaultValue string
-	usage        string
-	jsonName     string
-	yamlName     string
-	tomlName     string
-	hclName      string
-	envName      string
-	flagName     string
+	name       string
+	parent     *fieldData
+	field      reflect.StructField
+	value      reflect.Value
+	isSet      bool
+	isRequired bool
+	tags       map[string]string
+}
+
+func (f *fieldData) Name() string {
+	return f.name
+}
+
+func (f *fieldData) Tag(tag string) string {
+	if t, ok := f.tags[tag]; ok {
+		return t
+	}
+	return f.field.Tag.Get(tag)
+}
+
+func (f *fieldData) Parent() (Field, bool) {
+	return f.parent, f.parent != nil
 }
 
 func (l *Loader) newSimpleFieldData(value reflect.Value) *fieldData {
@@ -30,8 +38,6 @@ func (l *Loader) newSimpleFieldData(value reflect.Value) *fieldData {
 }
 
 func (l *Loader) newFieldData(field reflect.StructField, value reflect.Value, parent *fieldData) *fieldData {
-	words := splitNameByWords(field.Name)
-
 	requiredTag := field.Tag.Get("required")
 	if requiredTag != "" && requiredTag != "true" {
 		panic(fmt.Sprintf("aconfig: incorrect value for 'required' tag: %v", requiredTag))
@@ -44,21 +50,26 @@ func (l *Loader) newFieldData(field reflect.StructField, value reflect.Value, pa
 		field:      field,
 		isSet:      false,
 		isRequired: requiredTag == "true",
-
-		defaultValue: field.Tag.Get(defaultValueTag),
-		usage:        field.Tag.Get(usageTag),
-		jsonName:     l.makeTagValue(field, jsonNameTag, words),
-		yamlName:     l.makeTagValue(field, yamlNameTag, words),
-		tomlName:     l.makeTagValue(field, tomlNameTag, words),
-		hclName:      l.makeTagValue(field, hclNameTag, words),
-		envName:      l.makeEnvName(field, words),
-		flagName:     l.makeTagValue(field, flagNameTag, words),
+		tags:       l.tagsForField(field),
 	}
 	return fd
 }
 
-func (f *fieldData) Name() string {
-	return f.name
+func (l *Loader) tagsForField(field reflect.StructField) map[string]string {
+	words := splitNameByWords(field.Name)
+
+	tags := map[string]string{
+		defaultValueTag: field.Tag.Get(defaultValueTag),
+		usageTag:        field.Tag.Get(usageTag),
+
+		envNameTag:  l.makeTagValue(field, envNameTag, words),
+		flagNameTag: l.makeTagValue(field, flagNameTag, words),
+	}
+
+	for _, tag := range []string{jsonNameTag, yamlNameTag, tomlNameTag, hclNameTag} {
+		tags[tag] = l.makeTagValue(field, tag, words)
+	}
+	return tags
 }
 
 func (l *Loader) fullTag(f *fieldData, tag string) string {
@@ -71,33 +82,6 @@ func (l *Loader) fullTag(f *fieldData, tag string) string {
 		res = p.Tag(tag) + sep + res
 	}
 	return res
-}
-
-func (f *fieldData) Tag(tag string) string {
-	switch tag {
-	case defaultValueTag:
-		return f.defaultValue
-	case usageTag:
-		return f.usage
-	case jsonNameTag:
-		return f.jsonName
-	case yamlNameTag:
-		return f.yamlName
-	case tomlNameTag:
-		return f.tomlName
-	case hclNameTag:
-		return f.hclName
-	case envNameTag:
-		return f.envName
-	case flagNameTag:
-		return f.flagName
-	default:
-		return f.field.Tag.Get(tag)
-	}
-}
-
-func (f *fieldData) Parent() (Field, bool) {
-	return f.parent, f.parent != nil
 }
 
 func (l *Loader) getFields(x interface{}) []*fieldData {
