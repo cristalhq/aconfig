@@ -21,10 +21,11 @@ const (
 
 // Loader of user configuration.
 type Loader struct {
-	config  Config
-	dst     interface{}
-	fields  []*fieldData
-	flagSet *flag.FlagSet
+	config       Config
+	dst          interface{}
+	fields       []*fieldData
+	configFields *tree
+	flagSet      *flag.FlagSet
 }
 
 // Config to configure configuration loader.
@@ -138,6 +139,7 @@ func (l *Loader) init() {
 }
 
 func (l *Loader) parseFields() {
+	l.configFields = l.getTree(l.dst)
 	l.fields = l.getFields(l.dst)
 
 	if !l.config.SkipFlags {
