@@ -304,12 +304,14 @@ func (l *Loader) find(actualFields map[string]interface{}, name string) (map[str
 				actualFields[subName+"."+k] = v
 			}
 		}
+		delete(actualFields, subName)
 	case []map[interface{}]interface{}:
 		for _, m := range val {
 			for k, v := range m {
 				actualFields[subName+"."+fmt.Sprint(k)] = v
 			}
 		}
+		delete(actualFields, subName)
 	}
 	return actualFields, true
 }
