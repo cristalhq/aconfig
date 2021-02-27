@@ -29,6 +29,18 @@ jobs:
     - name: Test
       run: go test -v -coverprofile=coverage.txt ./...
 
+    - name: Test YAML
+      run: cd aconfigyaml && go test -v ./...
+
+    - name: Test TOML
+      run: cd aconfigtoml && go test -v ./...
+
+    - name: Test HCL
+      run: cd aconfighcl && go test -v ./...
+
+    - name: Test DotEnv
+      run: cd aconfigdotenv && go test -v ./...
+
     - name: Upload Coverage
       uses: codecov/codecov-action@v1
       continue-on-error: true
