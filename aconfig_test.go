@@ -297,13 +297,13 @@ func TestFileMerging(t *testing.T) {
 }
 
 func TestEnv(t *testing.T) {
-	setEnv(t, "TST_STR", "str-env")
-	setEnv(t, "TST_BYTES", "bytes-env")
-	setEnv(t, "TST_INT", "121")
-	setEnv(t, "TST_HTTP_PORT", "3000")
-	setEnv(t, "TST_SUB_FLOAT", "222.333")
-	setEnv(t, "TST_ANON_IS_ANON", "true")
-	setEnv(t, "TST_EM", "em-env")
+	setEnv(t, "TST.STR", "str-env")
+	setEnv(t, "TST.BYTES", "bytes-env")
+	setEnv(t, "TST.INT", "121")
+	setEnv(t, "TST.HTTP_PORT", "3000")
+	setEnv(t, "TST.SUB.FLOAT", "222.333")
+	setEnv(t, "TST.ANON.IS_ANON", "true")
+	setEnv(t, "TST.EM", "em-env")
 	defer os.Clearenv()
 
 	var cfg TestConfig
@@ -548,7 +548,7 @@ func TestFileNotFound(t *testing.T) {
 }
 
 func TestBadEnvs(t *testing.T) {
-	setEnv(t, "TST_HTTP_PORT", "30a00")
+	setEnv(t, "TST.HTTP_PORT", "30a00")
 	defer os.Clearenv()
 
 	loader := LoaderFor(&TestConfig{}, Config{
@@ -600,8 +600,8 @@ func TestUnknownFields(t *testing.T) {
 }
 
 func TestUnknownEnvs(t *testing.T) {
-	setEnv(t, "TST_STR", "defined")
-	setEnv(t, "TST_UNKNOWN", "42")
+	setEnv(t, "TST.STR", "defined")
+	setEnv(t, "TST.UNKNOWN", "42")
 	setEnv(t, "JUST_ENV", "JUST_VALUE")
 	defer os.Clearenv()
 

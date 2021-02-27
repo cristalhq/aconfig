@@ -62,9 +62,9 @@ func (f *fieldData) Name() string {
 }
 
 func (l *Loader) fullTag(f *fieldData, tag string) string {
-	sep := "."
+	sep := l.config.FlagDelimiter
 	if tag == envNameTag {
-		sep = "_"
+		sep = l.config.EnvDelimiter
 	}
 	res := f.Tag(tag)
 	for p := f.parent; p != nil; p = p.parent {
