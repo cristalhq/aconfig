@@ -37,6 +37,9 @@ type Config struct {
 	EnvPrefix  string // EnvPrefix for environment variables.
 	FlagPrefix string // FlagPrefix for flag parameters.
 
+	EnvDelimiter  string // EnvDelimiter for environment variables. If not set - default is ".".
+	FlagDelimiter string // FlagDelimiter for flag parameters. If not set - default is ".".
+
 	// AllFieldsRequired set to true will fail config loading if one of the fields was not set.
 	// File, environment, flag must provide a value for the field.
 	// If default is set and this option is enabled (or required tag is set) there will be an error.
@@ -109,12 +112,18 @@ func LoaderFor(dst interface{}, cfg Config) *Loader {
 }
 
 func (l *Loader) init() {
-	if l.config.EnvPrefix != "" {
-		l.config.EnvPrefix += "_"
+	if l.config.EnvDelimiter == "" {
+		l.config.EnvDelimiter = "."
+	}
+	if l.config.FlagDelimiter == "" {
+		l.config.FlagDelimiter = "."
 	}
 
+	if l.config.EnvPrefix != "" {
+		l.config.EnvPrefix += l.config.EnvDelimiter
+	}
 	if l.config.FlagPrefix != "" {
-		l.config.FlagPrefix += "."
+		l.config.FlagPrefix += l.config.FlagDelimiter
 	}
 
 	if _, ok := l.config.FileDecoders[".json"]; !ok {
@@ -365,7 +374,6 @@ func (l *Loader) loadFlags() error {
 }
 
 func (l *Loader) setField(field *fieldData, name string, values map[string]interface{}) error {
-	println(name)
 	val, ok := values[name]
 	if !ok {
 		return nil
