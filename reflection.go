@@ -139,7 +139,7 @@ func (l *Loader) getFieldsHelper(valueObject reflect.Value, parent *fieldData) [
 	return fields
 }
 
-func (l *Loader) setFieldData(field *fieldData, value string) error {
+func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 	// unwrap pointers
 	for field.value.Type().Kind() == reflect.Ptr {
 		if field.value.IsNil() {
@@ -154,28 +154,31 @@ func (l *Loader) setFieldData(field *fieldData, value string) error {
 
 	switch kind := field.value.Type().Kind(); kind {
 	case reflect.Bool:
-		return l.setBool(field, value)
+		return l.setBool(field, fmt.Sprint(value))
 
 	case reflect.String:
-		return l.setString(field, value)
+		return l.setString(field, fmt.Sprint(value))
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-		return l.setInt(field, value)
+		return l.setInt(field, fmt.Sprint(value))
 
 	case reflect.Int64:
-		return l.setInt64(field, value)
+		return l.setInt64(field, fmt.Sprint(value))
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return l.setUint(field, value)
+		return l.setUint(field, fmt.Sprint(value))
 
 	case reflect.Float32, reflect.Float64:
-		return l.setFloat(field, value)
+		return l.setFloat(field, fmt.Sprint(value))
 
 	case reflect.Slice:
-		return l.setSlice(field, value)
+		return l.setSlice(field, fmt.Sprint(normalize(value)))
 
 	case reflect.Map:
-		return l.setMap(field, value)
+		return l.setMap(field, fmt.Sprint(value))
+
+	case reflect.Interface:
+		return l.setInterface(field, value)
 
 	default:
 		return fmt.Errorf("type kind %q isn't supported", kind)
@@ -281,5 +284,10 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 		mapField.SetMapIndex(fdk.value, fdv.value)
 	}
 	field.value.Set(mapField)
+	return nil
+}
+
+func (l *Loader) setInterface(field *fieldData, value interface{}) error {
+	field.value.Set(reflect.ValueOf(value))
 	return nil
 }

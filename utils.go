@@ -132,6 +132,7 @@ func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	var raw map[string]interface{}
 	if err := json.NewDecoder(f).Decode(&raw); err != nil {
@@ -140,17 +141,39 @@ func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error
 
 	res := map[string]interface{}{}
 	for key, value := range raw {
-		flatten("", key, value, res)
+		res[key] = value
 	}
 	return res, nil
 }
 
-func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
+//func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
+//	switch curr := curr.(type) {
+//	case map[string]interface{}:
+//		for k, v := range curr {
+//			flatten(prefix+key+".", k, v, res)
+//		}
+//	case []interface{}:
+//		b := &strings.Builder{}
+//		for i, v := range curr {
+//			if i > 0 {
+//				b.WriteByte(',')
+//			}
+//			b.WriteString(fmt.Sprint(v))
+//		}
+//		res[prefix+key] = b.String()
+//	case string:
+//		res[prefix+key] = curr
+//	case float64:
+//		res[prefix+key] = fmt.Sprint(curr)
+//	case bool:
+//		res[prefix+key] = fmt.Sprint(curr)
+//	default:
+//		panic(fmt.Sprintf("%s::%s got %T %v", prefix, key, curr, curr))
+//	}
+//}
+
+func normalize(curr interface{}) interface{} {
 	switch curr := curr.(type) {
-	case map[string]interface{}:
-		for k, v := range curr {
-			flatten(prefix+key+".", k, v, res)
-		}
 	case []interface{}:
 		b := &strings.Builder{}
 		for i, v := range curr {
@@ -159,14 +182,14 @@ func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
 			}
 			b.WriteString(fmt.Sprint(v))
 		}
-		res[prefix+key] = b.String()
+		return b.String()
 	case string:
-		res[prefix+key] = curr
+		return curr
 	case float64:
-		res[prefix+key] = fmt.Sprint(curr)
+		return fmt.Sprint(curr)
 	case bool:
-		res[prefix+key] = fmt.Sprint(curr)
+		return fmt.Sprint(curr)
 	default:
-		panic(fmt.Sprintf("%s::%s got %T %v", prefix, key, curr, curr))
+		panic(fmt.Sprintf("Can't normalize %T %v", curr, curr))
 	}
 }

@@ -161,6 +161,10 @@ func TestJSON(t *testing.T) {
 
 	i := int32(42)
 	j := int64(420)
+	mInterface := make([]interface{}, 2)
+	for iI, vI := range []string{"q", "w"} {
+		mInterface[iI] = vI
+	}
 	want := structConfig{
 		A: "b",
 		C: 10,
@@ -188,6 +192,7 @@ func TestJSON(t *testing.T) {
 		StructM: StructM{
 			M: "n",
 		},
+		M: mInterface,
 	}
 	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
@@ -950,6 +955,7 @@ func createTestFile(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	_, err = f.WriteString(testfileContent)
 	if err != nil {
 		t.Fatal(err)
@@ -994,6 +1000,8 @@ type structConfig struct {
 
 	AA structA `json:"A"`
 	StructM
+
+	M interface{} `json:"M"`
 }
 
 type structY struct {
@@ -1052,6 +1060,8 @@ const testfileContent = `{
         }
 	},
 
-	"m": "n"
+	"m": "n",
+
+	"M":["q", "w"]
 }
 `

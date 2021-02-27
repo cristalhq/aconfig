@@ -244,10 +244,14 @@ func (l *Loader) loadFromFile() error {
 			name := field.fullTag(tag)
 			value, ok := actualFields[name]
 			if !ok {
-				continue
+				actualFields, _ = l.find(actualFields, name)
+				value, ok = actualFields[name]
+				if !ok {
+					continue
+				}
 			}
 
-			if err := l.setFieldData(field, fmt.Sprint(value)); err != nil {
+			if err := l.setFieldData(field, value); err != nil {
 				return err
 			}
 			field.isSet = true
@@ -266,6 +270,35 @@ func (l *Loader) loadFromFile() error {
 		return nil
 	}
 	return nil
+}
+
+func (l *Loader) find(actualFields map[string]interface{}, name string) (map[string]interface{}, bool) {
+	if strings.LastIndex(name, ".") == -1 {
+		return actualFields, false
+	}
+	subName := name[:strings.LastIndex(name, ".")]
+	value, ok := actualFields[subName]
+	if !ok {
+		actualFields, ok = l.find(actualFields, subName)
+		value, ok = actualFields[subName]
+		if !ok {
+			return actualFields, false
+		}
+	}
+	switch val := value.(type) {
+	case map[string]interface{}:
+		for k, v := range val {
+			actualFields[subName+"."+k] = v
+		}
+		delete(actualFields, subName)
+	case map[interface{}]interface{}:
+		for k, v := range val {
+			actualFields[subName+"."+fmt.Sprint(k)] = v
+		}
+		delete(actualFields, subName)
+
+	}
+	return actualFields, true
 }
 
 func (l *Loader) loadEnvironment() error {
