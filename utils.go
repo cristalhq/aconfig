@@ -2,6 +2,7 @@ package aconfig
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"reflect"
@@ -22,20 +23,27 @@ func assertStruct(x interface{}) {
 	}
 }
 
-func getEnv() map[string]string {
+func getEnv() map[string]interface{} {
 	env := os.Environ()
-	res := make(map[string]string, len(env))
+	res := make(map[string]interface{}, len(env))
 
 	for _, s := range env {
 		for j := 0; j < len(s); j++ {
-			if s[j] != '=' {
-				continue
+			if s[j] == '=' {
+				key, value := s[:j], s[j+1:]
+				res[key] = value
+				break
 			}
-
-			key, value := s[:j], s[j+1:]
-			res[key] = value
 		}
 	}
+	return res
+}
+
+func getFlags(flagSet *flag.FlagSet) map[string]interface{} {
+	res := map[string]interface{}{}
+	flagSet.Visit(func(f *flag.Flag) {
+		res[f.Name] = f.Value
+	})
 	return res
 }
 

@@ -133,7 +133,7 @@ func (l *Loader) parseFields() {
 
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
-			flagName := l.config.FlagPrefix + field.fullTag(flagNameTag)
+			flagName := l.config.FlagPrefix + l.fullTag(field, flagNameTag)
 			l.flagSet.String(flagName, field.defaultValue, field.usage)
 		}
 	}
@@ -241,7 +241,7 @@ func (l *Loader) loadFromFile() error {
 		tag := ext[1:]
 
 		for _, field := range l.fields {
-			name := field.fullTag(tag)
+			name := l.fullTag(field, tag)
 			value, ok := actualFields[name]
 			if !ok {
 				actualFields, _ = l.find(actualFields, name)
@@ -317,23 +317,18 @@ func (l *Loader) find(actualFields map[string]interface{}, name string) (map[str
 }
 
 func (l *Loader) loadEnvironment() error {
-	actualEnv := getEnv()
+	actualEnvs := getEnv()
 
 	for _, field := range l.fields {
-		envName := l.config.EnvPrefix + field.fullTag(envNameTag)
-		v, ok := actualEnv[envName]
-		if !ok {
-			continue
-		}
-		if err := l.setFieldData(field, v); err != nil {
+		envName := l.config.EnvPrefix + l.fullTag(field, envNameTag)
+
+		if err := l.setField(field, envName, actualEnvs); err != nil {
 			return err
 		}
-		field.isSet = true
-		delete(actualEnv, envName)
 	}
 
 	if !l.config.AllowUnknownEnvs && l.config.EnvPrefix != "" {
-		for env, value := range actualEnv {
+		for env, value := range actualEnvs {
 			if strings.HasPrefix(env, l.config.EnvPrefix) {
 				return fmt.Errorf("unknown environment var %s=%s (see AllowUnknownEnvs config param)", env, value)
 			}
@@ -349,22 +344,14 @@ func (l *Loader) loadFlags() error {
 		}
 	}
 
-	actualFlags := map[string]*flag.Flag{}
-	l.flagSet.Visit(func(f *flag.Flag) {
-		actualFlags[f.Name] = f
-	})
+	actualFlags := getFlags(l.flagSet)
 
 	for _, field := range l.fields {
-		flagName := l.config.FlagPrefix + field.fullTag(flagNameTag)
-		flg, ok := actualFlags[flagName]
-		if !ok {
-			continue
-		}
-		if err := l.setFieldData(field, flg.Value.String()); err != nil {
+		flagName := l.config.FlagPrefix + l.fullTag(field, flagNameTag)
+
+		if err := l.setField(field, flagName, actualFlags); err != nil {
 			return err
 		}
-		field.isSet = true
-		delete(actualFlags, flagName)
 	}
 
 	if !l.config.AllowUnknownFlags && l.config.FlagPrefix != "" {
@@ -374,5 +361,21 @@ func (l *Loader) loadFlags() error {
 			}
 		}
 	}
+	return nil
+}
+
+func (l *Loader) setField(field *fieldData, name string, values map[string]interface{}) error {
+	println(name)
+	val, ok := values[name]
+	if !ok {
+		return nil
+	}
+
+	if err := l.setFieldData(field, val); err != nil {
+		return err
+	}
+
+	field.isSet = true
+	delete(values, name)
 	return nil
 }

@@ -61,7 +61,7 @@ func (f *fieldData) Name() string {
 	return f.name
 }
 
-func (f *fieldData) fullTag(tag string) string {
+func (l *Loader) fullTag(f *fieldData, tag string) string {
 	sep := "."
 	if tag == envNameTag {
 		sep = "_"
