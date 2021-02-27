@@ -276,6 +276,7 @@ func (l *Loader) find(actualFields map[string]interface{}, name string) (map[str
 	if strings.LastIndex(name, ".") == -1 {
 		return actualFields, false
 	}
+
 	subName := name[:strings.LastIndex(name, ".")]
 	value, ok := actualFields[subName]
 	if !ok {
@@ -285,6 +286,7 @@ func (l *Loader) find(actualFields map[string]interface{}, name string) (map[str
 			return actualFields, false
 		}
 	}
+
 	switch val := value.(type) {
 	case map[string]interface{}:
 		for k, v := range val {
