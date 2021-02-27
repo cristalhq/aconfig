@@ -138,39 +138,8 @@ func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error
 	if err := json.NewDecoder(f).Decode(&raw); err != nil {
 		return nil, err
 	}
-
-	res := map[string]interface{}{}
-	for key, value := range raw {
-		res[key] = value
-	}
-	return res, nil
+	return raw, nil
 }
-
-//func flatten(prefix, key string, curr interface{}, res map[string]interface{}) {
-//	switch curr := curr.(type) {
-//	case map[string]interface{}:
-//		for k, v := range curr {
-//			flatten(prefix+key+".", k, v, res)
-//		}
-//	case []interface{}:
-//		b := &strings.Builder{}
-//		for i, v := range curr {
-//			if i > 0 {
-//				b.WriteByte(',')
-//			}
-//			b.WriteString(fmt.Sprint(v))
-//		}
-//		res[prefix+key] = b.String()
-//	case string:
-//		res[prefix+key] = curr
-//	case float64:
-//		res[prefix+key] = fmt.Sprint(curr)
-//	case bool:
-//		res[prefix+key] = fmt.Sprint(curr)
-//	default:
-//		panic(fmt.Sprintf("%s::%s got %T %v", prefix, key, curr, curr))
-//	}
-//}
 
 func normalize(curr interface{}) interface{} {
 	switch curr := curr.(type) {

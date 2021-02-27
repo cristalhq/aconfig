@@ -171,14 +171,14 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 	case reflect.Float32, reflect.Float64:
 		return l.setFloat(field, fmt.Sprint(value))
 
+	case reflect.Interface:
+		return l.setInterface(field, value)
+
 	case reflect.Slice:
 		return l.setSlice(field, fmt.Sprint(normalize(value)))
 
 	case reflect.Map:
 		return l.setMap(field, fmt.Sprint(value))
-
-	case reflect.Interface:
-		return l.setInterface(field, value)
 
 	default:
 		return fmt.Errorf("type kind %q isn't supported", kind)
@@ -238,6 +238,11 @@ func (l *Loader) setString(field *fieldData, value string) error {
 	return nil
 }
 
+func (l *Loader) setInterface(field *fieldData, value interface{}) error {
+	field.value.Set(reflect.ValueOf(value))
+	return nil
+}
+
 func (l *Loader) setSlice(field *fieldData, value string) error {
 	// Special case for []byte
 	if field.field.Type.Elem().Kind() == reflect.Uint8 {
@@ -284,10 +289,5 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 		mapField.SetMapIndex(fdk.value, fdv.value)
 	}
 	field.value.Set(mapField)
-	return nil
-}
-
-func (l *Loader) setInterface(field *fieldData, value interface{}) error {
-	field.value.Set(reflect.ValueOf(value))
 	return nil
 }

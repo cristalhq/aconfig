@@ -17,8 +17,7 @@ func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	res := map[string]interface{}{}
-
+	res := make(map[string]interface{}, len(raw))
 	for key, value := range raw {
 		res[key] = value
 	}
