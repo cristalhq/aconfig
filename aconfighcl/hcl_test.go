@@ -77,6 +77,7 @@ func createTestFile(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	_, err = f.WriteString(testfileContent)
 	if err != nil {
 		t.Fatal(err)
