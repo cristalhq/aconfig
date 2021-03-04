@@ -169,7 +169,7 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 	}
 }
 
-func (l *Loader) setBool(field *fieldData, value string) error {
+func (*Loader) setBool(field *fieldData, value string) error {
 	val, err := strconv.ParseBool(value)
 	if err != nil {
 		return err
@@ -178,7 +178,7 @@ func (l *Loader) setBool(field *fieldData, value string) error {
 	return nil
 }
 
-func (l *Loader) setInt(field *fieldData, value string) error {
+func (*Loader) setInt(field *fieldData, value string) error {
 	val, err := strconv.ParseInt(value, 0, field.value.Type().Bits())
 	if err != nil {
 		return err
@@ -199,7 +199,7 @@ func (l *Loader) setInt64(field *fieldData, value string) error {
 	return l.setInt(field, value)
 }
 
-func (l *Loader) setUint(field *fieldData, value string) error {
+func (*Loader) setUint(field *fieldData, value string) error {
 	val, err := strconv.ParseUint(value, 0, field.value.Type().Bits())
 	if err != nil {
 		return err
@@ -208,7 +208,7 @@ func (l *Loader) setUint(field *fieldData, value string) error {
 	return nil
 }
 
-func (l *Loader) setFloat(field *fieldData, value string) error {
+func (*Loader) setFloat(field *fieldData, value string) error {
 	val, err := strconv.ParseFloat(value, field.value.Type().Bits())
 	if err != nil {
 		return err
@@ -217,12 +217,12 @@ func (l *Loader) setFloat(field *fieldData, value string) error {
 	return nil
 }
 
-func (l *Loader) setString(field *fieldData, value string) error {
+func (*Loader) setString(field *fieldData, value string) error {
 	field.value.SetString(value)
 	return nil
 }
 
-func (l *Loader) setInterface(field *fieldData, value interface{}) error {
+func (*Loader) setInterface(field *fieldData, value interface{}) error {
 	field.value.Set(reflect.ValueOf(value))
 	return nil
 }
