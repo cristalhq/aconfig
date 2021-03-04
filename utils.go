@@ -155,3 +155,47 @@ func normalize(curr interface{}) interface{} {
 		panic(fmt.Sprintf("Can't normalize %T %v", curr, curr))
 	}
 }
+
+func find(actualFields map[string]interface{}, name string) (map[string]interface{}, bool) {
+	if strings.LastIndex(name, ".") == -1 {
+		return actualFields, false
+	}
+
+	subName := name[:strings.LastIndex(name, ".")]
+	value, ok := actualFields[subName]
+	if !ok {
+		actualFields, ok = find(actualFields, subName)
+		value, ok = actualFields[subName]
+		if !ok {
+			return actualFields, false
+		}
+	}
+
+	switch val := value.(type) {
+	case map[string]interface{}:
+		for k, v := range val {
+			actualFields[subName+"."+k] = v
+		}
+		delete(actualFields, subName)
+	case map[interface{}]interface{}:
+		for k, v := range val {
+			actualFields[subName+"."+fmt.Sprint(k)] = v
+		}
+		delete(actualFields, subName)
+	case []map[string]interface{}:
+		for _, m := range val {
+			for k, v := range m {
+				actualFields[subName+"."+k] = v
+			}
+		}
+		delete(actualFields, subName)
+	case []map[interface{}]interface{}:
+		for _, m := range val {
+			for k, v := range m {
+				actualFields[subName+"."+fmt.Sprint(k)] = v
+			}
+		}
+		delete(actualFields, subName)
+	}
+	return actualFields, true
+}

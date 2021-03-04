@@ -276,7 +276,7 @@ func (l *Loader) loadFromFile() error {
 			name := l.fullTag(field, tag)
 			value, ok := actualFields[name]
 			if !ok {
-				actualFields, _ = l.find(actualFields, name)
+				actualFields, _ = find(actualFields, name)
 				value, ok = actualFields[name]
 				if !ok {
 					continue
@@ -302,50 +302,6 @@ func (l *Loader) loadFromFile() error {
 		return nil
 	}
 	return nil
-}
-
-func (l *Loader) find(actualFields map[string]interface{}, name string) (map[string]interface{}, bool) {
-	if strings.LastIndex(name, ".") == -1 {
-		return actualFields, false
-	}
-
-	subName := name[:strings.LastIndex(name, ".")]
-	value, ok := actualFields[subName]
-	if !ok {
-		actualFields, ok = l.find(actualFields, subName)
-		value, ok = actualFields[subName]
-		if !ok {
-			return actualFields, false
-		}
-	}
-
-	switch val := value.(type) {
-	case map[string]interface{}:
-		for k, v := range val {
-			actualFields[subName+"."+k] = v
-		}
-		delete(actualFields, subName)
-	case map[interface{}]interface{}:
-		for k, v := range val {
-			actualFields[subName+"."+fmt.Sprint(k)] = v
-		}
-		delete(actualFields, subName)
-	case []map[string]interface{}:
-		for _, m := range val {
-			for k, v := range m {
-				actualFields[subName+"."+k] = v
-			}
-		}
-		delete(actualFields, subName)
-	case []map[interface{}]interface{}:
-		for _, m := range val {
-			for k, v := range m {
-				actualFields[subName+"."+fmt.Sprint(k)] = v
-			}
-		}
-		delete(actualFields, subName)
-	}
-	return actualFields, true
 }
 
 func (l *Loader) loadEnvironment() error {
