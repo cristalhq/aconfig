@@ -154,6 +154,10 @@ func (l *Loader) init() {
 			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
 		}
 	}
+	if l.config.FileFlag != "" {
+		// TODO: should be prefixed ?
+		l.flagSet.String(l.config.FileFlag, "", "config file param")
+	}
 }
 
 // Flags returngs flag.FlagSet to create your own flags.
@@ -195,7 +199,7 @@ func (l *Loader) loadConfig() error {
 
 func (l *Loader) parseFlags() error {
 	// TODO: too simple?
-	if l.flagSet.Parsed() {
+	if l.flagSet.Parsed() || l.config.SkipFlags || l.config.FileFlag == "" {
 		return nil
 	}
 	return l.flagSet.Parse(l.config.Args)
