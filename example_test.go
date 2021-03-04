@@ -160,6 +160,7 @@ func Example_Flag() {
 		"-ex.auth.user=flag-user",
 		"-ex.auth.pass=flag-pass",
 	)
+	flags.Parse(os.Args[1:])
 
 	if err := loader.Load(); err != nil {
 		log.Panic(err)
