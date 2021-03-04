@@ -69,6 +69,11 @@ type Config struct {
 	// Files from which config should be loaded.
 	Files []string
 
+	// Args hold the command-line arguments from which flags will be parsed.
+	// By default is nil and then os.Args will be used.
+	// Unless loader.Flags() will be explicitly parsed by the user.
+	Args []string
+
 	// FileDecoders to enable other than JSON file formats and prevent additional dependencies.
 	// Add required submodules to the go.mod and register them in this field.
 	// Example:
@@ -133,13 +138,13 @@ func (l *Loader) init() {
 		l.config.FileDecoders[".json"] = &jsonDecoder{}
 	}
 
-	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
-	l.parseFields()
-}
+	if l.config.Args == nil {
+		l.config.Args = os.Args[1:]
+	}
 
-func (l *Loader) parseFields() {
 	l.fields = l.getFields(l.dst)
 
+	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
 			flagName := l.config.FlagPrefix + l.fullTag(field, flagNameTag)
@@ -166,13 +171,31 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 
 // Load configuration into a given param.
 func (l *Loader) Load() error {
-	if err := l.loadSources(); err != nil {
+	if err := l.loadConfig(); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
+	return nil
+}
+
+func (l *Loader) loadConfig() error {
+	if err := l.parseFlags(); err != nil {
+		return err
+	}
+	if err := l.loadSources(); err != nil {
+		return err
+	}
 	if err := l.checkRequired(); err != nil {
-		return fmt.Errorf("aconfig: missing required field: %w", err)
+		return err
 	}
 	return nil
+}
+
+func (l *Loader) parseFlags() error {
+	// TODO: too simple?
+	if l.flagSet.Parsed() {
+		return nil
+	}
+	return l.flagSet.Parse(l.config.Args)
 }
 
 // LoadWithFile configuration into a given param.
@@ -347,12 +370,6 @@ func (l *Loader) loadEnvironment() error {
 }
 
 func (l *Loader) loadFlags() error {
-	if !l.flagSet.Parsed() {
-		if err := l.flagSet.Parse(os.Args[1:]); err != nil {
-			return err
-		}
-	}
-
 	actualFlags := getFlags(l.flagSet)
 
 	for _, field := range l.fields {
