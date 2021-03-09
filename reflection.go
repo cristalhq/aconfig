@@ -75,7 +75,7 @@ func (l *Loader) tagsForField(field reflect.StructField) map[string]string {
 func (l *Loader) fullTag(f *fieldData, tag string) string {
 	sep := l.config.FlagDelimiter
 	if tag == envNameTag {
-		sep = l.config.EnvDelimiter
+		sep = l.config.envDelimiter
 	}
 	res := f.Tag(tag)
 	for p := f.parent; p != nil; p = p.parent {

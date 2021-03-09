@@ -21,10 +21,11 @@ const (
 
 // Loader of user configuration.
 type Loader struct {
-	config  Config
-	dst     interface{}
-	fields  []*fieldData
-	flagSet *flag.FlagSet
+	config       Config
+	dst          interface{}
+	fields       []*fieldData
+	configFields *tree
+	flagSet      *flag.FlagSet
 }
 
 // Config to configure configuration loader.
@@ -37,7 +38,10 @@ type Config struct {
 	EnvPrefix  string // EnvPrefix for environment variables.
 	FlagPrefix string // FlagPrefix for flag parameters.
 
-	EnvDelimiter  string // EnvDelimiter for environment variables. If not set - default is ".".
+	// envDelimiter for environment variables. Is always "_" due to env-var format.
+	// Also unexported cause there is no sense to change it.
+	envDelimiter string
+
 	FlagDelimiter string // FlagDelimiter for flag parameters. If not set - default is ".".
 
 	// AllFieldsRequired set to true will fail config loading if one of the fields was not set.
@@ -68,11 +72,6 @@ type Config struct {
 
 	// Files from which config should be loaded.
 	Files []string
-
-	// Args hold the command-line arguments from which flags will be parsed.
-	// By default is nil and then os.Args will be used.
-	// Unless loader.Flags() will be explicitly parsed by the user.
-	Args []string
 
 	// FileDecoders to enable other than JSON file formats and prevent additional dependencies.
 	// Add required submodules to the go.mod and register them in this field.
@@ -117,15 +116,14 @@ func LoaderFor(dst interface{}, cfg Config) *Loader {
 }
 
 func (l *Loader) init() {
-	if l.config.EnvDelimiter == "" {
-		l.config.EnvDelimiter = "."
-	}
+	l.config.envDelimiter = "_"
+
 	if l.config.FlagDelimiter == "" {
 		l.config.FlagDelimiter = "."
 	}
 
 	if l.config.EnvPrefix != "" {
-		l.config.EnvPrefix += l.config.EnvDelimiter
+		l.config.EnvPrefix += l.config.envDelimiter
 	}
 	if l.config.FlagPrefix != "" {
 		l.config.FlagPrefix += l.config.FlagDelimiter
@@ -138,13 +136,26 @@ func (l *Loader) init() {
 		l.config.FileDecoders[".json"] = &jsonDecoder{}
 	}
 
-	if l.config.Args == nil {
-		l.config.Args = os.Args[1:]
+	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
+	l.parseFields()
+}
+
+func (l *Loader) parseFields() {
+	l.configFields = l.getConfigTree(l.dst)
+
+	q := []*node{l.configFields.root}
+	for len(q) > 0 {
+		var n *node
+		n, q = q[0], q[1:]
+		fmt.Printf("\tq %#v\n", n.name)
+		q = append(q, n.childs...)
+		for _, c := range n.childs {
+			fmt.Printf("%v -> %v\n", c.parent.field.Name, c.field.Name)
+		}
 	}
 
 	l.fields = l.getFields(l.dst)
 
-	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
 			flagName := l.config.FlagPrefix + l.fullTag(field, flagNameTag)
@@ -171,31 +182,13 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 
 // Load configuration into a given param.
 func (l *Loader) Load() error {
-	if err := l.loadConfig(); err != nil {
+	if err := l.loadSources(); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
-	return nil
-}
-
-func (l *Loader) loadConfig() error {
-	if err := l.parseFlags(); err != nil {
-		return err
-	}
-	if err := l.loadSources(); err != nil {
-		return err
-	}
 	if err := l.checkRequired(); err != nil {
-		return err
+		return fmt.Errorf("aconfig: missing required field: %w", err)
 	}
 	return nil
-}
-
-func (l *Loader) parseFlags() error {
-	// TODO: too simple?
-	if l.flagSet.Parsed() || l.config.SkipFlags {
-		return nil
-	}
-	return l.flagSet.Parse(l.config.Args)
 }
 
 // LoadWithFile configuration into a given param.
@@ -276,7 +269,7 @@ func (l *Loader) loadFromFile() error {
 			name := l.fullTag(field, tag)
 			value, ok := actualFields[name]
 			if !ok {
-				actualFields, _ = find(actualFields, name)
+				actualFields, _ = l.find(actualFields, name)
 				value, ok = actualFields[name]
 				if !ok {
 					continue
@@ -304,6 +297,50 @@ func (l *Loader) loadFromFile() error {
 	return nil
 }
 
+func (l *Loader) find(actualFields map[string]interface{}, name string) (map[string]interface{}, bool) {
+	if strings.LastIndex(name, ".") == -1 {
+		return actualFields, false
+	}
+
+	subName := name[:strings.LastIndex(name, ".")]
+	value, ok := actualFields[subName]
+	if !ok {
+		actualFields, ok = l.find(actualFields, subName)
+		value, ok = actualFields[subName]
+		if !ok {
+			return actualFields, false
+		}
+	}
+
+	switch val := value.(type) {
+	case map[string]interface{}:
+		for k, v := range val {
+			actualFields[subName+"."+k] = v
+		}
+		delete(actualFields, subName)
+	case map[interface{}]interface{}:
+		for k, v := range val {
+			actualFields[subName+"."+fmt.Sprint(k)] = v
+		}
+		delete(actualFields, subName)
+	case []map[string]interface{}:
+		for _, m := range val {
+			for k, v := range m {
+				actualFields[subName+"."+k] = v
+			}
+		}
+		delete(actualFields, subName)
+	case []map[interface{}]interface{}:
+		for _, m := range val {
+			for k, v := range m {
+				actualFields[subName+"."+fmt.Sprint(k)] = v
+			}
+		}
+		delete(actualFields, subName)
+	}
+	return actualFields, true
+}
+
 func (l *Loader) loadEnvironment() error {
 	actualEnvs := getEnv()
 
@@ -326,6 +363,12 @@ func (l *Loader) loadEnvironment() error {
 }
 
 func (l *Loader) loadFlags() error {
+	if !l.flagSet.Parsed() {
+		if err := l.flagSet.Parse(os.Args[1:]); err != nil {
+			return err
+		}
+	}
+
 	actualFlags := getFlags(l.flagSet)
 
 	for _, field := range l.fields {
