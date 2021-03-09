@@ -37,7 +37,10 @@ type Config struct {
 	EnvPrefix  string // EnvPrefix for environment variables.
 	FlagPrefix string // FlagPrefix for flag parameters.
 
-	EnvDelimiter  string // EnvDelimiter for environment variables. If not set - default is ".".
+	// envDelimiter for environment variables. Is always "_" due to env-var format.
+	// Also unexported cause there is no sense to change it.
+	envDelimiter string
+
 	FlagDelimiter string // FlagDelimiter for flag parameters. If not set - default is ".".
 
 	// AllFieldsRequired set to true will fail config loading if one of the fields was not set.
@@ -117,15 +120,14 @@ func LoaderFor(dst interface{}, cfg Config) *Loader {
 }
 
 func (l *Loader) init() {
-	if l.config.EnvDelimiter == "" {
-		l.config.EnvDelimiter = "."
-	}
+	l.config.envDelimiter = "_"
+
 	if l.config.FlagDelimiter == "" {
 		l.config.FlagDelimiter = "."
 	}
 
 	if l.config.EnvPrefix != "" {
-		l.config.EnvPrefix += l.config.EnvDelimiter
+		l.config.EnvPrefix += l.config.envDelimiter
 	}
 	if l.config.FlagPrefix != "" {
 		l.config.FlagPrefix += l.config.FlagDelimiter

@@ -112,9 +112,9 @@ func Example_File() {
 // And then overwrite with environment variables.
 //
 func Example_Env() {
-	os.Setenv("EXAMPLE.HTTP_PORT", "3333")
-	os.Setenv("EXAMPLE.AUTH.USER", "env-user")
-	os.Setenv("EXAMPLE.AUTH.PASS", "env-pass")
+	os.Setenv("EXAMPLE_HTTP_PORT", "3333")
+	os.Setenv("EXAMPLE_AUTH_USER", "env-user")
+	os.Setenv("EXAMPLE_AUTH_PASS", "env-pass")
 	defer os.Clearenv()
 
 	var cfg MyConfig
