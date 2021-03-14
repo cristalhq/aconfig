@@ -108,12 +108,20 @@ func (l *Loader) getFieldsHelper(valueObject reflect.Value, parent *fieldData) [
 		fd := l.newFieldData(field, value, parent)
 
 		// if it's a struct - expand and process it's fields
-		if field.Type.Kind() == reflect.Struct {
+		kind := field.Type.Kind()
+		if kind == reflect.Ptr {
+			kind = field.Type.Elem().Kind()
+		}
+		if kind == reflect.Struct {
 			var subFieldParent *fieldData
 			if field.Anonymous {
 				subFieldParent = parent
 			} else {
 				subFieldParent = fd
+			}
+			if field.Type.Kind() == reflect.Ptr {
+				value.Set(reflect.New(field.Type.Elem()))
+				value = value.Elem()
 			}
 			fields = append(fields, l.getFieldsHelper(value, subFieldParent)...)
 			continue

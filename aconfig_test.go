@@ -193,6 +193,9 @@ func TestJSON(t *testing.T) {
 			M: "n",
 		},
 		M: mInterface,
+		P: &structP{
+			P: "r",
+		},
 	}
 	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
@@ -1002,6 +1005,8 @@ type structConfig struct {
 	StructM
 
 	M interface{} `json:"M"`
+
+	P *structP `json:"P"`
 }
 
 type structY struct {
@@ -1033,6 +1038,10 @@ type StructM struct {
 	M string
 }
 
+type structP struct {
+	P string `json:"P"`
+}
+
 const testfileContent = `{
     "a": "b",
     "c": 10,
@@ -1062,6 +1071,10 @@ const testfileContent = `{
 
 	"m": "n",
 
-	"M":["q", "w"]
+	"M":["q", "w"],
+	
+	"P": {
+		"P": "r"
+	}
 }
 `
