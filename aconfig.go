@@ -244,10 +244,11 @@ func (l *Loader) checkRequired() error {
 
 func (l *Loader) loadDefaults() error {
 	for _, field := range l.fields {
-		if err := l.setFieldData(field, field.Tag(defaultValueTag)); err != nil {
+		defaultValue := field.Tag(defaultValueTag)
+		if err := l.setFieldData(field, defaultValue); err != nil {
 			return err
 		}
-		field.isSet = true
+		field.isSet = (defaultValue != "")
 	}
 	return nil
 }
