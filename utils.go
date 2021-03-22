@@ -156,18 +156,18 @@ func normalize(curr interface{}) interface{} {
 	}
 }
 
-func find(actualFields map[string]interface{}, name string) (map[string]interface{}, bool) {
+func find(actualFields map[string]interface{}, name string) map[string]interface{} {
 	if strings.LastIndex(name, ".") == -1 {
-		return actualFields, false
+		return actualFields
 	}
 
 	subName := name[:strings.LastIndex(name, ".")]
 	value, ok := actualFields[subName]
 	if !ok {
-		actualFields, ok = find(actualFields, subName)
+		actualFields = find(actualFields, subName)
 		value, ok = actualFields[subName]
 		if !ok {
-			return actualFields, false
+			return actualFields
 		}
 	}
 
@@ -197,5 +197,5 @@ func find(actualFields map[string]interface{}, name string) (map[string]interfac
 		}
 		delete(actualFields, subName)
 	}
-	return actualFields, true
+	return actualFields
 }

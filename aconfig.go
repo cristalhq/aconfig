@@ -278,7 +278,7 @@ func (l *Loader) loadFromFile() error {
 			name := l.fullTag(field, tag)
 			value, ok := actualFields[name]
 			if !ok {
-				actualFields, _ = find(actualFields, name)
+				actualFields = find(actualFields, name)
 				value, ok = actualFields[name]
 				if !ok {
 					continue
