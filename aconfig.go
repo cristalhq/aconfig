@@ -69,6 +69,9 @@ type Config struct {
 	// Easy wat to cobine base.yaml with prod.yaml
 	MergeFiles bool
 
+	// FileFlag to make easier pass file with a config via flags.
+	FileFlag string
+
 	// Files from which config should be loaded.
 	Files []string
 
@@ -153,6 +156,10 @@ func (l *Loader) init() {
 			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
 		}
 	}
+	if l.config.FileFlag != "" {
+		// TODO: should be prefixed ?
+		l.flagSet.String(l.config.FileFlag, "", "config file param")
+	}
 }
 
 // Flags returngs flag.FlagSet to create your own flags.
@@ -194,16 +201,10 @@ func (l *Loader) loadConfig() error {
 
 func (l *Loader) parseFlags() error {
 	// TODO: too simple?
-	if l.flagSet.Parsed() || l.config.SkipFlags {
+	if l.flagSet.Parsed() || l.config.SkipFlags || l.config.FileFlag == "" {
 		return nil
 	}
 	return l.flagSet.Parse(l.config.Args)
-}
-
-// LoadWithFile configuration into a given param.
-func (l *Loader) LoadWithFile(file string) error {
-	l.config.Files = []string{file}
-	return l.Load()
 }
 
 func (l *Loader) loadSources() error {
@@ -254,6 +255,15 @@ func (l *Loader) loadDefaults() error {
 }
 
 func (l *Loader) loadFromFile() error {
+	if l.config.FileFlag != "" {
+		flag := l.flagSet.Lookup(l.config.FileFlag)
+		if flag != nil {
+			configFile := flag.Value.String()
+			// TODO: do not ignore l.config.Files ?
+			l.config.Files = []string{configFile}
+		}
+	}
+
 	for _, file := range l.config.Files {
 		if _, err := os.Stat(file); os.IsNotExist(err) {
 			if l.config.FailOnFileNotFound {

@@ -236,39 +236,6 @@ func TestFile(t *testing.T) {
 	}
 }
 
-func TestFile_WithFile(t *testing.T) {
-	filepath := "testdata/config.json"
-
-	var cfg TestConfig
-	loader := LoaderFor(&cfg, Config{
-		SkipDefaults: true,
-		SkipEnv:      true,
-		SkipFlags:    true,
-	})
-	if err := loader.LoadWithFile(filepath); err != nil {
-		t.Fatal(err)
-	}
-
-	want := TestConfig{
-		Str:      "str-json",
-		Bytes:    []byte("Ynl0ZXMtanNvbg=="),
-		Int:      int32Ptr(101),
-		HTTPPort: 65000,
-		Sub: SubConfig{
-			Float: 999.111,
-		},
-		Anon: struct {
-			IsAnon bool `default:"true"`
-		}{
-			IsAnon: true,
-		},
-	}
-
-	if got := cfg; !reflect.DeepEqual(want, got) {
-		t.Fatalf("want %v, got %v", want, got)
-	}
-}
-
 func TestFileMerging(t *testing.T) {
 	file1 := "testdata/config1.json"
 	file2 := "testdata/config2.json"
