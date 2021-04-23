@@ -201,7 +201,7 @@ func (l *Loader) loadConfig() error {
 
 func (l *Loader) parseFlags() error {
 	// TODO: too simple?
-	if l.flagSet.Parsed() || l.config.SkipFlags || l.config.FileFlag == "" {
+	if l.flagSet.Parsed() || l.config.SkipFlags {
 		return nil
 	}
 	return l.flagSet.Parse(l.config.Args)
