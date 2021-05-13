@@ -259,10 +259,12 @@ func (l *Loader) loadFromFile() error {
 		flag := l.flagSet.Lookup(l.config.FileFlag)
 		if flag != nil {
 			configFile := flag.Value.String()
-			if l.config.MergeFiles {
-				l.config.Files = append(l.config.Files, configFile)
-			} else {
-				l.config.Files = []string{configFile}
+			if configFile != "" {
+				if l.config.MergeFiles {
+					l.config.Files = append(l.config.Files, configFile)
+				} else {
+					l.config.Files = []string{configFile}
+				}
 			}
 		}
 	}
