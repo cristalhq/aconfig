@@ -256,9 +256,12 @@ func (l *Loader) loadDefaults() error {
 
 func (l *Loader) loadFromFile() error {
 	if l.config.FileFlag != "" {
-		flag := l.flagSet.Lookup(l.config.FileFlag)
-		if flag != nil {
-			configFile := flag.Value.String()
+		fileFlag := getActualFlag(l.config.FileFlag, l.flagSet)
+		if fileFlag != nil {
+			configFile := fileFlag.Value.String()
+			if configFile == "" {
+				return fmt.Errorf("%s should not be empty", l.config.FileFlag)
+			}
 			if l.config.MergeFiles {
 				l.config.Files = append(l.config.Files, configFile)
 			} else {
