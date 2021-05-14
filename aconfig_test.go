@@ -266,6 +266,53 @@ func TestFileMerging(t *testing.T) {
 	}
 }
 
+func TestFileFlag(t *testing.T) {
+	file1 := "testdata/config1.json"
+
+	flags := []string{
+		"-file_flag=testdata/config2.json",
+	}
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		MergeFiles:   true,
+		FileFlag:     "file_flag",
+		Files:        []string{file1},
+		Args:         flags,
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := TestConfig{
+		Str:      "111",
+		HTTPPort: 222,
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func TestBadFileFlag(t *testing.T) {
+	flags := []string{
+		"-file_flag=",
+	}
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		FileFlag:     "file_flag",
+		Args:         flags,
+	})
+	if err := loader.Load(); err == nil {
+		t.Fatal("should be an error")
+	}
+}
+
 func TestEnv(t *testing.T) {
 	setEnv(t, "TST_STR", "str-env")
 	setEnv(t, "TST_BYTES", "bytes-env")

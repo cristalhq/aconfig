@@ -47,6 +47,16 @@ func getFlags(flagSet *flag.FlagSet) map[string]interface{} {
 	return res
 }
 
+func getActualFlag(name string, flagSet *flag.FlagSet) *flag.Flag {
+	var found *flag.Flag
+	flagSet.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = f
+		}
+	})
+	return found
+}
+
 func makeName(name string, parent *fieldData) string {
 	if parent == nil {
 		return name
