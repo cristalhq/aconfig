@@ -313,6 +313,31 @@ func TestBadFileFlag(t *testing.T) {
 	}
 }
 
+func TestNoFileFlagValue(t *testing.T) {
+	file1 := "testdata/config1.json"
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		FileFlag:     "file_flag",
+		Files:        []string{file1},
+		Args:         []string{}, // no file_flag
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := TestConfig{
+		Str:      "111",
+		HTTPPort: 111,
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
 func TestEnv(t *testing.T) {
 	setEnv(t, "TST_STR", "str-env")
 	setEnv(t, "TST_BYTES", "bytes-env")
