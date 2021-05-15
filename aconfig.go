@@ -142,6 +142,9 @@ func (l *Loader) init() {
 		}
 		l.config.FileDecoders[".json"] = &jsonDecoder{}
 	}
+	if dec, ok := l.config.FileDecoders[".yaml"]; ok {
+		l.config.FileDecoders[".yml"] = dec
+	}
 
 	if l.config.Args == nil {
 		l.config.Args = os.Args[1:]
@@ -289,7 +292,7 @@ func (l *Loader) loadFromFile() error {
 			return err
 		}
 
-		tag := ext[1:]
+		tag := getTagForExt(ext)
 
 		for _, field := range l.fields {
 			name := l.fullTag(field, tag)
