@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -142,6 +143,11 @@ func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error
 		return nil, err
 	}
 	return raw, nil
+}
+
+// ...
+func (d *jsonDecoder) EncodeTo(w io.Writer, data map[string]interface{}) error {
+	return json.NewEncoder(w).Encode(data)
 }
 
 func normalize(curr interface{}) interface{} {

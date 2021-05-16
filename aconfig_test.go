@@ -1,6 +1,7 @@
 package aconfig
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -430,6 +431,15 @@ func TestFlag(t *testing.T) {
 	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
+}
+
+func TestSave(t *testing.T) {
+	var buf bytes.Buffer
+
+	loader := LoaderFor(&EmbeddedConfig{Em: "wow"}, Config{})
+	loader.Save(&buf, ".json")
+
+	t.Log(buf.String())
 }
 
 func TestUsage(t *testing.T) {
