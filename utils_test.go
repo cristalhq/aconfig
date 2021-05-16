@@ -21,6 +21,7 @@ func Test_splitNameByWords(t *testing.T) {
 		{"", args{"ApiKey"}, []string{"Api", "Key"}},
 		{"", args{"APIKey"}, []string{"API", "Key"}},
 		{"", args{"Type2"}, []string{"Type", "2"}},
+		{"", args{"Type∆"}, []string{"Type", "∆"}},
 		{"", args{"MarshalJSONStruct"}, []string{"Marshal", "JSON", "Struct"}},
 	}
 	for _, tt := range tests {
