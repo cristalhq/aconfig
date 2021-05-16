@@ -281,7 +281,7 @@ func (l *Loader) loadFromFile() error {
 		ext := strings.ToLower(filepath.Ext(file))
 		decoder, ok := l.config.FileDecoders[ext]
 		if !ok {
-			return fmt.Errorf("file format '%q' isn't supported", ext)
+			return fmt.Errorf("file format %q isn't supported", ext)
 		}
 
 		actualFields, err := decoder.DecodeFile(file)
@@ -311,7 +311,7 @@ func (l *Loader) loadFromFile() error {
 
 		if !l.config.AllowUnknownFields {
 			for env, value := range actualFields {
-				return fmt.Errorf("unknown field in file %q: %s=%s (see AllowUnknownFields config param)", file, env, value)
+				return fmt.Errorf("unknown field in file %q: %s=%v (see AllowUnknownFields config param)", file, env, value)
 			}
 		}
 
@@ -337,7 +337,7 @@ func (l *Loader) loadEnvironment() error {
 	if !l.config.AllowUnknownEnvs && l.config.EnvPrefix != "" {
 		for env, value := range actualEnvs {
 			if strings.HasPrefix(env, l.config.EnvPrefix) {
-				return fmt.Errorf("unknown environment var %s=%s (see AllowUnknownEnvs config param)", env, value)
+				return fmt.Errorf("unknown environment var %s=%v (see AllowUnknownEnvs config param)", env, value)
 			}
 		}
 	}
@@ -358,7 +358,7 @@ func (l *Loader) loadFlags() error {
 	if !l.config.AllowUnknownFlags && l.config.FlagPrefix != "" {
 		for flag, value := range actualFlags {
 			if strings.HasPrefix(flag, l.config.FlagPrefix) {
-				return fmt.Errorf("unknown flag %s=%s (see AllowUnknownFlags config param)", flag, value)
+				return fmt.Errorf("unknown flag %s=%v (see AllowUnknownFlags config param)", flag, value)
 			}
 		}
 	}
