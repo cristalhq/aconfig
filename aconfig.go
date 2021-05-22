@@ -93,6 +93,7 @@ type Config struct {
 
 // FileDecoder is used to read config from files. See aconfig submodules.
 type FileDecoder interface {
+	Format() string
 	DecodeFile(filename string) (map[string]interface{}, error)
 }
 
@@ -141,9 +142,6 @@ func (l *Loader) init() {
 			l.config.FileDecoders = map[string]FileDecoder{}
 		}
 		l.config.FileDecoders[".json"] = &jsonDecoder{}
-	}
-	if dec, ok := l.config.FileDecoders[".yaml"]; ok {
-		l.config.FileDecoders[".yml"] = dec
 	}
 
 	if l.config.Args == nil {
@@ -292,7 +290,7 @@ func (l *Loader) loadFromFile() error {
 			return err
 		}
 
-		tag := getTagForExt(ext)
+		tag := decoder.Format()
 
 		for _, field := range l.fields {
 			name := l.fullTag(field, tag)

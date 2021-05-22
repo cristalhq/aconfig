@@ -23,14 +23,6 @@ func assertStruct(x interface{}) {
 	}
 }
 
-func getTagForExt(ext string) string {
-	tag := ext[1:]
-	if tag == "yml" {
-		tag = "yaml"
-	}
-	return tag
-}
-
 func getEnv() map[string]interface{} {
 	env := os.Environ()
 	res := make(map[string]interface{}, len(env))
