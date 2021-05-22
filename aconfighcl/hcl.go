@@ -12,6 +12,11 @@ type Decoder struct{}
 // New HCL decoder for aconfig.
 func New() *Decoder { return &Decoder{} }
 
+// Format of the decoder.
+func (d *Decoder) Format() string {
+	return "hcl"
+}
+
 // DecodeFile implements aconfig.FileDecoder.
 func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 	b, err := ioutil.ReadFile(filename)

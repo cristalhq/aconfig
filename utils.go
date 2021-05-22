@@ -137,6 +137,11 @@ func splitNameByWords(src string) []string {
 
 type jsonDecoder struct{}
 
+// Format of the decoder.
+func (d *jsonDecoder) Format() string {
+	return "toml"
+}
+
 // DecodeFile implements FileDecoder.
 func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error) {
 	f, err := os.Open(filename)
