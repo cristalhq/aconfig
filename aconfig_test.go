@@ -159,44 +159,30 @@ func TestJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	i := int32(42)
-	j := int64(420)
-	mInterface := make([]interface{}, 2)
-	for iI, vI := range []string{"q", "w"} {
-		mInterface[iI] = vI
+	want := wantConfig
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
 	}
-	want := structConfig{
-		A: "b",
-		C: 10,
-		E: 123.456,
-		B: []byte("abc"),
-		I: &i,
-		J: &j,
-		Y: structY{
-			X: "y",
-			Z: []int{1, 2, 3},
-			A: structD{
-				I: true,
-			},
+}
+
+func TestCustomFile(t *testing.T) {
+	filepath := createTestFile(t, "custom.config")
+
+	var cfg structConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{filepath},
+		FileDecoders: map[string]FileDecoder{
+			".config": &jsonDecoder{},
 		},
-		AA: structA{
-			X: "y",
-			BB: structB{
-				CC: structC{
-					MM: "n",
-					BB: []byte("boo"),
-				},
-				DD: []string{"x", "y", "z"},
-			},
-		},
-		StructM: StructM{
-			M: "n",
-		},
-		M: mInterface,
-		P: &structP{
-			P: "r",
-		},
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
 	}
+
+	want := wantConfig
 	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
@@ -547,8 +533,6 @@ func TestBadDefauts(t *testing.T) {
 
 func TestBadFiles(t *testing.T) {
 	f := func(filepath string) {
-		t.Helper()
-
 		var cfg TestConfig
 		loader := LoaderFor(&cfg, Config{
 			SkipDefaults:       true,
@@ -557,15 +541,41 @@ func TestBadFiles(t *testing.T) {
 			FailOnFileNotFound: true,
 			Files:              []string{filepath},
 		})
-
 		if err := loader.Load(); err == nil {
 			t.Fatal(err)
 		}
 	}
 
-	f("testdata/no_such_file.json")
-	f("testdata/bad_config.json")
-	f("testdata/unknown.ext")
+	t.Run("no_such_file.json", func(t *testing.T) {
+		f("no_such_file.json")
+	})
+
+	t.Run("bad_config.json", func(t *testing.T) {
+		filepath := t.TempDir() + "unknown.ext"
+		file, err := os.Create(filepath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Close()
+
+		_, err = file.WriteString(`{almost": "json`)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		f(filepath)
+	})
+
+	t.Run("unknown.ext", func(t *testing.T) {
+		filepath := t.TempDir() + "unknown.ext"
+		file, err := os.Create(filepath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Close()
+
+		f(filepath)
+	})
 }
 
 func TestFileNotFound(t *testing.T) {
@@ -984,14 +994,21 @@ func int32Ptr(a int32) *int32 {
 	return &a
 }
 
-func createTestFile(t *testing.T) string {
+func createTestFile(t *testing.T, name ...string) string {
 	t.Helper()
+	if len(name) > 1 {
+		t.Fatal()
+	}
+
 	dir := t.TempDir()
 	t.Cleanup(func() {
 		os.RemoveAll(dir)
 	})
 
 	filepath := dir + "/testfile.json"
+	if len(name) == 1 {
+		filepath = dir + name[0]
+	}
 
 	f, err := os.Create(filepath)
 	if err != nil {
@@ -1117,3 +1134,45 @@ const testfileContent = `{
 	}
 }
 `
+
+var wantConfig = func() structConfig {
+	i := int32(42)
+	j := int64(420)
+	mInterface := make([]interface{}, 2)
+	for iI, vI := range []string{"q", "w"} {
+		mInterface[iI] = vI
+	}
+
+	return structConfig{
+		A: "b",
+		C: 10,
+		E: 123.456,
+		B: []byte("abc"),
+		I: &i,
+		J: &j,
+		Y: structY{
+			X: "y",
+			Z: []int{1, 2, 3},
+			A: structD{
+				I: true,
+			},
+		},
+		AA: structA{
+			X: "y",
+			BB: structB{
+				CC: structC{
+					MM: "n",
+					BB: []byte("boo"),
+				},
+				DD: []string{"x", "y", "z"},
+			},
+		},
+		StructM: StructM{
+			M: "n",
+		},
+		M: mInterface,
+		P: &structP{
+			P: "r",
+		},
+	}
+}()
