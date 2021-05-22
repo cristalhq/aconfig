@@ -131,7 +131,7 @@ type jsonDecoder struct{}
 
 // Format of the decoder.
 func (d *jsonDecoder) Format() string {
-	return "toml"
+	return "json"
 }
 
 // DecodeFile implements FileDecoder.
