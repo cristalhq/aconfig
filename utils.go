@@ -23,14 +23,6 @@ func assertStruct(x interface{}) {
 	}
 }
 
-func getTagForExt(ext string) string {
-	tag := ext[1:]
-	if tag == "yml" {
-		tag = "yaml"
-	}
-	return tag
-}
-
 func getEnv() map[string]interface{} {
 	env := os.Environ()
 	res := make(map[string]interface{}, len(env))
@@ -136,6 +128,11 @@ func splitNameByWords(src string) []string {
 }
 
 type jsonDecoder struct{}
+
+// Format of the decoder.
+func (d *jsonDecoder) Format() string {
+	return "json"
+}
 
 // DecodeFile implements FileDecoder.
 func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error) {
