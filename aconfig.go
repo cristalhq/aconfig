@@ -3,6 +3,7 @@ package aconfig
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -95,6 +96,7 @@ type Config struct {
 type FileDecoder interface {
 	Format() string
 	DecodeFile(filename string) (map[string]interface{}, error)
+	EncodeTo(w io.Writer, data map[string]interface{}) error
 }
 
 // Field of the user configuration structure.
@@ -185,6 +187,23 @@ func (l *Loader) Load() error {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
 	return nil
+}
+
+// Load configuration into a given param.
+func (l *Loader) Save(w io.Writer, format string) error {
+	dec, ok := l.config.FileDecoders[format]
+	if !ok {
+		return fmt.Errorf("aconfig: %q decoder not found", format)
+	}
+	return dec.EncodeTo(w, l.dump())
+}
+
+func (l *Loader) dump() map[string]interface{} {
+	data := map[string]interface{}{}
+	for _, field := range l.fields {
+		data[field.name] = field.value.Interface()
+	}
+	return data
 }
 
 func (l *Loader) loadConfig() error {
