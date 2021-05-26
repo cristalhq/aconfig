@@ -175,7 +175,7 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 		return l.setInterface(field, value)
 
 	case reflect.Slice:
-		return l.setSlice(field, fmt.Sprint(normalize(value)))
+		return l.setSlice(field, sliceToString(value))
 
 	case reflect.Map:
 		return l.setMap(field, fmt.Sprint(value))
