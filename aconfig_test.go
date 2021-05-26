@@ -455,6 +455,40 @@ func TestExactName(t *testing.T) {
 	}
 }
 
+func TestSkipName(t *testing.T) {
+	setEnv(t, "STR", "str-env")
+	setEnv(t, "BAR", "bar-env")
+	defer os.Clearenv()
+
+	type Foo struct {
+		String string `env:"STR"`
+	}
+	type ExactConfig struct {
+		Foo Foo    `env:"-"`
+		Bar string `default:"def" env:"-"`
+	}
+	var cfg ExactConfig
+
+	loader := LoaderFor(&cfg, Config{
+		SkipFiles: true,
+		SkipFlags: true,
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := ExactConfig{
+		Foo: Foo{
+			String: "str-env",
+		},
+		Bar: "def",
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
 func TestUsage(t *testing.T) {
 	loader := LoaderFor(&EmbeddedConfig{}, Config{})
 

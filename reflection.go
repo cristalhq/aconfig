@@ -78,11 +78,16 @@ func (l *Loader) fullTag(prefix string, f *fieldData, tag string) string {
 		sep = l.config.envDelimiter
 	}
 	res := f.Tag(tag)
+	if res == "-" {
+		return ""
+	}
 	if before, _, ok := cut(res, ",exact"); ok {
 		return before
 	}
 	for p := f.parent; p != nil; p = p.parent {
-		res = p.Tag(tag) + sep + res
+		if p.Tag(tag) != "-" {
+			res = p.Tag(tag) + sep + res
+		}
 	}
 	return prefix + res
 }
