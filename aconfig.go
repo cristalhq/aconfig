@@ -154,6 +154,9 @@ func (l *Loader) init() {
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
 			flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
+			if flagName == "" {
+				continue
+			}
 			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
 		}
 	}
@@ -298,6 +301,9 @@ func (l *Loader) loadFile(file string) error {
 
 	for _, field := range l.fields {
 		name := l.fullTag("", field, tag)
+		if name == "" {
+			continue
+		}
 		value, ok := actualFields[name]
 		if !ok {
 			actualFields = find(actualFields, name)
@@ -346,6 +352,9 @@ func (l *Loader) loadEnvironment() error {
 
 	for _, field := range l.fields {
 		envName := l.fullTag(l.config.EnvPrefix, field, envNameTag)
+		if envName == "" {
+			continue
+		}
 
 		if err := l.setField(field, envName, actualEnvs); err != nil {
 			return err
@@ -367,6 +376,9 @@ func (l *Loader) loadFlags() error {
 
 	for _, field := range l.fields {
 		flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
+		if flagName == "" {
+			continue
+		}
 
 		if err := l.setField(field, flagName, actualFlags); err != nil {
 			return err
