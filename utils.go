@@ -127,6 +127,14 @@ func splitNameByWords(src string) []string {
 	return words
 }
 
+// copy-paste until https://github.com/golang/go/issues/46336 is fixed
+func cut(s, sep string) (before, after string, found bool) {
+	if i := strings.Index(s, sep); i >= 0 {
+		return s[:i], s[i+len(sep):], true
+	}
+	return s, "", false
+}
+
 type jsonDecoder struct{}
 
 // Format of the decoder.

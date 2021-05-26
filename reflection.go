@@ -72,16 +72,19 @@ func (l *Loader) tagsForField(field reflect.StructField) map[string]string {
 	return tags
 }
 
-func (l *Loader) fullTag(f *fieldData, tag string) string {
+func (l *Loader) fullTag(prefix string, f *fieldData, tag string) string {
 	sep := l.config.FlagDelimiter
 	if tag == envNameTag {
 		sep = l.config.envDelimiter
 	}
 	res := f.Tag(tag)
+	if before, _, ok := cut(res, ",exact"); ok {
+		return before
+	}
 	for p := f.parent; p != nil; p = p.parent {
 		res = p.Tag(tag) + sep + res
 	}
-	return res
+	return prefix + res
 }
 
 func (l *Loader) getFields(x interface{}) []*fieldData {

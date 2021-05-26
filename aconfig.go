@@ -153,7 +153,7 @@ func (l *Loader) init() {
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	if !l.config.SkipFlags {
 		for _, field := range l.fields {
-			flagName := l.config.FlagPrefix + l.fullTag(field, flagNameTag)
+			flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
 			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
 		}
 	}
@@ -297,7 +297,7 @@ func (l *Loader) loadFile(file string) error {
 	tag := decoder.Format()
 
 	for _, field := range l.fields {
-		name := l.fullTag(field, tag)
+		name := l.fullTag("", field, tag)
 		value, ok := actualFields[name]
 		if !ok {
 			actualFields = find(actualFields, name)
@@ -345,7 +345,7 @@ func (l *Loader) loadEnvironment() error {
 	actualEnvs := getEnv()
 
 	for _, field := range l.fields {
-		envName := l.config.EnvPrefix + l.fullTag(field, envNameTag)
+		envName := l.fullTag(l.config.EnvPrefix, field, envNameTag)
 
 		if err := l.setField(field, envName, actualEnvs); err != nil {
 			return err
@@ -366,7 +366,7 @@ func (l *Loader) loadFlags() error {
 	actualFlags := getFlags(l.flagSet)
 
 	for _, field := range l.fields {
-		flagName := l.config.FlagPrefix + l.fullTag(field, flagNameTag)
+		flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
 
 		if err := l.setField(field, flagName, actualFlags); err != nil {
 			return err
