@@ -1,3 +1,3 @@
 module github.com/cristalhq/aconfig
 
-go 1.14
+go 1.16
