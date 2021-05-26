@@ -418,6 +418,43 @@ func TestFlag(t *testing.T) {
 	}
 }
 
+func TestExactName(t *testing.T) {
+	setEnv(t, "STR", "str-env")
+	setEnv(t, "TST_STR", "bar-env")
+	defer os.Clearenv()
+
+	type Foo struct {
+		String string `env:"STR,exact"`
+	}
+	type ExactConfig struct {
+		Foo Foo
+		Bar string `env:"STR"`
+	}
+	var cfg ExactConfig
+
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:     true,
+		SkipFiles:        true,
+		SkipFlags:        true,
+		AllowUnknownEnvs: true,
+		EnvPrefix:        "TST",
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := ExactConfig{
+		Foo: Foo{
+			String: "str-env",
+		},
+		Bar: "bar-env",
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
 func TestUsage(t *testing.T) {
 	loader := LoaderFor(&EmbeddedConfig{}, Config{})
 
