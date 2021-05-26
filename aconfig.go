@@ -48,6 +48,9 @@ type Config struct {
 	// If default is set and this option is enabled (or required tag is set) there will be an error.
 	AllFieldRequired bool
 
+	// AllowDuplicates set to true will not fail on duplicated names on fields (env, flag, etc...)
+	AllowDuplicates bool
+
 	// AllowUnknownFields set to true will not fail on unknown fields in files.
 	AllowUnknownFields bool
 
@@ -214,22 +217,22 @@ func (l *Loader) parseFlags() error {
 func (l *Loader) loadSources() error {
 	if !l.config.SkipDefaults {
 		if err := l.loadDefaults(); err != nil {
-			return err
+			return fmt.Errorf("loading defaults: %w", err)
 		}
 	}
 	if !l.config.SkipFiles {
 		if err := l.loadFiles(); err != nil {
-			return err
+			return fmt.Errorf("loading files: %w", err)
 		}
 	}
 	if !l.config.SkipEnv {
 		if err := l.loadEnvironment(); err != nil {
-			return err
+			return fmt.Errorf("loading environment: %w", err)
 		}
 	}
 	if !l.config.SkipFlags {
 		if err := l.loadFlags(); err != nil {
-			return err
+			return fmt.Errorf("loading flags: %w", err)
 		}
 	}
 	return nil
@@ -349,6 +352,7 @@ func (l *Loader) loadFileFlag() error {
 
 func (l *Loader) loadEnvironment() error {
 	actualEnvs := getEnv()
+	dupls := make(map[string]struct{})
 
 	for _, field := range l.fields {
 		envName := l.fullTag(l.config.EnvPrefix, field, envNameTag)
@@ -356,16 +360,24 @@ func (l *Loader) loadEnvironment() error {
 			continue
 		}
 
-		if err := l.setField(field, envName, actualEnvs); err != nil {
+		if err := l.setField(field, envName, actualEnvs, dupls); err != nil {
 			return err
 		}
 	}
 
-	if !l.config.AllowUnknownEnvs && l.config.EnvPrefix != "" {
-		for env, value := range actualEnvs {
-			if strings.HasPrefix(env, l.config.EnvPrefix) {
-				return fmt.Errorf("unknown environment var %s=%v (see AllowUnknownEnvs config param)", env, value)
-			}
+	return l.postEnvCheck(actualEnvs, dupls)
+}
+
+func (l *Loader) postEnvCheck(values map[string]interface{}, dupls map[string]struct{}) error {
+	for name := range dupls {
+		delete(values, name)
+	}
+	if l.config.AllowUnknownEnvs || l.config.EnvPrefix == "" {
+		return nil
+	}
+	for env, value := range values {
+		if strings.HasPrefix(env, l.config.EnvPrefix) {
+			return fmt.Errorf("unknown environment var %s=%v (see AllowUnknownEnvs config param)", env, value)
 		}
 	}
 	return nil
@@ -373,6 +385,7 @@ func (l *Loader) loadEnvironment() error {
 
 func (l *Loader) loadFlags() error {
 	actualFlags := getFlags(l.flagSet)
+	dupls := make(map[string]struct{})
 
 	for _, field := range l.fields {
 		flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
@@ -380,22 +393,37 @@ func (l *Loader) loadFlags() error {
 			continue
 		}
 
-		if err := l.setField(field, flagName, actualFlags); err != nil {
+		if err := l.setField(field, flagName, actualFlags, dupls); err != nil {
 			return err
 		}
 	}
+	return l.postFlagCheck(actualFlags, dupls)
+}
 
-	if !l.config.AllowUnknownFlags && l.config.FlagPrefix != "" {
-		for flag, value := range actualFlags {
-			if strings.HasPrefix(flag, l.config.FlagPrefix) {
-				return fmt.Errorf("unknown flag %s=%v (see AllowUnknownFlags config param)", flag, value)
-			}
+func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]struct{}) error {
+	for name := range dupls {
+		delete(values, name)
+	}
+	if l.config.AllowUnknownFlags || l.config.FlagPrefix == "" {
+		return nil
+	}
+	for flag, value := range values {
+		if strings.HasPrefix(flag, l.config.EnvPrefix) {
+			return fmt.Errorf("unknown flag %s=%v (see AllowUnknownFlags config param)", flag, value)
 		}
 	}
 	return nil
 }
 
-func (l *Loader) setField(field *fieldData, name string, values map[string]interface{}) error {
+// TODO(cristaloleg): revisit
+func (l *Loader) setField(field *fieldData, name string, values map[string]interface{}, dupls map[string]struct{}) error {
+	if !l.config.AllowDuplicates {
+		if _, ok := dupls[name]; ok {
+			return fmt.Errorf("field %q is duplicated", name)
+		}
+		dupls[name] = struct{}{}
+	}
+
 	val, ok := values[name]
 	if !ok {
 		return nil
@@ -406,6 +434,8 @@ func (l *Loader) setField(field *fieldData, name string, values map[string]inter
 	}
 
 	field.isSet = true
-	delete(values, name)
+	if !l.config.AllowDuplicates {
+		delete(values, name)
+	}
 	return nil
 }

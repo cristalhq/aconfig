@@ -490,6 +490,59 @@ func TestSkipName(t *testing.T) {
 	}
 }
 
+func TestDuplicatedName(t *testing.T) {
+	setEnv(t, "FOO_BAR", "str-env")
+	defer os.Clearenv()
+
+	type Foo struct {
+		Bar string
+	}
+	type ExactConfig struct {
+		Foo    Foo
+		FooBar string
+	}
+	var cfg ExactConfig
+
+	loader := LoaderFor(&cfg, Config{
+		SkipFlags:       true,
+		AllowDuplicates: true,
+	})
+	if err := loader.Load(); err != nil {
+		t.Error(err)
+	}
+
+	want := ExactConfig{
+		Foo: Foo{
+			Bar: "str-env",
+		},
+		FooBar: "str-env",
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func TestFailOnDuplicatedName(t *testing.T) {
+	type Foo struct {
+		Bar string
+	}
+	type ExactConfig struct {
+		Foo    Foo
+		FooBar string
+	}
+	var cfg ExactConfig
+
+	loader := LoaderFor(&cfg, Config{
+		SkipFlags: true,
+	})
+
+	err := loader.Load()
+	if !strings.Contains(err.Error(), "is duplicated") {
+		t.Fatalf("got %s", err.Error())
+	}
+}
+
 func TestUsage(t *testing.T) {
 	loader := LoaderFor(&EmbeddedConfig{}, Config{})
 
