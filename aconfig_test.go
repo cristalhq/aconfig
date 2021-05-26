@@ -33,9 +33,10 @@ func TestDefaults(t *testing.T) {
 		}{
 			IsAnon: true,
 		},
-		Slice: []int{1, 2, 3},
-		Map1:  map[string]int{"a": 1, "b": 2, "c": 3},
-		Map2:  map[int]string{1: "a", 2: "b", 3: "c"},
+		StrSlice: []string{"1", "2", "3"},
+		Slice:    []int{1, 2, 3},
+		Map1:     map[string]int{"a": 1, "b": 2, "c": 3},
+		Map2:     map[int]string{1: "a", 2: "b", 3: "c"},
 		EmbeddedConfig: EmbeddedConfig{
 			Em: "em-def",
 		},
@@ -379,8 +380,7 @@ func TestFlag(t *testing.T) {
 
 	flags := []string{
 		"-tst.str=str-flag",
-		// TODO
-		// "-tst.bytes=bytes-flag",
+		"-tst.bytes=Ynl0ZXMtZmxhZw==",
 		"-tst.int=1001",
 		"-tst.http_port=30000",
 		"-tst.sub.float=123.321",
@@ -398,6 +398,7 @@ func TestFlag(t *testing.T) {
 
 	want := TestConfig{
 		Str:      "str-flag",
+		Bytes:    []byte("Ynl0ZXMtZmxhZw=="),
 		Int:      int32Ptr(1001),
 		HTTPPort: 30000,
 		Sub: SubConfig{
@@ -486,10 +487,6 @@ func TestBadDefauts(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-
-	f(&struct {
-		Bool bool `default:"omg"`
-	}{})
 
 	f(&struct {
 		Bool bool `default:"omg"`
@@ -615,7 +612,7 @@ func TestBadFiles(t *testing.T) {
 	})
 }
 
-func TestFileNotFound(t *testing.T) {
+func TestFailOnFileNotFound(t *testing.T) {
 	f := func(filepath string) {
 		t.Helper()
 
@@ -822,15 +819,13 @@ func TestCustomNames(t *testing.T) {
 	}
 
 	var cfg TestConfig
-	loader := LoaderFor(&cfg, Config{})
+	loader := LoaderFor(&cfg, Config{
+		Args: []string{"-two=2", "-four=4"},
+	})
 
 	setEnv(t, "ONE", "1")
 	setEnv(t, "three", "3")
 	defer os.Clearenv()
-
-	if err := loader.Flags().Parse([]string{"-two=2", "-four=4"}); err != nil {
-		t.Fatal(err)
-	}
 
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
@@ -966,13 +961,13 @@ func TestWalkFields(t *testing.T) {
 }
 
 func TestDontFillFlagsIfDisabled(t *testing.T) {
-	type TestConfig struct {
-		A int `default:"1"`
-	}
-
 	loader := LoaderFor(&TestConfig{}, Config{
 		SkipFlags: true,
+		Args:      []string{},
 	})
+	if err := loader.Load(); err != nil {
+		t.Error(err)
+	}
 
 	if flags := loader.Flags().NFlag(); flags != 0 {
 		t.Errorf("want empty, got %v", flags)
@@ -1070,9 +1065,10 @@ type TestConfig struct {
 		IsAnon bool `default:"true"`
 	}
 
-	Slice []int          `default:"1,2,3" usage:"just pass elements"`
-	Map1  map[string]int `default:"a:1,b:2,c:3"`
-	Map2  map[int]string `default:"1:a,2:b,3:c"`
+	StrSlice []string       `default:"1,2,3" usage:"just pass strings"`
+	Slice    []int          `default:"1,2,3" usage:"just pass elements"`
+	Map1     map[string]int `default:"a:1,b:2,c:3"`
+	Map2     map[int]string `default:"1:a,2:b,3:c"`
 
 	EmbeddedConfig
 }

@@ -42,7 +42,7 @@ func getEnv() map[string]interface{} {
 func getFlags(flagSet *flag.FlagSet) map[string]interface{} {
 	res := map[string]interface{}{}
 	flagSet.Visit(func(f *flag.Flag) {
-		res[f.Name] = f.Value
+		res[f.Name] = f.Value.String()
 	})
 	return res
 }
@@ -157,7 +157,7 @@ func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error
 	return raw, nil
 }
 
-func normalize(curr interface{}) interface{} {
+func sliceToString(curr interface{}) string {
 	switch curr := curr.(type) {
 	case []interface{}:
 		b := &strings.Builder{}
@@ -170,12 +170,8 @@ func normalize(curr interface{}) interface{} {
 		return b.String()
 	case string:
 		return curr
-	case float64:
-		return fmt.Sprint(curr)
-	case bool:
-		return fmt.Sprint(curr)
 	default:
-		panic(fmt.Sprintf("Can't normalize %T %v", curr, curr))
+		panic(fmt.Sprintf("can't normalize %T %v", curr, curr))
 	}
 }
 
