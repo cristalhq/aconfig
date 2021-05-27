@@ -1296,3 +1296,62 @@ var wantConfig = func() structConfig {
 		},
 	}
 }()
+
+type ConfigTest struct {
+	VCenter ConfigVCenter `json:"vcenter" env:"VCENTER"`
+}
+
+type ConfigVCenter struct {
+	User        string                  `json:"user" env:"USER"`
+	Password    string                  `json:"password" env:"PASSWORD"`
+	Port        string                  `json:"port" env:"PORT"`
+	Datacenters []ConfigVCenterDCRegion `json:"datacenters" env:"-"`
+}
+
+type ConfigVCenterDCRegion struct {
+	Region    string            `json:"region"`
+	Addresses []ConfigVCenterDC `json:"addresses"`
+}
+
+type ConfigVCenterDC struct {
+	Zone       string `json:"zone"`
+	Address    string `json:"address"`
+	Datacenter string `json:"datacenter"`
+}
+
+func TestSliceStructs(t *testing.T) {
+	var cfg ConfigTest
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{"testdata/complex.json"},
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := ConfigTest{
+		VCenter: ConfigVCenter{
+			User:     "user-test",
+			Password: "pass-test",
+			Port:     "8080",
+			Datacenters: []ConfigVCenterDCRegion{
+				{
+					Region: "region-test",
+					Addresses: []ConfigVCenterDC{
+						{
+							Zone:       "zone-test",
+							Address:    "address-test",
+							Datacenter: "datacenter-test",
+						},
+					},
+				},
+			},
+		},
+	}
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
