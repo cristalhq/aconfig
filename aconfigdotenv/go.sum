@@ -1,6 +1,4 @@
-github.com/cristalhq/aconfig v0.10.0 h1:5dyXjRkUBDuueSHFYxlLdxpZrnzGHwlffhL16NiT+XQ=
-github.com/cristalhq/aconfig v0.10.0/go.mod h1:0ZBp7dUf0F2Jr7YbLjw8OVlAD0eeV2bU3NwmVgeUReo=
-github.com/cristalhq/aconfig v0.11.4 h1:DARtSacbcHdMEPen1xFkiHQ3UaJwkipWj/AeKP1ufNA=
-github.com/cristalhq/aconfig v0.11.4/go.mod h1:0ZBp7dUf0F2Jr7YbLjw8OVlAD0eeV2bU3NwmVgeUReo=
+github.com/cristalhq/aconfig v0.16.1 h1:P3noQOujaPU5Of8E9fA1YYU3s/HUoPCIhpKkEgIQtfc=
+github.com/cristalhq/aconfig v0.16.1/go.mod h1:NXaRp+1e6bkO4dJn+wZ71xyaihMDYPtCSvEhMTm/H3E=
 github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
