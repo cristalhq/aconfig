@@ -1303,8 +1303,8 @@ type ConfigTest struct {
 
 type ConfigVCenter struct {
 	User        string                  `json:"user" env:"USER"`
-	Password    string                  `yaml:"password" env:"PASSWORD"`
-	Port        string                  `yaml:"port" env:"PORT"`
+	Password    string                  `json:"password" env:"PASSWORD"`
+	Port        string                  `json:"port" env:"PORT"`
 	Datacenters []ConfigVCenterDCRegion `json:"datacenters" env:"-"`
 }
 
@@ -1325,7 +1325,7 @@ func TestSliceStructs(t *testing.T) {
 		SkipDefaults: true,
 		SkipEnv:      true,
 		SkipFlags:    true,
-		Files:        []string{"testdata/1.json"},
+		Files:        []string{"testdata/complex.json"},
 	})
 
 	if err := loader.Load(); err != nil {
