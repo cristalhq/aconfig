@@ -1,0 +1,19 @@
+{
+  "vcenter": {
+    "user": "user-test",
+    "password": "pass-test",
+    "port": 8080,
+    "datacenters": [
+      {
+        "region": "region-test",
+        "addresses": [
+          {
+            "zone": "zone-test",
+            "address": "address-test",
+            "datacenter": "datacenter-test"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -175,6 +175,27 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 		return l.setInterface(field, value)
 
 	case reflect.Slice:
+		if field.field.Type.Elem().Kind() == reflect.Struct {
+			v, ok := value.([]interface{})
+			if !ok {
+				panic(fmt.Errorf("%T %v", value, value))
+			}
+
+			slice := reflect.MakeSlice(field.field.Type, len(v), len(v))
+			for i, val := range v {
+				val, ok := val.(map[string]interface{})
+				if !ok {
+					panic(fmt.Errorf("%T %v", val, val))
+				}
+
+				fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
+				if err := m2s(val, fd.value); err != nil {
+					return err
+				}
+			}
+			field.value.Set(slice)
+			return nil
+		}
 		return l.setSlice(field, sliceToString(value))
 
 	case reflect.Map:
@@ -289,5 +310,41 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 		mapField.SetMapIndex(fdk.value, fdv.value)
 	}
 	field.value.Set(mapField)
+	return nil
+}
+
+func m2s(m map[string]interface{}, structValue reflect.Value) error {
+	for name, value := range m {
+		name = strings.Title(name)
+		structFieldValue := structValue.FieldByName(name)
+		if !structFieldValue.IsValid() {
+			return fmt.Errorf("no such field %q in struct", name)
+		}
+
+		if !structFieldValue.CanSet() {
+			return fmt.Errorf("cannot set %q field value", name)
+		}
+
+		val := reflect.ValueOf(value)
+		if structFieldValue.Type() != val.Type() {
+			if structFieldValue.Kind() == reflect.Slice && val.Kind() == reflect.Slice {
+				vals := value.([]interface{})
+				slice := reflect.MakeSlice(structFieldValue.Type(), len(vals), len(vals))
+				for i := 0; i < len(vals); i++ {
+					a := vals[i].(map[string]interface{})
+					b := slice.Index(i)
+					if err := m2s(a, b); err != nil {
+						return err
+					}
+				}
+				structFieldValue.Set(slice)
+				continue
+			} else {
+				return fmt.Errorf("provided value type do not match struct field type (%v and %v)", structFieldValue.Type(), val.Type())
+			}
+		}
+
+		structFieldValue.Set(val)
+	}
 	return nil
 }
