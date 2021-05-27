@@ -183,13 +183,10 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 
 			slice := reflect.MakeSlice(field.field.Type, len(v), len(v))
 			for i, val := range v {
-				val, ok := val.(map[string]interface{})
-				if !ok {
-					panic(fmt.Errorf("%T %v", val, val))
-				}
+				vv := mii(val)
 
 				fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
-				if err := m2s(val, fd.value); err != nil {
+				if err := m2s(vv, fd.value); err != nil {
 					return err
 				}
 			}
@@ -331,7 +328,7 @@ func m2s(m map[string]interface{}, structValue reflect.Value) error {
 				vals := value.([]interface{})
 				slice := reflect.MakeSlice(structFieldValue.Type(), len(vals), len(vals))
 				for i := 0; i < len(vals); i++ {
-					a := vals[i].(map[string]interface{})
+					a := mii(vals[i])
 					b := slice.Index(i)
 					if err := m2s(a, b); err != nil {
 						return err
@@ -347,4 +344,19 @@ func m2s(m map[string]interface{}, structValue reflect.Value) error {
 		structFieldValue.Set(val)
 	}
 	return nil
+}
+
+func mii(m interface{}) map[string]interface{} {
+	switch m := m.(type) {
+	case map[string]interface{}:
+		return m
+	case map[interface{}]interface{}:
+		res := map[string]interface{}{}
+		for k, v := range m {
+			res[k.(string)] = v
+		}
+		return res
+	default:
+		panic(fmt.Sprintf("%T %v", m, m))
+	}
 }
