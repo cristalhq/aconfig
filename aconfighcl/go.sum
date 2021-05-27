@@ -1,5 +1,5 @@
-github.com/cristalhq/aconfig v0.11.4 h1:DARtSacbcHdMEPen1xFkiHQ3UaJwkipWj/AeKP1ufNA=
-github.com/cristalhq/aconfig v0.11.4/go.mod h1:0ZBp7dUf0F2Jr7YbLjw8OVlAD0eeV2bU3NwmVgeUReo=
+github.com/cristalhq/aconfig v0.16.1 h1:P3noQOujaPU5Of8E9fA1YYU3s/HUoPCIhpKkEgIQtfc=
+github.com/cristalhq/aconfig v0.16.1/go.mod h1:NXaRp+1e6bkO4dJn+wZ71xyaihMDYPtCSvEhMTm/H3E=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
