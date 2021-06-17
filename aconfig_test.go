@@ -1,6 +1,7 @@
 package aconfig
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -737,18 +738,24 @@ func TestBadEnvs(t *testing.T) {
 }
 
 func TestBadFlags(t *testing.T) {
+	args := []string{"-tst.param=10a01"}
+
 	loader := LoaderFor(&TestConfig{}, Config{
 		SkipDefaults: true,
 		SkipFiles:    true,
 		SkipEnv:      true,
 		FlagPrefix:   "tst",
+		Args:         args,
 	})
 
-	if err := loader.Flags().Parse([]string{"-tst.param=10a01"}); err != nil {
-		t.Fatal(err)
-	}
+	// just for test
+	loader.flagSet.SetOutput(io.Discard)
+
 	if err := loader.Load(); err == nil {
-		t.Fatal(err)
+		t.Fatal("must be non-nil")
+	}
+	if err := loader.Flags().Parse([]string{"-tst.param=10a01"}); err == nil {
+		t.Fatal("must be non-nil")
 	}
 }
 
