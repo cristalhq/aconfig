@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -155,12 +158,8 @@ func (l *Loader) init() {
 
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	if !l.config.SkipFlags {
-		for _, field := range l.fields {
-			flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
-			if flagName == "" {
-				continue
-			}
-			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
+		if err := l.createFlags(); err != nil {
+			panic(fmt.Errorf("aconfig: incorrect default value: %w", err))
 		}
 	}
 	if l.config.FileFlag != "" {
