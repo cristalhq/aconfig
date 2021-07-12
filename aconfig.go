@@ -72,7 +72,8 @@ type Config struct {
 	// Easy wat to cobine base.yaml with prod.yaml
 	MergeFiles bool
 
-	// FileFlag to make easier pass file with a config via flags.
+	// FileFlag the name of the flag that defines the path to the configuration file passed through the CLI.
+	// (To make it easier to transfer the config file via flags.)
 	FileFlag string
 
 	// Files from which config should be loaded.
