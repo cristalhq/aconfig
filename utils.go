@@ -15,6 +15,9 @@ func assertStruct(x interface{}) {
 		panic("aconfig: nil should not be passed to the Loader")
 	}
 	value := reflect.ValueOf(x)
+	if value.Type().Kind() != reflect.Ptr {
+		panic("aconfig: destination must be a pointer")
+	}
 	for value.Type().Kind() == reflect.Ptr {
 		value = value.Elem()
 	}

@@ -1061,7 +1061,7 @@ func TestDontFillFlagsIfDisabled(t *testing.T) {
 	}
 }
 
-func TestPassNonStructs(t *testing.T) {
+func TestPassBadStructs(t *testing.T) {
 	f := func(cfg interface{}) {
 		t.Helper()
 
@@ -1080,6 +1080,11 @@ func TestPassNonStructs(t *testing.T) {
 	f([]string{})
 	f([4]string{})
 	f(func() {})
+
+	type S struct {
+		Foo int
+	}
+	f(S{})
 }
 
 func TestBadRequiredTag(t *testing.T) {
