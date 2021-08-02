@@ -156,11 +156,16 @@ func (l *Loader) init() {
 
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	if !l.config.SkipFlags {
+		names := make(map[string]bool, len(l.fields))
 		for _, field := range l.fields {
 			flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
 			if flagName == "" {
 				continue
 			}
+			if names[flagName] && !l.config.AllowDuplicates {
+				panic(fmt.Errorf("duplicate flag %q", flagName))
+			}
+			names[flagName] = true
 			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
 		}
 	}
