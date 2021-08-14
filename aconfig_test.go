@@ -1360,3 +1360,32 @@ func TestSliceStructs(t *testing.T) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
+
+func TestMapOfMap(t *testing.T) {
+	type TestConfig struct {
+		Options map[string]float64
+	}
+	var cfg TestConfig
+
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{"testdata/toy.json"},
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	var want = TestConfig{
+		Options: map[string]float64{
+			"foo": 0.4,
+			"bar": 0.25,
+		},
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}

@@ -196,7 +196,26 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 		return l.setSlice(field, sliceToString(value))
 
 	case reflect.Map:
-		return l.setMap(field, fmt.Sprint(value))
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return l.setMap(field, fmt.Sprint(value))
+		}
+
+		mapp := reflect.MakeMapWithSize(field.field.Type, len(v))
+		for key, val := range v {
+			fdk := l.newSimpleFieldData(reflect.New(field.field.Type.Key()).Elem())
+			if err := l.setFieldData(fdk, key); err != nil {
+				return fmt.Errorf("incorrect map key %q: %w", key, err)
+			}
+
+			fdv := l.newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
+			if err := l.setFieldData(fdv, val); err != nil {
+				return fmt.Errorf("incorrect map value %q: %w", val, err)
+			}
+			mapp.SetMapIndex(fdk.value, fdv.value)
+		}
+		field.value.Set(mapp)
+		return nil
 
 	default:
 		return fmt.Errorf("type kind %q isn't supported", kind)
