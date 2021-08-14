@@ -320,6 +320,7 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 		}
 
 		fdv := l.newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
+		fdv.field.Type = field.field.Type.Elem()
 		if err := l.setFieldData(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
 		}
