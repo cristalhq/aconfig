@@ -544,6 +544,20 @@ func TestFailOnDuplicatedName(t *testing.T) {
 	}
 }
 
+func TestFailOnDuplicatedFlag(t *testing.T) {
+	type Foo struct {
+		Bar string `flag:"yes"`
+		Baz string `flag:"yes"`
+	}
+
+	err := LoaderFor(&Foo{}, Config{}).Load()
+
+	want := `aconfig: cannot init loader: duplicate flag "yes"`
+	if got := err.Error(); got != want {
+		t.Fatalf("got %s want %s", got, want)
+	}
+}
+
 func TestUsage(t *testing.T) {
 	loader := LoaderFor(&EmbeddedConfig{}, Config{})
 

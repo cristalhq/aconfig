@@ -25,6 +25,7 @@ type Loader struct {
 	dst     interface{}
 	fields  []*fieldData
 	flagSet *flag.FlagSet
+	errInit error
 }
 
 // Config to configure configuration loader.
@@ -163,7 +164,8 @@ func (l *Loader) init() {
 				continue
 			}
 			if names[flagName] && !l.config.AllowDuplicates {
-				panic(fmt.Errorf("duplicate flag %q", flagName))
+				l.errInit = fmt.Errorf("duplicate flag %q", flagName)
+				return
 			}
 			names[flagName] = true
 			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
@@ -193,6 +195,9 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 
 // Load configuration into a given param.
 func (l *Loader) Load() error {
+	if l.errInit != nil {
+		return fmt.Errorf("aconfig: cannot init loader: %w", l.errInit)
+	}
 	if err := l.loadConfig(); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
