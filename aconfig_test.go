@@ -261,7 +261,7 @@ func TestFileFlag(t *testing.T) {
 	}
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		// SkipDefaults:       true,
+		SkipDefaults:       true,
 		SkipEnv:            true,
 		MergeFiles:         true,
 		FileFlag:           "file_flag",
@@ -278,8 +278,6 @@ func TestFileFlag(t *testing.T) {
 		Int: nil,
 	}
 
-	t.Logf("%v", *cfg.Int)
-	t.Logf("%v", want.Int)
 	if got := cfg; !reflect.DeepEqual(want, got) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
