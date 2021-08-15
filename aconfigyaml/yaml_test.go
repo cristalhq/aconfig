@@ -10,7 +10,7 @@ import (
 )
 
 func TestYAML(t *testing.T) {
-	filepath := createTestFile(t)
+	filepath := createTestFile(t, "file.yaml", testfileContent)
 
 	var cfg structConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
@@ -68,21 +68,98 @@ func TestYAML(t *testing.T) {
 	}
 }
 
-func createTestFile(t *testing.T) string {
+type ConfigTest struct {
+	VCenter ConfigVCenter `yaml:"vcenter"`
+}
+
+type ConfigVCenter struct {
+	User        string `yaml:"user"`
+	Password    string `yaml:"password"`
+	Port        string `yaml:"port"`
+	Datacenters []ConfigVCenterDCRegion
+}
+
+type ConfigVCenterDCRegion struct {
+	Region    string `yaml:"region"`
+	Addresses []ConfigVCenterDC
+}
+
+type ConfigVCenterDC struct {
+	Zone       string `yaml:"zone"`
+	Address    string `yaml:"address"`
+	Datacenter string `yaml:"datacenter"`
+}
+
+func TestSliceStructs(t *testing.T) {
+	content := `vcenter:
+  user: user-test
+  password: pass-test
+  port: 8080
+  datacenters:
+    - region: region-test
+      addresses:
+      - zone: zone-test
+        address: address-test
+        datacenter: datacenter-test
+`
+
+	file := createTestFile(t, "test.yaml", content)
+
+	var cfg ConfigTest
+	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
+		SkipDefaults:       true,
+		SkipEnv:            true,
+		SkipFlags:          true,
+		FailOnFileNotFound: true,
+		Files:              []string{file},
+		FileDecoders: map[string]aconfig.FileDecoder{
+			".yaml": aconfigyaml.New(),
+		},
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := ConfigTest{
+		VCenter: ConfigVCenter{
+			User:     "user-test",
+			Password: "pass-test",
+			Port:     "8080",
+			Datacenters: []ConfigVCenterDCRegion{
+				{
+					Region: "region-test",
+					Addresses: []ConfigVCenterDC{
+						{
+							Zone:       "zone-test",
+							Address:    "address-test",
+							Datacenter: "datacenter-test",
+						},
+					},
+				},
+			},
+		},
+	}
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func createTestFile(t *testing.T, name, content string) string {
 	t.Helper()
 	dir := t.TempDir()
 	t.Cleanup(func() {
 		os.RemoveAll(dir)
 	})
 
-	filepath := dir + "/testfile.yaml"
+	filepath := dir + name
 
 	f, err := os.Create(filepath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	_, err = f.WriteString(testfileContent)
+	_, err = f.WriteString(content)
 	if err != nil {
 		t.Fatal(err)
 	}
