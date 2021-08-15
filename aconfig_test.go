@@ -2,6 +2,7 @@ package aconfig
 
 import (
 	"io/ioutil"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -1383,6 +1384,34 @@ func TestMapOfMap(t *testing.T) {
 			"foo": 0.4,
 			"bar": 0.25,
 		},
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+func TestBad(t *testing.T) {
+	type TestConfig struct {
+		Params url.Values
+	}
+	var cfg TestConfig
+	os.Setenv("PARAMS", "foo:bar")
+	defer os.Unsetenv("PARAMS")
+
+	loader := LoaderFor(&cfg, Config{
+		SkipFlags: true,
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	p, err := url.ParseQuery("foo=bar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want = TestConfig{
+		Params: p,
 	}
 
 	if got := cfg; !reflect.DeepEqual(want, got) {
