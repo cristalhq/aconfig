@@ -375,11 +375,11 @@ func (l *Loader) loadEnvironment() error {
 }
 
 func (l *Loader) postEnvCheck(values map[string]interface{}, dupls map[string]struct{}) error {
-	for name := range dupls {
-		delete(values, name)
-	}
 	if l.config.AllowUnknownEnvs || l.config.EnvPrefix == "" {
 		return nil
+	}
+	for name := range dupls {
+		delete(values, name)
 	}
 	for env, value := range values {
 		if strings.HasPrefix(env, l.config.EnvPrefix) {
@@ -407,11 +407,11 @@ func (l *Loader) loadFlags() error {
 }
 
 func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]struct{}) error {
-	for name := range dupls {
-		delete(values, name)
-	}
 	if l.config.AllowUnknownFlags || l.config.FlagPrefix == "" {
 		return nil
+	}
+	for name := range dupls {
+		delete(values, name)
 	}
 	for flag, value := range values {
 		if strings.HasPrefix(flag, l.config.EnvPrefix) {
