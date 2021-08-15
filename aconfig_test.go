@@ -1392,21 +1392,29 @@ func TestMapOfMap(t *testing.T) {
 }
 
 func TestBad(t *testing.T) {
-	var cfg struct {
+	type TestConfig struct {
 		Params url.Values
 	}
+	var cfg TestConfig
 	os.Setenv("PARAMS", "foo:bar")
+	defer os.Unsetenv("PARAMS")
 
-	defer func() {
-		if r := recover(); r != nil {
-			t.Fatal(r)
-		}
-	}()
-	if err := LoaderFor(&cfg, Config{
+	loader := LoaderFor(&cfg, Config{
 		SkipFlags: true,
-	}).Load(); err != nil {
+	})
+	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
-	t.Logf("cfg %+v\n", cfg)
+	p, err := url.ParseQuery("foo=bar")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want = TestConfig{
+		Params: p,
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
 }
