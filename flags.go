@@ -17,9 +17,10 @@ func (l *Loader) createFlags() error {
 		fd := field.value
 		for fd.Type().Kind() == reflect.Ptr {
 			if fd.IsNil() {
-				fd.Set(reflect.New(fd.Type().Elem()))
+				fd = reflect.New(fd.Type().Elem())
+			} else {
+				fd = fd.Elem()
 			}
-			fd = fd.Elem()
 		}
 
 		value := field.Tag(defaultValueTag)
