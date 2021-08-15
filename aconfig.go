@@ -25,6 +25,7 @@ type Loader struct {
 	dst     interface{}
 	fields  []*fieldData
 	flagSet *flag.FlagSet
+	errInit error
 }
 
 // Config to configure configuration loader.
@@ -156,11 +157,17 @@ func (l *Loader) init() {
 
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	if !l.config.SkipFlags {
+		names := make(map[string]bool, len(l.fields))
 		for _, field := range l.fields {
 			flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
 			if flagName == "" {
 				continue
 			}
+			if names[flagName] && !l.config.AllowDuplicates {
+				l.errInit = fmt.Errorf("duplicate flag %q", flagName)
+				return
+			}
+			names[flagName] = true
 			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
 		}
 	}
@@ -188,6 +195,9 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 
 // Load configuration into a given param.
 func (l *Loader) Load() error {
+	if l.errInit != nil {
+		return fmt.Errorf("aconfig: cannot init loader: %w", l.errInit)
+	}
 	if err := l.loadConfig(); err != nil {
 		return fmt.Errorf("aconfig: cannot load config: %w", err)
 	}
@@ -370,11 +380,11 @@ func (l *Loader) loadEnvironment() error {
 }
 
 func (l *Loader) postEnvCheck(values map[string]interface{}, dupls map[string]struct{}) error {
-	for name := range dupls {
-		delete(values, name)
-	}
 	if l.config.AllowUnknownEnvs || l.config.EnvPrefix == "" {
 		return nil
+	}
+	for name := range dupls {
+		delete(values, name)
 	}
 	for env, value := range values {
 		if strings.HasPrefix(env, l.config.EnvPrefix) {
@@ -402,11 +412,11 @@ func (l *Loader) loadFlags() error {
 }
 
 func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]struct{}) error {
-	for name := range dupls {
-		delete(values, name)
-	}
 	if l.config.AllowUnknownFlags || l.config.FlagPrefix == "" {
 		return nil
+	}
+	for name := range dupls {
+		delete(values, name)
 	}
 	for flag, value := range values {
 		if strings.HasPrefix(flag, l.config.EnvPrefix) {
