@@ -255,32 +255,33 @@ func TestFileMerging(t *testing.T) {
 }
 
 func TestFileFlag(t *testing.T) {
-	file1 := "testdata/config1.json"
-
-	flags := []string{
-		"-file_flag=testdata/config2.json",
+	type TestConfig struct {
+		Str string
+		Int *int `default:"123"`
 	}
-
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
-		SkipDefaults: true,
-		SkipEnv:      true,
-		MergeFiles:   true,
-		FileFlag:     "file_flag",
-		Files:        []string{file1},
-		Args:         flags,
+		// SkipDefaults:       true,
+		SkipEnv:            true,
+		MergeFiles:         true,
+		FileFlag:           "file_flag",
+		Files:              []string{"testdata/config1.json"},
+		Args:               []string{"-file_flag=testdata/config1.json"},
+		AllowUnknownFields: true,
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)
 	}
 
 	want := TestConfig{
-		Str:      "111",
-		HTTPPort: 222,
+		Str: "111",
+		Int: nil,
 	}
 
+	t.Logf("%v", *cfg.Int)
+	t.Logf("%v", want.Int)
 	if got := cfg; !reflect.DeepEqual(want, got) {
-		t.Fatalf("want %v, got %v", want, got)
+		t.Fatalf("got %v, want %v", got, want)
 	}
 }
 

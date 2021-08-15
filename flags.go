@@ -48,6 +48,7 @@ func (l *Loader) createFlags() error {
 			if err != nil {
 				return err
 			}
+			println(v)
 			l.flagSet.Int(flagName, int(v), usage)
 
 		case reflect.Int64:
