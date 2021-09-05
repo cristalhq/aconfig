@@ -420,6 +420,49 @@ func TestFlag(t *testing.T) {
 	}
 }
 
+func TestFlagAllowUnknownFlags(t *testing.T) {
+	var cfg struct {
+		A string `flag:"a" env:"a" usage:"a" required:"true"`
+		B string `flag:"b" env:"b" usage:"b" required:"true"`
+	}
+
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:      true,
+		SkipFiles:         true,
+		SkipEnv:           true,
+		SkipFlags:         false,
+		AllowUnknownFlags: true,
+		EnvPrefix:         "",
+		FlagPrefix:        "",
+		Files:             []string{},
+		FileDecoders:      map[string]FileDecoder{},
+		Args: []string{
+			"--a",
+			"foo",
+			"--b",
+			"bar",
+			"--c",
+			"foobar",
+		},
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := struct {
+		A string `flag:"a" env:"a" usage:"a" required:"true"`
+		B string `flag:"b" env:"b" usage:"b" required:"true"`
+	}{
+		A: "foo",
+		B: "bar",
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
 func TestExactName(t *testing.T) {
 	setEnv(t, "STR", "str-env")
 	setEnv(t, "TST_STR", "bar-env")

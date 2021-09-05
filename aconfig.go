@@ -3,6 +3,7 @@ package aconfig
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -222,6 +223,20 @@ func (l *Loader) parseFlags() error {
 	if l.flagSet.Parsed() || l.config.SkipFlags {
 		return nil
 	}
+
+	if l.config.AllowUnknownFlags {
+		originalOutput := l.flagSet.Output()
+		l.flagSet.SetOutput(io.Discard)
+
+		err := l.flagSet.Parse(l.config.Args)
+
+		l.flagSet.SetOutput(originalOutput)
+
+		if err != nil && strings.HasPrefix(err.Error(), "flag provided but not defined: ") {
+			return nil
+		}
+	}
+
 	return l.flagSet.Parse(l.config.Args)
 }
 
