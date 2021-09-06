@@ -84,6 +84,9 @@ func (l *Loader) fullTag(prefix string, f *fieldData, tag string) string {
 	if before, _, ok := cut(res, ",exact"); ok {
 		return before
 	}
+	if before, _, ok := cut(res, ",omitempty"); ok {
+		return before
+	}
 	for p := f.parent; p != nil; p = p.parent {
 		if p.Tag(tag) != "-" {
 			res = p.Tag(tag) + sep + res

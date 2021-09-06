@@ -167,6 +167,24 @@ func TestJSON(t *testing.T) {
 	}
 }
 
+func TestJSONWithOmitempty(t *testing.T) {
+	type TestConfig struct {
+		APIKey string `json:"b,omitempty"`
+	}
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:       true,
+		SkipEnv:            true,
+		SkipFlags:          true,
+		AllowUnknownFields: true,
+		Files:              []string{createTestFile(t)},
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCustomFile(t *testing.T) {
 	filepath := createTestFile(t, "custom.config")
 
