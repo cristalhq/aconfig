@@ -29,9 +29,15 @@ The goal was to load config values from 4 places: defaults (in the code), files,
 
 ## Requirements
 
-- Go version 1.14+
+- Go version 1.15+
 
-## Install
+## Installation 
+
+### Install Go
+
+See [Go docs](https://golang.org/)
+
+### Install package 
 
 ```sh
 go get github.com/cristalhq/aconfig
