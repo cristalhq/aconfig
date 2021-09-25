@@ -1,10 +1,11 @@
 # aconfig
-> Simple, useful and opinionated config loader
 
 [![build-img]][build-url]
 [![pkg-img]][pkg-url]
 [![reportcard-img]][reportcard-url]
 [![coverage-img]][coverage-url]
+
+Simple, useful and opinionated config loader
 
 ## Rationale
 
