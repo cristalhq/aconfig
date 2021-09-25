@@ -60,7 +60,7 @@ func Example_WalkFields() {
 	// Auth.Pass: "PASS" "pass" "def-pass" "make it strong"
 }
 
-// Just load defaults from struct defenition.
+// Just load defaults from struct definition.
 //
 func Example_Defaults() {
 	var cfg MyConfig
@@ -84,7 +84,7 @@ func Example_Defaults() {
 	// Auth.Pass: def-pass
 }
 
-// Load defaults from struct defenition and overwrite with a file.
+// Load defaults from struct defunition and overwrite with a file.
 //
 func Example_File() {
 	var cfg MyConfig
@@ -108,7 +108,7 @@ func Example_File() {
 	// Auth.Pass: json-pass
 }
 
-// Load defaults from struct defenition and overwrite with a file.
+// Load defaults from struct definition and overwrite with a file.
 // And then overwrite with environment variables.
 //
 func Example_Env() {
@@ -138,7 +138,7 @@ func Example_Env() {
 	// Auth.Pass: env-pass
 }
 
-// Load defaults from struct defenition and overwrite with a file.
+// Load defaults from struct definition and overwrite with a file.
 // And then overwrite with environment variables.
 // Finally read command line flags.
 //
