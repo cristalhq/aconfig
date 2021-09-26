@@ -5,15 +5,11 @@
 [![reportcard-img]][reportcard-url]
 [![coverage-img]][coverage-url]
 
-Simple, useful and opinionated config loader
+Simple, useful and opinionated config loader.
 
 ## Rationale
 
-There are many solutions regarding configuration loading in Go. 
-
-This simple config loader was created to be as easy to use and understand as possible. 
-
-The goal was to load config values from 4 places: defaults (in the code), files, environment variables, and command-line flags. This library works with all of these sources.
+There are many solutions regarding configuration loading in Go. I was looking for a simple loader that is as easy to use and understand as possible. The goal was to load config from 4 places: defaults (in the code), files, environment variables, command-line flags. This library works with all of this sources.
 
 ## Features
 
@@ -22,25 +18,17 @@ The goal was to load config values from 4 places: defaults (in the code), files,
 * Automatic fields mapping.
 * Supports different sources:
   * defaults in the code
-  * config files (JSON, YAML, TOML, DotENV, HCL)
+  * files (JSON, YAML, TOML, DotENV, HCL)
   * environment variables
   * command-line flags
 * Dependency-free (file parsers are optional).
 * Ability to walk over configuration fields.
 
-## Requirements
+## Install
 
-- Go version 1.15+
+Go version 1.14+
 
-## Installation 
-
-### Install Go
-
-See [Go docs](https://golang.org/)
-
-### Install package 
-
-```sh
+```
 go get github.com/cristalhq/aconfig
 ```
 
@@ -48,12 +36,12 @@ go get github.com/cristalhq/aconfig
 
 ```go
 type MyConfig struct {
-	Port int `default: "1111" usage: "Port number to serve on"`
+	Port int `default:"1111" usage:"just give a number"`
 	Auth struct {
-		User string `default: "def-user"`
-		Pass string `default: "def-pass"`
+		User string `default:"def-user"`
+		Pass string `default:"def-pass"`
 	}
-	Pass string `default:"" env: "SECRET" flag: "secret"`
+	Pass string `default:"" env:"SECRET" flag:"sec_ret"`
 }
 
 var cfg MyConfig
@@ -94,11 +82,11 @@ Integration with `spf13/cobra` [playground](https://play.golang.org/p/OsCR8qTCN0
 
 ## Documentation
 
-See the [online docs][pkg-url].
+See [these docs][pkg-url].
 
 ## License
 
-Licensed under [MIT License](LICENSE).
+[MIT License](LICENSE).
 
 [build-img]: https://github.com/cristalhq/aconfig/workflows/build/badge.svg
 [build-url]: https://github.com/cristalhq/aconfig/actions
