@@ -1450,3 +1450,35 @@ func TestBad(t *testing.T) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
+
+func TestFileConfigFlagDelim(t *testing.T) {
+	type TestConfig struct {
+		Options struct {
+			Foo float64
+			Bar float64
+		}
+	}
+	var cfg TestConfig
+
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults:  true,
+		SkipEnv:       true,
+		SkipFlags:     true,
+		FlagDelimiter: "_",
+
+		Files: []string{"testdata/toy.json"},
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	var want = TestConfig{Options: struct {
+		Foo float64
+		Bar float64
+	}{0.4, 0.25}}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
