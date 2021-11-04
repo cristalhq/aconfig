@@ -68,6 +68,34 @@ func TestYAML(t *testing.T) {
 	}
 }
 
+func TestLoadResources(t *testing.T) {
+	type ResourceA struct {
+		Field string `yaml:"field"`
+	}
+	type ResourceB struct {
+		Field int `yaml:"field"`
+	}
+	type TestConfig struct {
+		ResourcesA []ResourceA `yaml:"resources_a"`
+		ResourcesB []ResourceB `yaml:"resources_b"`
+	}
+
+	var cfg TestConfig
+
+	resourcesLoader := aconfig.LoaderFor(&cfg,
+		aconfig.Config{
+			SkipFlags:          true,
+			Files:              []string{"res.yaml"},
+			FailOnFileNotFound: true,
+			FileDecoders: map[string]aconfig.FileDecoder{
+				".yaml": aconfigyaml.New(),
+			},
+		})
+	if err := resourcesLoader.Load(); err != nil {
+		t.Errorf("failed to load resources configurations [err=%s]", err)
+	}
+}
+
 func createTestFile(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
