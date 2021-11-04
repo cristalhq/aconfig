@@ -182,6 +182,9 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 
 	case reflect.Slice:
 		if field.field.Type.Elem().Kind() == reflect.Struct {
+			if value == nil {
+				return nil
+			}
 			v, ok := value.([]interface{})
 			if !ok {
 				panic(fmt.Errorf("%T %v", value, value))
