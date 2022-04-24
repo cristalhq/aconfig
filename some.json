@@ -1,0 +1,22 @@
+{
+    "api_key": "test",
+    "remote_endpoint": "localhost:3000",
+    "logs": {
+        "collectors": [
+            {
+                "type": "file",
+                "filepath": "./log.txt",
+                "exporters": [
+                    "console"
+                ],
+                "processors": []
+            }
+        ],
+        "processors": [],
+        "exporters": [
+            {
+                "type": "console"
+            }
+        ]
+    }
+}

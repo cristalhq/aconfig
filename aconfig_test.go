@@ -1207,13 +1207,14 @@ type SubConfig struct {
 }
 
 type structConfig struct {
-	A string
-	C int
-	E float64
-	B []byte
-	I *int32
-	J *int64
-	Y structY
+	A  string
+	C  int
+	XX []interface{} `json:"xx"`
+	E  float64
+	B  []byte
+	I  *int32
+	J  *int64
+	Y  structY
 
 	AA structA `json:"A"`
 	StructM
@@ -1262,6 +1263,7 @@ const testfileContent = `{
     "e": 123.456,
     "b": "abc",
     "i": 42,
+	"xx": [],
 	"j": 420,
 
     "y": {
