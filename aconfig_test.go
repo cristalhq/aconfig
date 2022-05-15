@@ -1,6 +1,7 @@
 package aconfig
 
 import (
+	"embed"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -217,6 +218,44 @@ func TestFile(t *testing.T) {
 		SkipEnv:      true,
 		SkipFlags:    true,
 		Files:        []string{filepath},
+	})
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	want := TestConfig{
+		Str:      "str-json",
+		Bytes:    []byte("Ynl0ZXMtanNvbg=="),
+		Int:      int32Ptr(101),
+		HTTPPort: 65000,
+		Sub: SubConfig{
+			Float: 999.111,
+		},
+		Anon: struct {
+			IsAnon bool `default:"true"`
+		}{
+			IsAnon: true,
+		},
+	}
+
+	if got := cfg; !reflect.DeepEqual(want, got) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+}
+
+//go:embed testdata
+var configEmbed embed.FS
+
+func TestFileEmbed(t *testing.T) {
+	filepath := "testdata/config.json"
+
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{filepath},
+		FileSystem:   configEmbed,
 	})
 	if err := loader.Load(); err != nil {
 		t.Fatal(err)

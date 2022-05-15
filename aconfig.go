@@ -3,6 +3,7 @@ package aconfig
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +25,7 @@ type Loader struct {
 	config  Config
 	dst     interface{}
 	fields  []*fieldData
+	fsys    fs.FS
 	flagSet *flag.FlagSet
 	errInit error
 }
@@ -69,6 +71,9 @@ type Config struct {
 	// FailOnFileNotFound will stop Loader on a first not found file from Files field in this structure.
 	FailOnFileNotFound bool
 
+	// FileSystem from which files will be loaded. Default is nil (OS file system).
+	FileSystem fs.FS
+
 	// MergeFiles set to true will collect all the entries from all the given files.
 	// Easy wat to cobine base.yaml with prod.yaml
 	MergeFiles bool
@@ -99,7 +104,7 @@ type Config struct {
 // FileDecoder is used to read config from files. See aconfig submodules.
 type FileDecoder interface {
 	Format() string
-	DecodeFile(filename string) (map[string]interface{}, error)
+	DecodeFile(fsys fs.FS, filename string) (map[string]interface{}, error)
 }
 
 // Field of the user configuration structure.
@@ -152,6 +157,8 @@ func (l *Loader) init() {
 	if l.config.Args == nil {
 		l.config.Args = os.Args[1:]
 	}
+
+	l.fsys = &fsOrOS{l.config.FileSystem}
 
 	l.fields = l.getFields(l.dst)
 
@@ -280,7 +287,7 @@ func (l *Loader) loadFiles() error {
 	}
 
 	for _, file := range l.config.Files {
-		if _, err := os.Stat(file); os.IsNotExist(err) {
+		if _, err := fs.Stat(l.fsys, file); os.IsNotExist(err) {
 			if l.config.FailOnFileNotFound {
 				return err
 			}
@@ -306,7 +313,7 @@ func (l *Loader) loadFile(file string) error {
 		return fmt.Errorf("file format %q is not supported", ext)
 	}
 
-	actualFields, err := decoder.DecodeFile(file)
+	actualFields, err := decoder.DecodeFile(l.fsys, file)
 	if err != nil {
 		return err
 	}

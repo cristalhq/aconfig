@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"reflect"
 	"strings"
@@ -138,6 +139,17 @@ func cut(s, sep string) (before, after string, found bool) {
 	return s, "", false
 }
 
+var _ fs.FS = &fsOrOS{}
+
+type fsOrOS struct{ fs.FS }
+
+func (fs *fsOrOS) Open(name string) (fs.File, error) {
+	if fs.FS == nil {
+		return os.Open(name)
+	}
+	return fs.FS.Open(name)
+}
+
 type jsonDecoder struct{}
 
 // Format of the decoder.
@@ -146,8 +158,8 @@ func (d *jsonDecoder) Format() string {
 }
 
 // DecodeFile implements FileDecoder.
-func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error) {
-	f, err := os.Open(filename)
+func (d *jsonDecoder) DecodeFile(fsys fs.FS, filename string) (map[string]interface{}, error) {
+	f, err := fsys.Open(filename)
 	if err != nil {
 		return nil, err
 	}
