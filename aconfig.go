@@ -154,7 +154,7 @@ func (l *Loader) init() {
 		if l.config.FileDecoders == nil {
 			l.config.FileDecoders = map[string]FileDecoder{}
 		}
-		l.config.FileDecoders[".json"] = &jsonDecoder{fsys: l.fsys}
+		l.config.FileDecoders[".json"] = &jsonDecoder{}
 	}
 	for _, dec := range l.config.FileDecoders {
 		dec, ok := dec.(interface{ Init(fs.FS) })
