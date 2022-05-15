@@ -3,6 +3,7 @@ package aconfig
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +25,7 @@ type Loader struct {
 	config  Config
 	dst     interface{}
 	fields  []*fieldData
+	fsys    fs.FS
 	flagSet *flag.FlagSet
 	errInit error
 }
@@ -69,6 +71,9 @@ type Config struct {
 	// FailOnFileNotFound will stop Loader on a first not found file from Files field in this structure.
 	FailOnFileNotFound bool
 
+	// FileSystem from which files will be loaded. Default is nil (OS file system).
+	FileSystem fs.FS
+
 	// MergeFiles set to true will collect all the entries from all the given files.
 	// Easy wat to cobine base.yaml with prod.yaml
 	MergeFiles bool
@@ -100,6 +105,7 @@ type Config struct {
 type FileDecoder interface {
 	Format() string
 	DecodeFile(filename string) (map[string]interface{}, error)
+	// Init(fsys fs.FS)
 }
 
 // Field of the user configuration structure.
@@ -142,11 +148,20 @@ func (l *Loader) init() {
 		l.config.FlagPrefix += l.config.FlagDelimiter
 	}
 
+	l.fsys = &fsOrOS{l.config.FileSystem}
+
 	if _, ok := l.config.FileDecoders[".json"]; !ok {
 		if l.config.FileDecoders == nil {
 			l.config.FileDecoders = map[string]FileDecoder{}
 		}
 		l.config.FileDecoders[".json"] = &jsonDecoder{}
+	}
+	for _, dec := range l.config.FileDecoders {
+		dec, ok := dec.(interface{ Init(fs.FS) })
+		if !ok {
+			continue
+		}
+		dec.Init(l.fsys)
 	}
 
 	if l.config.Args == nil {
@@ -280,7 +295,7 @@ func (l *Loader) loadFiles() error {
 	}
 
 	for _, file := range l.config.Files {
-		if _, err := os.Stat(file); os.IsNotExist(err) {
+		if _, err := fs.Stat(l.fsys, file); os.IsNotExist(err) {
 			if l.config.FailOnFileNotFound {
 				return err
 			}
