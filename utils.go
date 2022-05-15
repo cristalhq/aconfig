@@ -150,7 +150,13 @@ func (fs *fsOrOS) Open(name string) (fs.File, error) {
 	return fs.FS.Open(name)
 }
 
-type jsonDecoder struct{}
+type jsonDecoder struct {
+	fsys fs.FS
+}
+
+func (d *jsonDecoder) Init(fsys fs.FS) {
+	d.fsys = fsys
+}
 
 // Format of the decoder.
 func (d *jsonDecoder) Format() string {
@@ -158,8 +164,8 @@ func (d *jsonDecoder) Format() string {
 }
 
 // DecodeFile implements FileDecoder.
-func (d *jsonDecoder) DecodeFile(fsys fs.FS, filename string) (map[string]interface{}, error) {
-	f, err := fsys.Open(filename)
+func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error) {
+	f, err := d.fsys.Open(filename)
 	if err != nil {
 		return nil, err
 	}

@@ -104,7 +104,8 @@ type Config struct {
 // FileDecoder is used to read config from files. See aconfig submodules.
 type FileDecoder interface {
 	Format() string
-	DecodeFile(fsys fs.FS, filename string) (map[string]interface{}, error)
+	DecodeFile(filename string) (map[string]interface{}, error)
+	// Init(fsys fs.FS)
 }
 
 // Field of the user configuration structure.
@@ -147,18 +148,25 @@ func (l *Loader) init() {
 		l.config.FlagPrefix += l.config.FlagDelimiter
 	}
 
+	l.fsys = &fsOrOS{l.config.FileSystem}
+
 	if _, ok := l.config.FileDecoders[".json"]; !ok {
 		if l.config.FileDecoders == nil {
 			l.config.FileDecoders = map[string]FileDecoder{}
 		}
-		l.config.FileDecoders[".json"] = &jsonDecoder{}
+		l.config.FileDecoders[".json"] = &jsonDecoder{fsys: l.fsys}
+	}
+	for _, dec := range l.config.FileDecoders {
+		dec, ok := dec.(interface{ Init(fs.FS) })
+		if !ok {
+			continue
+		}
+		dec.Init(l.fsys)
 	}
 
 	if l.config.Args == nil {
 		l.config.Args = os.Args[1:]
 	}
-
-	l.fsys = &fsOrOS{l.config.FileSystem}
 
 	l.fields = l.getFields(l.dst)
 
@@ -313,7 +321,7 @@ func (l *Loader) loadFile(file string) error {
 		return fmt.Errorf("file format %q is not supported", ext)
 	}
 
-	actualFields, err := decoder.DecodeFile(l.fsys, file)
+	actualFields, err := decoder.DecodeFile(file)
 	if err != nil {
 		return err
 	}
