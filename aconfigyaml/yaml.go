@@ -3,7 +3,7 @@ package aconfigyaml
 import (
 	"os"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Decoder of YAML files for aconfig.

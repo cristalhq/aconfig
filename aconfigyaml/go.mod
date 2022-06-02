@@ -3,6 +3,6 @@ module github.com/cristalhq/aconfig/aconfigyaml
 go 1.15
 
 require (
-	github.com/cristalhq/aconfig v0.16.8
-	gopkg.in/yaml.v2 v2.3.0
+	github.com/cristalhq/aconfig v0.17.0
+	gopkg.in/yaml.v3 v3.0.1
 )
