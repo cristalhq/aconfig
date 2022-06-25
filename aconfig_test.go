@@ -609,7 +609,7 @@ func TestFailOnDuplicatedFlag(t *testing.T) {
 
 	err := LoaderFor(&Foo{}, Config{}).Load()
 
-	want := `aconfig: cannot init loader: duplicate flag "yes"`
+	want := `init loader: duplicate flag "yes"`
 	if got := err.Error(); got != want {
 		t.Fatalf("got %s want %s", got, want)
 	}
