@@ -211,10 +211,10 @@ func (l *Loader) WalkFields(fn func(f Field) bool) {
 // Load configuration into a given param.
 func (l *Loader) Load() error {
 	if l.errInit != nil {
-		return fmt.Errorf("aconfig: cannot init loader: %w", l.errInit)
+		return fmt.Errorf("init loader: %w", l.errInit)
 	}
 	if err := l.loadConfig(); err != nil {
-		return fmt.Errorf("aconfig: cannot load config: %w", err)
+		return fmt.Errorf("load config: %w", err)
 	}
 	return nil
 }
@@ -243,22 +243,22 @@ func (l *Loader) parseFlags() error {
 func (l *Loader) loadSources() error {
 	if !l.config.SkipDefaults {
 		if err := l.loadDefaults(); err != nil {
-			return fmt.Errorf("loading defaults: %w", err)
+			return fmt.Errorf("load defaults: %w", err)
 		}
 	}
 	if !l.config.SkipFiles {
 		if err := l.loadFiles(); err != nil {
-			return fmt.Errorf("loading files: %w", err)
+			return fmt.Errorf("load files: %w", err)
 		}
 	}
 	if !l.config.SkipEnv {
 		if err := l.loadEnvironment(); err != nil {
-			return fmt.Errorf("loading environment: %w", err)
+			return fmt.Errorf("load environment: %w", err)
 		}
 	}
 	if !l.config.SkipFlags {
 		if err := l.loadFlags(); err != nil {
-			return fmt.Errorf("loading flags: %w", err)
+			return fmt.Errorf("load flags: %w", err)
 		}
 	}
 	return nil
@@ -270,7 +270,7 @@ func (l *Loader) checkRequired() error {
 			continue
 		}
 		if field.isRequired || l.config.AllFieldRequired {
-			return fmt.Errorf("field %s was not set but it is required", field.name)
+			return fmt.Errorf("field %s is required but not set", field.name)
 		}
 	}
 	return nil
@@ -306,10 +306,9 @@ func (l *Loader) loadFiles() error {
 			return err
 		}
 
-		if l.config.MergeFiles {
-			continue
+		if !l.config.MergeFiles {
+			break
 		}
-		break
 	}
 	return nil
 }
@@ -385,12 +384,10 @@ func (l *Loader) loadEnvironment() error {
 		if envName == "" {
 			continue
 		}
-
 		if err := l.setField(field, envName, actualEnvs, dupls); err != nil {
 			return err
 		}
 	}
-
 	return l.postEnvCheck(actualEnvs, dupls)
 }
 
@@ -418,7 +415,6 @@ func (l *Loader) loadFlags() error {
 		if flagName == "" {
 			continue
 		}
-
 		if err := l.setField(field, flagName, actualFlags, dupls); err != nil {
 			return err
 		}

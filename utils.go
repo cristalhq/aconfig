@@ -13,17 +13,17 @@ import (
 
 func assertStruct(x interface{}) {
 	if x == nil {
-		panic("aconfig: nil should not be passed to the Loader")
+		panic("aconfig: destination cannot be nil")
 	}
 	value := reflect.ValueOf(x)
 	if value.Type().Kind() != reflect.Ptr {
 		panic("aconfig: destination must be a pointer")
 	}
-	for value.Type().Kind() == reflect.Ptr {
+	if value.Type().Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
 	if value.Kind() != reflect.Struct {
-		panic("aconfig: only struct can be passed to the Loader")
+		panic("aconfig: destination must be struct")
 	}
 }
 
