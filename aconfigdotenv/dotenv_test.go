@@ -1,6 +1,7 @@
 package aconfigdotenv_test
 
 import (
+	"embed"
 	"os"
 	"reflect"
 	"testing"
@@ -8,6 +9,38 @@ import (
 	"github.com/cristalhq/aconfig"
 	"github.com/cristalhq/aconfig/aconfigdotenv"
 )
+
+//go:embed testdata
+var configEmbed embed.FS
+
+func TestDotEnvEmbed(t *testing.T) {
+	var cfg struct {
+		Foo string
+		Bar string
+	}
+	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
+		SkipDefaults:       true,
+		SkipEnv:            true,
+		SkipFlags:          true,
+		FailOnFileNotFound: true,
+		FileDecoders: map[string]aconfig.FileDecoder{
+			".env": aconfigdotenv.New(),
+		},
+		Files:      []string{"testdata/config.env"},
+		FileSystem: configEmbed,
+	})
+
+	if err := loader.Load(); err != nil {
+		t.Fatal(err)
+	}
+
+	if cfg.Foo != "value1" {
+		t.Fatalf("have: %v", cfg.Foo)
+	}
+	if cfg.Bar != "value2" {
+		t.Fatalf("have: %v", cfg.Bar)
+	}
+}
 
 func TestDotEnv(t *testing.T) {
 	filepath := createTestFile(t)

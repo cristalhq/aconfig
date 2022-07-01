@@ -1,8 +1,8 @@
 module github.com/cristalhq/aconfig/aconfigtoml
 
-go 1.15
+go 1.16
 
 require (
-	github.com/BurntSushi/toml v0.3.1
-	github.com/cristalhq/aconfig v0.16.8
+	github.com/BurntSushi/toml v1.1.0
+	github.com/cristalhq/aconfig v0.17.0
 )

@@ -1,8 +1,8 @@
 module github.com/cristalhq/aconfig/aconfighcl
 
-go 1.15
+go 1.16
 
 require (
-	github.com/cristalhq/aconfig v0.16.8
+	github.com/cristalhq/aconfig v0.17.0
 	github.com/hashicorp/hcl v1.0.0
 )
