@@ -1,13 +1,16 @@
 package aconfighcl
 
 import (
+	"io/fs"
 	"io/ioutil"
 
 	"github.com/hashicorp/hcl"
 )
 
 // Decoder of HCL files for aconfig.
-type Decoder struct{}
+type Decoder struct {
+	fsys fs.FS
+}
 
 // New HCL decoder for aconfig.
 func New() *Decoder { return &Decoder{} }
@@ -34,4 +37,9 @@ func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return raw, nil
+}
+
+// DecodeFile implements aconfig.FileDecoder.
+func (d *Decoder) Init(fsys fs.FS) {
+	d.fsys = fsys
 }

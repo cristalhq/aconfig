@@ -1,13 +1,15 @@
 package aconfigyaml
 
 import (
-	"os"
+	"io/fs"
 
 	"gopkg.in/yaml.v3"
 )
 
 // Decoder of YAML files for aconfig.
-type Decoder struct{}
+type Decoder struct {
+	fsys fs.FS
+}
 
 // New YAML decoder for aconfig.
 func New() *Decoder { return &Decoder{} }
@@ -19,7 +21,7 @@ func (d *Decoder) Format() string {
 
 // DecodeFile implements aconfig.FileDecoder.
 func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
-	f, err := os.Open(filename)
+	f, err := d.fsys.Open(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -30,4 +32,9 @@ func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return raw, nil
+}
+
+// DecodeFile implements aconfig.FileDecoder.
+func (d *Decoder) Init(fsys fs.FS) {
+	d.fsys = fsys
 }
