@@ -2,6 +2,7 @@ package aconfig
 
 import (
 	"embed"
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -10,6 +11,25 @@ import (
 	"testing"
 	"time"
 )
+
+type LogLevel int8
+
+func (l *LogLevel) UnmarshalText(text []byte) error {
+	switch string(text) {
+	case "debug":
+		*l = -1
+	case "info":
+		*l = 0
+	case "warn":
+		*l = 1
+	case "error":
+		*l = 2
+	default:
+		return fmt.Errorf("unknown log level: %s", text)
+	}
+
+	return nil
+}
 
 func TestDefaults(t *testing.T) {
 	var cfg TestConfig
@@ -71,6 +91,8 @@ func TestDefaults_AllTypes(t *testing.T) {
 
 		Dur  time.Duration `default:"1h2m3s"`
 		Time time.Time     `default:"2000-04-05 10:20:30 +0000 UTC"`
+
+		Level LogLevel `default:"warn"`
 	}
 
 	var cfg AllTypesConfig
@@ -101,6 +123,7 @@ func TestDefaults_AllTypes(t *testing.T) {
 		Dur:     time.Hour + 2*time.Minute + 3*time.Second,
 		// TODO
 		// Time :2000-04-05 10:20:30 +0000 UTC,
+		Level: LogLevel(1),
 	}
 
 	if got := cfg; got != want {
