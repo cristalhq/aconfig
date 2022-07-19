@@ -1,6 +1,7 @@
 package aconfig
 
 import (
+	"encoding"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -156,6 +157,11 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 
 	if value == "" {
 		return nil
+	}
+
+	pv := field.value.Addr().Interface()
+	if v, ok := pv.(encoding.TextUnmarshaler); ok {
+		return v.UnmarshalText([]byte(fmt.Sprint(value)))
 	}
 
 	switch kind := field.value.Type().Kind(); kind {
