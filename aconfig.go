@@ -13,6 +13,7 @@ import (
 type Loader struct {
 	config  Config
 	dst     interface{}
+	parser  *structParser
 	fields  []*fieldData
 	fsys    fs.FS
 	flagSet *flag.FlagSet
@@ -21,6 +22,11 @@ type Loader struct {
 
 // Config to configure configuration loader.
 type Config struct {
+	// NewParser set to true enables a new and better struct parser.
+	// Default is false because there might be bugs.
+	// In the future new parser will be enabled by default.
+	NewParser bool
+
 	SkipDefaults bool // SkipDefaults set to true will not load config from 'default' tag.
 	SkipFiles    bool // SkipFiles set to true will not load config from files.
 	SkipEnv      bool // SkipEnv set to true will not load config from environment variables.
@@ -164,24 +170,37 @@ func (l *Loader) init() {
 		l.config.Args = os.Args[1:]
 	}
 
-	l.fields = l.getFields(l.dst)
+	if l.config.NewParser {
+		l.parser = newStructParser(l.config)
+		if err := l.parser.parseStruct(l.dst); err != nil {
+			l.errInit = err
+			return
+		}
+	} else {
+		l.fields = l.getFields(l.dst)
+	}
 
 	l.flagSet = flag.NewFlagSet(l.config.FlagPrefix, flag.ContinueOnError)
 	if !l.config.SkipFlags {
 		names := make(map[string]bool, len(l.fields))
-		for _, field := range l.fields {
-			flagName := l.fullTag(l.config.FlagPrefix, field, "flag")
-			if flagName == "" {
-				continue
+		if l.config.NewParser {
+			l.flagSet = l.parser.flagSet
+		} else {
+			for _, field := range l.fields {
+				flagName := l.fullTag(l.config.FlagPrefix, field, "flag")
+				if flagName == "" {
+					continue
+				}
+				if names[flagName] && !l.config.AllowDuplicates {
+					l.errInit = fmt.Errorf("duplicate flag %q", flagName)
+					return
+				}
+				names[flagName] = true
+				l.flagSet.String(flagName, field.Tag("default"), field.Tag("usage"))
 			}
-			if names[flagName] && !l.config.AllowDuplicates {
-				l.errInit = fmt.Errorf("duplicate flag %q", flagName)
-				return
-			}
-			names[flagName] = true
-			l.flagSet.String(flagName, field.Tag("default"), field.Tag("usage"))
 		}
 	}
+
 	if l.config.FileFlag != "" {
 		// TODO: should be prefixed ?
 		l.flagSet.String(l.config.FileFlag, "", "config file param")
@@ -257,6 +276,12 @@ func (l *Loader) loadSources() error {
 			return fmt.Errorf("load flags: %w", err)
 		}
 	}
+
+	if l.config.NewParser {
+		if err := l.parser.apply(l.dst); err != nil {
+			return fmt.Errorf("apply: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -278,6 +303,10 @@ func (l *Loader) checkRequired() error {
 }
 
 func (l *Loader) loadDefaults() error {
+	if l.config.NewParser {
+		return nil
+	}
+
 	for _, field := range l.fields {
 		defaultValue := field.Tag("default")
 		if err := l.setFieldData(field, defaultValue); err != nil {
@@ -327,6 +356,13 @@ func (l *Loader) loadFile(file string) error {
 	}
 
 	tag := decoder.Format()
+
+	if l.config.NewParser {
+		if err := l.parser.applyLevel(tag, actualFields); err != nil {
+			return fmt.Errorf("apply %s: %w", tag, err)
+		}
+		return nil
+	}
 
 	for _, field := range l.fields {
 		name := l.fullTag("", field, tag)
@@ -380,6 +416,13 @@ func (l *Loader) loadEnvironment() error {
 	actualEnvs := getEnv(l.config.Envs)
 	dupls := make(map[string]struct{})
 
+	if l.config.NewParser {
+		if err := l.parser.applyFlat("env", actualEnvs); err != nil {
+			return fmt.Errorf("apply env: %w", err)
+		}
+		return nil
+	}
+
 	for _, field := range l.fields {
 		envName := l.fullTag(l.config.EnvPrefix, field, "env")
 		if envName == "" {
@@ -410,6 +453,13 @@ func (l *Loader) postEnvCheck(values map[string]interface{}, dupls map[string]st
 func (l *Loader) loadFlags() error {
 	actualFlags := getFlags(l.flagSet)
 	dupls := make(map[string]struct{})
+
+	if l.config.NewParser {
+		if err := l.parser.applyFlat("flag", actualFlags); err != nil {
+			return fmt.Errorf("apply flag: %w", err)
+		}
+		return nil
+	}
 
 	for _, field := range l.fields {
 		flagName := l.fullTag(l.config.FlagPrefix, field, "flag")
