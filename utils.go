@@ -27,8 +27,7 @@ func assertStruct(x interface{}) {
 	}
 }
 
-func getEnv() map[string]interface{} {
-	env := os.Environ()
+func getEnv(env []string) map[string]interface{} {
 	res := make(map[string]interface{}, len(env))
 
 	for _, s := range env {
@@ -73,15 +72,16 @@ func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []str
 		return v
 	}
 
-	switch tag {
-	case jsonNameTag, yamlNameTag, tomlNameTag, hclNameTag:
-		if l.config.DontGenerateTags {
-			return field.Name
+	for _, dec := range l.config.FileDecoders {
+		if tag == dec.Format() {
+			if l.config.DontGenerateTags {
+				return field.Name
+			}
 		}
 	}
 
 	name := strings.Join(words, "_")
-	if tag == envNameTag {
+	if tag == "env" {
 		return strings.ToUpper(name)
 	}
 	return strings.ToLower(name)
@@ -90,7 +90,7 @@ func (l *Loader) makeTagValue(field reflect.StructField, tag string, words []str
 // based on https://github.com/fatih/camelcase
 func splitNameByWords(src string) []string {
 	var runes [][]rune
-	lastClass, class := 0, 0
+	var lastClass, class int
 
 	// split into fields based on class of unicode character
 	for _, r := range src {
@@ -132,7 +132,8 @@ func splitNameByWords(src string) []string {
 }
 
 // copy-paste until https://github.com/golang/go/issues/46336 is fixed
-func cut(s, sep string) (before, after string, found bool) {
+// returns: before, after, isFound
+func cut(s, sep string) (_, _ string, _ bool) {
 	if i := strings.Index(s, sep); i >= 0 {
 		return s[:i], s[i+len(sep):], true
 	}
@@ -143,11 +144,11 @@ var _ fs.FS = &fsOrOS{}
 
 type fsOrOS struct{ fs.FS }
 
-func (fs *fsOrOS) Open(name string) (fs.File, error) {
-	if fs.FS == nil {
+func (f *fsOrOS) Open(name string) (fs.File, error) {
+	if f.FS == nil {
 		return os.Open(name)
 	}
-	return fs.FS.Open(name)
+	return f.FS.Open(name)
 }
 
 type jsonDecoder struct {
