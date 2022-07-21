@@ -9,17 +9,6 @@ import (
 	"strings"
 )
 
-const (
-	defaultValueTag = "default"
-	usageTag        = "usage"
-	jsonNameTag     = "json"
-	yamlNameTag     = "yaml"
-	tomlNameTag     = "toml"
-	hclNameTag      = "hcl"
-	envNameTag      = "env"
-	flagNameTag     = "flag"
-)
-
 // Loader of user configuration.
 type Loader struct {
 	config  Config
@@ -84,6 +73,10 @@ type Config struct {
 
 	// Files from which config should be loaded.
 	Files []string
+
+	// Envs hold the environment variable from which envs will be parsed.
+	// By default is nil and then os.Environ() will be used.
+	Envs []string
 
 	// Args hold the command-line arguments from which flags will be parsed.
 	// By default is nil and then os.Args will be used.
@@ -164,6 +157,9 @@ func (l *Loader) init() {
 		dec.Init(l.fsys)
 	}
 
+	if l.config.Envs == nil {
+		l.config.Envs = os.Environ()
+	}
 	if l.config.Args == nil {
 		l.config.Args = os.Args[1:]
 	}
@@ -174,7 +170,7 @@ func (l *Loader) init() {
 	if !l.config.SkipFlags {
 		names := make(map[string]bool, len(l.fields))
 		for _, field := range l.fields {
-			flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
+			flagName := l.fullTag(l.config.FlagPrefix, field, "flag")
 			if flagName == "" {
 				continue
 			}
@@ -183,7 +179,7 @@ func (l *Loader) init() {
 				return
 			}
 			names[flagName] = true
-			l.flagSet.String(flagName, field.Tag(defaultValueTag), field.Tag(usageTag))
+			l.flagSet.String(flagName, field.Tag("default"), field.Tag("usage"))
 		}
 	}
 	if l.config.FileFlag != "" {
@@ -278,7 +274,7 @@ func (l *Loader) checkRequired() error {
 
 func (l *Loader) loadDefaults() error {
 	for _, field := range l.fields {
-		defaultValue := field.Tag(defaultValueTag)
+		defaultValue := field.Tag("default")
 		if err := l.setFieldData(field, defaultValue); err != nil {
 			return err
 		}
@@ -376,11 +372,11 @@ func (l *Loader) loadFileFlag() error {
 }
 
 func (l *Loader) loadEnvironment() error {
-	actualEnvs := getEnv()
+	actualEnvs := getEnv(l.config.Envs)
 	dupls := make(map[string]struct{})
 
 	for _, field := range l.fields {
-		envName := l.fullTag(l.config.EnvPrefix, field, envNameTag)
+		envName := l.fullTag(l.config.EnvPrefix, field, "env")
 		if envName == "" {
 			continue
 		}
@@ -411,7 +407,7 @@ func (l *Loader) loadFlags() error {
 	dupls := make(map[string]struct{})
 
 	for _, field := range l.fields {
-		flagName := l.fullTag(l.config.FlagPrefix, field, flagNameTag)
+		flagName := l.fullTag(l.config.FlagPrefix, field, "flag")
 		if flagName == "" {
 			continue
 		}
@@ -430,7 +426,7 @@ func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]s
 		delete(values, name)
 	}
 	for flag, value := range values {
-		if strings.HasPrefix(flag, l.config.EnvPrefix) {
+		if strings.HasPrefix(flag, l.config.FlagPrefix) {
 			return fmt.Errorf("unknown flag %s=%v (see AllowUnknownFlags config param)", flag, value)
 		}
 	}

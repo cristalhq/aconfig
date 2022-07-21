@@ -60,25 +60,25 @@ func (l *Loader) tagsForField(field reflect.StructField) map[string]string {
 	words := splitNameByWords(field.Name)
 
 	tags := map[string]string{
-		defaultValueTag: field.Tag.Get(defaultValueTag),
-		usageTag:        field.Tag.Get(usageTag),
+		"default": field.Tag.Get("default"),
+		"usage":   field.Tag.Get("usage"),
 
-		envNameTag:  l.makeTagValue(field, envNameTag, words),
-		flagNameTag: l.makeTagValue(field, flagNameTag, words),
+		"env":  l.makeTagValue(field, "env", words),
+		"flag": l.makeTagValue(field, "flag", words),
 	}
 
-	for _, tag := range []string{jsonNameTag, yamlNameTag, tomlNameTag, hclNameTag} {
-		tags[tag] = l.makeTagValue(field, tag, words)
+	for _, dec := range l.config.FileDecoders {
+		tags[dec.Format()] = l.makeTagValue(field, dec.Format(), words)
 	}
 	return tags
 }
 
 func (l *Loader) fullTag(prefix string, f *fieldData, tag string) string {
 	sep := "."
-	if tag == flagNameTag {
+	if tag == "flag" {
 		sep = l.config.FlagDelimiter
 	}
-	if tag == envNameTag {
+	if tag == "env" {
 		sep = l.config.envDelimiter
 	}
 	res := f.Tag(tag)
