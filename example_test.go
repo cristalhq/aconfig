@@ -61,7 +61,6 @@ func Example_WalkFields() {
 }
 
 // Just load defaults from struct definition.
-//
 func Example_Defaults() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
@@ -85,7 +84,6 @@ func Example_Defaults() {
 }
 
 // Load defaults from struct defunition and overwrite with a file.
-//
 func Example_File() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
@@ -110,7 +108,6 @@ func Example_File() {
 
 // Load defaults from struct definition and overwrite with a file.
 // And then overwrite with environment variables.
-//
 func Example_Env() {
 	os.Setenv("EXAMPLE_HTTP_PORT", "3333")
 	os.Setenv("EXAMPLE_AUTH_USER", "env-user")
@@ -141,7 +138,6 @@ func Example_Env() {
 // Load defaults from struct definition and overwrite with a file.
 // And then overwrite with environment variables.
 // Finally read command line flags.
-//
 func Example_Flag() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
