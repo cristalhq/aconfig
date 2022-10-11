@@ -201,7 +201,7 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 				vv := mii(val)
 
 				fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
-				if err := m2s(vv, fd.value); err != nil {
+				if err := l.m2s(vv, fd.value); err != nil {
 					return err
 				}
 			}
@@ -345,7 +345,7 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 	return nil
 }
 
-func m2s(m map[string]interface{}, structValue reflect.Value) error {
+func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error {
 	for name, value := range m {
 		name = strings.Title(name)
 		structFieldValue := structValue.FieldByName(name)
@@ -362,11 +362,20 @@ func m2s(m map[string]interface{}, structValue reflect.Value) error {
 			if structFieldValue.Kind() == reflect.Slice && val.Kind() == reflect.Slice {
 				vals := value.([]interface{})
 				slice := reflect.MakeSlice(structFieldValue.Type(), len(vals), len(vals))
-				for i := 0; i < len(vals); i++ {
-					a := mii(vals[i])
-					b := slice.Index(i)
-					if err := m2s(a, b); err != nil {
-						return err
+				if isPrimitive(structFieldValue.Type().Elem()) {
+					for i := 0; i < len(vals); i++ {
+						fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
+						if err := l.setFieldData(fd, vals[i]); err != nil {
+							return fmt.Errorf("incorrect slice item %q: %w", vals[i], err)
+						}
+					}
+				} else {
+					for i := 0; i < len(vals); i++ {
+						a := mii(vals[i])
+						b := slice.Index(i)
+						if err := l.m2s(a, b); err != nil {
+							return err
+						}
 					}
 				}
 				structFieldValue.Set(slice)
@@ -394,4 +403,8 @@ func mii(m interface{}) map[string]interface{} {
 	default:
 		panic(fmt.Sprintf("%T %v", m, m))
 	}
+}
+
+func isPrimitive(v reflect.Type) bool {
+	return v.Kind() < reflect.Array || v.Kind() == reflect.String
 }
