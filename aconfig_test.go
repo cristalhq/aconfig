@@ -1414,6 +1414,40 @@ func TestFileConfigFlagDelim(t *testing.T) {
 	mustEqual(t, cfg, want)
 }
 
+func TestSliceOfStructsWithSliceOfPrimitives(t *testing.T) {
+	type TestService struct {
+		Name     string
+		Strings  []string
+		Integers []int
+		Booleans []bool
+	}
+
+	type TestConfig struct {
+		Services []TestService
+	}
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{"testdata/slice-struct-primitive-slice.json"},
+	})
+
+	failIfErr(t, loader.Load())
+
+	want := TestConfig{
+		Services: []TestService{
+			{
+				Name:     "service1",
+				Strings:  []string{"string1", "string2"},
+				Integers: []int{1, 2},
+				Booleans: []bool{true, false},
+			},
+		},
+	}
+	mustEqual(t, cfg, want)
+}
+
 func failIfOk(t testing.TB, err error) {
 	t.Helper()
 	if err == nil {
