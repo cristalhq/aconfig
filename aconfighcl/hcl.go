@@ -2,7 +2,6 @@ package aconfighcl
 
 import (
 	"io/fs"
-	"io/ioutil"
 
 	"github.com/hashicorp/hcl"
 )
@@ -22,7 +21,7 @@ func (d *Decoder) Format() string {
 
 // DecodeFile implements aconfig.FileDecoder.
 func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
-	b, err := ioutil.ReadFile(filename)
+	b, err := fs.ReadFile(d.fsys, filename)
 	if err != nil {
 		return nil, err
 	}
