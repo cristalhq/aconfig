@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 )
 
@@ -156,7 +157,7 @@ func TestDefaults_OtherNumberFormats(t *testing.T) {
 }
 
 func TestJSON(t *testing.T) {
-	filepath := createTestFile(t)
+	const filepath = "testfile.json"
 
 	var cfg structConfig
 	loader := LoaderFor(&cfg, Config{
@@ -164,6 +165,7 @@ func TestJSON(t *testing.T) {
 		SkipEnv:      true,
 		SkipFlags:    true,
 		Files:        []string{filepath},
+		FileSystem:   fstest.MapFS{filepath: testfile},
 	})
 	failIfErr(t, loader.Load())
 
@@ -172,23 +174,24 @@ func TestJSON(t *testing.T) {
 }
 
 func TestJSONWithOmitempty(t *testing.T) {
-	type TestConfig struct {
+	const filepath = "testfile.json"
+
+	var cfg struct {
 		APIKey string `json:"b,omitempty"`
 	}
-
-	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
 		SkipDefaults:       true,
 		SkipEnv:            true,
 		SkipFlags:          true,
 		AllowUnknownFields: true,
-		Files:              []string{createTestFile(t)},
+		Files:              []string{filepath},
+		FileSystem:         fstest.MapFS{filepath: testfile},
 	})
 	failIfErr(t, loader.Load())
 }
 
 func TestCustomFile(t *testing.T) {
-	filepath := createTestFile(t, "custom.config")
+	const filepath = "custom.config"
 
 	var cfg structConfig
 	loader := LoaderFor(&cfg, Config{
@@ -196,6 +199,7 @@ func TestCustomFile(t *testing.T) {
 		SkipEnv:      true,
 		SkipFlags:    true,
 		Files:        []string{filepath},
+		FileSystem:   fstest.MapFS{filepath: testfile},
 		FileDecoders: map[string]FileDecoder{
 			".config": &jsonDecoder{},
 		},
@@ -671,41 +675,28 @@ func TestBadDefauts(t *testing.T) {
 
 func TestBadFiles(t *testing.T) {
 	f := func(filepath string) {
-		var cfg TestConfig
-		loader := LoaderFor(&cfg, Config{
-			SkipDefaults:       true,
-			SkipEnv:            true,
-			SkipFlags:          true,
-			FailOnFileNotFound: true,
-			Files:              []string{filepath},
+		t.Helper()
+		t.Run(filepath, func(t *testing.T) {
+			t.Helper()
+			var cfg TestConfig
+			loader := LoaderFor(&cfg, Config{
+				SkipDefaults:       true,
+				SkipEnv:            true,
+				SkipFlags:          true,
+				FailOnFileNotFound: true,
+				Files:              []string{filepath},
+				FileSystem: fstest.MapFS{
+					"bad_config.json": &fstest.MapFile{Data: []byte(`{almost": "json`)},
+					"unknown.ext":     &fstest.MapFile{},
+				},
+			})
+			failIfOk(t, loader.Load())
 		})
-		failIfOk(t, loader.Load())
 	}
 
-	t.Run("no_such_file.json", func(*testing.T) {
-		f("no_such_file.json")
-	})
-
-	t.Run("bad_config.json", func(t *testing.T) {
-		filepath := t.TempDir() + "unknown.ext"
-		file, err := os.Create(filepath)
-		failIfErr(t, err)
-		defer file.Close()
-
-		_, err = file.WriteString(`{almost": "json`)
-		failIfErr(t, err)
-
-		f(filepath)
-	})
-
-	t.Run("unknown.ext", func(t *testing.T) {
-		filepath := t.TempDir() + "unknown.ext"
-		file, err := os.Create(filepath)
-		failIfErr(t, err)
-		defer file.Close()
-
-		f(filepath)
-	})
+	f("no_such_file.json")
+	f("bad_config.json")
+	f("unknown.ext")
 }
 
 func TestFailOnFileNotFound(t *testing.T) {
@@ -1104,28 +1095,6 @@ func int32Ptr(a int32) *int32 {
 	return &a
 }
 
-func createTestFile(t *testing.T, name ...string) string {
-	t.Helper()
-	mustEqual(t, len(name) < 2, true)
-
-	dir := t.TempDir()
-	t.Cleanup(func() {
-		os.RemoveAll(dir)
-	})
-
-	filepath := dir + "/testfile.json"
-	if len(name) == 1 {
-		filepath = dir + name[0]
-	}
-
-	f, err := os.Create(filepath)
-	failIfErr(t, err)
-	defer f.Close()
-	_, err = f.WriteString(testfileContent)
-	failIfErr(t, err)
-	return filepath
-}
-
 type TestConfig struct {
 	Str      string `default:"str-def"`
 	Bytes    []byte `default:"bytes-def"`
@@ -1203,7 +1172,7 @@ type structP struct {
 	P string `json:"P"`
 }
 
-const testfileContent = `{
+var testfile = &fstest.MapFile{Data: []byte(`{
     "a": "b",
     "c": 10,
     "e": 123.456,
@@ -1238,7 +1207,7 @@ const testfileContent = `{
 		"P": "r"
 	}
 }
-`
+`)}
 
 var wantConfig = func() structConfig {
 	i := int32(42)
