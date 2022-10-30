@@ -345,8 +345,8 @@ func (l *Loader) loadFile(file string) error {
 	}
 
 	if !l.config.AllowUnknownFields {
-		for env, value := range actualFields {
-			return fmt.Errorf("unknown field in file %q: %s=%v (see AllowUnknownFields config param)", file, env, value)
+		for env := range actualFields {
+			return fmt.Errorf("unknown field in file %q: %s (see AllowUnknownFields config param)", file, env)
 		}
 	}
 	return nil
@@ -394,9 +394,9 @@ func (l *Loader) postEnvCheck(values map[string]interface{}, dupls map[string]st
 	for name := range dupls {
 		delete(values, name)
 	}
-	for env, value := range values {
+	for env := range values {
 		if strings.HasPrefix(env, l.config.EnvPrefix) {
-			return fmt.Errorf("unknown environment var %s=%v (see AllowUnknownEnvs config param)", env, value)
+			return fmt.Errorf("unknown environment var %s (see AllowUnknownEnvs config param)", env)
 		}
 	}
 	return nil
@@ -425,9 +425,9 @@ func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]s
 	for name := range dupls {
 		delete(values, name)
 	}
-	for flag, value := range values {
+	for flag := range values {
 		if strings.HasPrefix(flag, l.config.FlagPrefix) {
-			return fmt.Errorf("unknown flag %s=%v (see AllowUnknownFlags config param)", flag, value)
+			return fmt.Errorf("unknown flag %s (see AllowUnknownFlags config param)", flag)
 		}
 	}
 	return nil
