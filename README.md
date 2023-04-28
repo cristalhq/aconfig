@@ -39,8 +39,8 @@ go get github.com/cristalhq/aconfig
 type MyConfig struct {
 	Port int `default:"1111" usage:"just give a number"`
 	Auth struct {
-		User string `default:"def-user"`
-		Pass string `default:"def-pass"`
+		User string `required:"true"`
+		Pass string `required:"true"`
 	}
 	Pass string `default:"" env:"SECRET" flag:"sec_ret"`
 }
@@ -74,7 +74,7 @@ if err := loader.Load(); err != nil {
 // 1. defaults set in structure tags (see MyConfig defenition)
 // 2. loaded from files `file.json` if not `ouch.yaml` will be used
 // 3. from corresponding environment variables with the prefix `APP_`
-// 4. command-line flags with the prefix `app.` if they are 
+// 4. command-line flags with the prefix `app.` if they are
 ```
 
 Also see examples: [examples_test.go](https://github.com/cristalhq/aconfig/blob/master/example_test.go).
