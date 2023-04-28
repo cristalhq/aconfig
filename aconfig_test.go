@@ -358,13 +358,13 @@ func TestNoFileFlagValue(t *testing.T) {
 }
 
 func TestEnv(t *testing.T) {
-	setEnv(t, "TST_STR", "str-env")
-	setEnv(t, "TST_BYTES", "bytes-env")
-	setEnv(t, "TST_INT", "121")
-	setEnv(t, "TST_HTTP_PORT", "3000")
-	setEnv(t, "TST_SUB_FLOAT", "222.333")
-	setEnv(t, "TST_ANON_IS_ANON", "true")
-	setEnv(t, "TST_EM", "em-env")
+	t.Setenv("TST_STR", "str-env")
+	t.Setenv("TST_BYTES", "bytes-env")
+	t.Setenv("TST_INT", "121")
+	t.Setenv("TST_HTTP_PORT", "3000")
+	t.Setenv("TST_SUB_FLOAT", "222.333")
+	t.Setenv("TST_ANON_IS_ANON", "true")
+	t.Setenv("TST_EM", "em-env")
 	defer os.Clearenv()
 
 	var cfg TestConfig
@@ -442,8 +442,8 @@ func TestFlag(t *testing.T) {
 }
 
 func TestExactName(t *testing.T) {
-	setEnv(t, "STR", "str-env")
-	setEnv(t, "TST_STR", "bar-env")
+	t.Setenv("STR", "str-env")
+	t.Setenv("TST_STR", "bar-env")
 	defer os.Clearenv()
 
 	type Foo struct {
@@ -475,8 +475,8 @@ func TestExactName(t *testing.T) {
 }
 
 func TestSkipName(t *testing.T) {
-	setEnv(t, "STR", "str-env")
-	setEnv(t, "BAR", "bar-env")
+	t.Setenv("STR", "str-env")
+	t.Setenv("BAR", "bar-env")
 	defer os.Clearenv()
 
 	type Foo struct {
@@ -505,7 +505,7 @@ func TestSkipName(t *testing.T) {
 }
 
 func TestDuplicatedName(t *testing.T) {
-	setEnv(t, "FOO_BAR", "str-env")
+	t.Setenv("FOO_BAR", "str-env")
 	defer os.Clearenv()
 
 	type Foo struct {
@@ -719,7 +719,7 @@ func TestFailOnFileNotFound(t *testing.T) {
 }
 
 func TestBadEnvs(t *testing.T) {
-	setEnv(t, "TST_HTTP_PORT", "30a00")
+	t.Setenv("TST_HTTP_PORT", "30a00")
 	defer os.Clearenv()
 
 	loader := LoaderFor(&TestConfig{}, Config{
@@ -766,9 +766,9 @@ func TestUnknownFields(t *testing.T) {
 }
 
 func TestUnknownEnvs(t *testing.T) {
-	setEnv(t, "TST_STR", "defined")
-	setEnv(t, "TST_UNKNOWN", "42")
-	setEnv(t, "JUST_ENV", "JUST_VALUE")
+	t.Setenv("TST_STR", "defined")
+	t.Setenv("TST_UNKNOWN", "42")
+	t.Setenv("JUST_ENV", "JUST_VALUE")
 	defer os.Clearenv()
 
 	var cfg TestConfig
@@ -788,8 +788,8 @@ func TestUnknownEnvs(t *testing.T) {
 }
 
 func TestUnknownEnvsWithEmptyPrefix(t *testing.T) {
-	setEnv(t, "STR", "defined")
-	setEnv(t, "UNKNOWN", "42")
+	t.Setenv("STR", "defined")
+	t.Setenv("UNKNOWN", "42")
 	defer os.Clearenv()
 
 	var cfg TestConfig
@@ -857,7 +857,7 @@ func TestUnknownFlagsWithEmptyPrefix(t *testing.T) {
 	failIfErr(t, loader.Load())
 }
 
-// flag.FlagSet already fails on undefined flag
+// flag.FlagSet already fails on undefined flag.
 func TestUnknownFlagsStdlib(t *testing.T) {
 	loader := LoaderFor(&TestConfig{}, Config{
 		SkipDefaults: true,
@@ -902,8 +902,8 @@ func TestCustomNames(t *testing.T) {
 		C int `default:"-1" env:"three" flag:"four"`
 	}
 
-	setEnv(t, "ONE", "1")
-	setEnv(t, "three", "3")
+	t.Setenv("ONE", "1")
+	t.Setenv("three", "3")
 	defer os.Clearenv()
 
 	var cfg TestConfig
@@ -1085,10 +1085,6 @@ func TestBadRequiredTag(t *testing.T) {
 	}
 
 	f(&TestConfig{})
-}
-
-func setEnv(t *testing.T, key, value string) {
-	failIfErr(t, os.Setenv(key, value))
 }
 
 func int32Ptr(a int32) *int32 {
@@ -1336,8 +1332,7 @@ func TestBad(t *testing.T) {
 		Params url.Values
 	}
 	var cfg TestConfig
-	os.Setenv("PARAMS", "foo:bar")
-	defer os.Unsetenv("PARAMS")
+	t.Setenv("PARAMS", "foo:bar")
 
 	loader := LoaderFor(&cfg, Config{
 		SkipFlags: true,
@@ -1417,23 +1412,23 @@ func TestSliceOfStructsWithSliceOfPrimitives(t *testing.T) {
 	mustEqual(t, cfg, want)
 }
 
-func failIfOk(t testing.TB, err error) {
-	t.Helper()
+func failIfOk(tb testing.TB, err error) {
+	tb.Helper()
 	if err == nil {
-		t.Fatal("must be non-nil")
+		tb.Fatal("must be non-nil")
 	}
 }
 
-func failIfErr(t testing.TB, err error) {
-	t.Helper()
+func failIfErr(tb testing.TB, err error) {
+	tb.Helper()
 	if err != nil {
-		t.Fatal(err)
+		tb.Fatal(err)
 	}
 }
 
-func mustEqual(t testing.TB, got, want interface{}) {
-	t.Helper()
+func mustEqual(tb testing.TB, got, want interface{}) {
+	tb.Helper()
 	if !reflect.DeepEqual(got, want) {
-		t.Fatalf("\nhave %+v\nwant %+v", got, want)
+		tb.Fatalf("\nhave %+v\nwant %+v", got, want)
 	}
 }
