@@ -433,7 +433,7 @@ func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]s
 	return nil
 }
 
-// TODO(cristaloleg): revisit
+// TODO(cristaloleg): revisit.
 func (l *Loader) setField(field *fieldData, name string, values map[string]interface{}, dupls map[string]struct{}) error {
 	if !l.config.AllowDuplicates {
 		if _, ok := dupls[name]; ok {

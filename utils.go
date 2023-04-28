@@ -187,7 +187,7 @@ func sliceToString(curr interface{}) string {
 			if i > 0 {
 				b.WriteByte(',')
 			}
-			b.WriteString(fmt.Sprint(v))
+			fmt.Fprint(b, v)
 		}
 		return b.String()
 	case string:
