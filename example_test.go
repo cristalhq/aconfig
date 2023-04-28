@@ -16,7 +16,7 @@ type MyConfig struct {
 	}
 }
 
-func Example_SimpleUsage() {
+func Example_simpleUsage() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		SkipDefaults: true,
@@ -42,7 +42,7 @@ func Example_SimpleUsage() {
 	// Auth.Pass: ""
 }
 
-func Example_WalkFields() {
+func Example_walkFields() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		SkipFiles: true,
@@ -61,7 +61,7 @@ func Example_WalkFields() {
 }
 
 // Just load defaults from struct definition.
-func Example_Defaults() {
+func Example_defaults() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		SkipFiles: true,
@@ -84,7 +84,7 @@ func Example_Defaults() {
 }
 
 // Load defaults from struct defunition and overwrite with a file.
-func Example_File() {
+func Example_file() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		SkipEnv:   true,
@@ -108,7 +108,7 @@ func Example_File() {
 
 // Load defaults from struct definition and overwrite with a file.
 // And then overwrite with environment variables.
-func Example_Env() {
+func Example_env() {
 	os.Setenv("EXAMPLE_HTTP_PORT", "3333")
 	os.Setenv("EXAMPLE_AUTH_USER", "env-user")
 	os.Setenv("EXAMPLE_AUTH_PASS", "env-pass")
@@ -138,7 +138,7 @@ func Example_Env() {
 // Load defaults from struct definition and overwrite with a file.
 // And then overwrite with environment variables.
 // Finally read command line flags.
-func Example_Flag() {
+func Example_flag() {
 	var cfg MyConfig
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		FlagPrefix: "ex",
