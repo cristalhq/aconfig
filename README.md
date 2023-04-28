@@ -2,8 +2,6 @@
 
 [![build-img]][build-url]
 [![pkg-img]][pkg-url]
-[![reportcard-img]][reportcard-url]
-[![coverage-img]][coverage-url]
 [![version-img]][version-url]
 
 Simple, useful and opinionated config loader.
@@ -93,9 +91,5 @@ See [these docs][pkg-url].
 [build-url]: https://github.com/cristalhq/aconfig/actions
 [pkg-img]: https://pkg.go.dev/badge/cristalhq/aconfig
 [pkg-url]: https://pkg.go.dev/github.com/cristalhq/aconfig
-[reportcard-img]: https://goreportcard.com/badge/cristalhq/aconfig
-[reportcard-url]: https://goreportcard.com/report/cristalhq/aconfig
-[coverage-img]: https://codecov.io/gh/cristalhq/aconfig/branch/master/graph/badge.svg
-[coverage-url]: https://codecov.io/gh/cristalhq/aconfig
 [version-img]: https://img.shields.io/github/v/release/cristalhq/aconfig
 [version-url]: https://github.com/cristalhq/aconfig/releases
