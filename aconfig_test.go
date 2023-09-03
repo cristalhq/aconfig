@@ -1087,6 +1087,38 @@ func TestBadRequiredTag(t *testing.T) {
 	f(&TestConfig{})
 }
 
+func TestMissingFieldWithRequiredTag(t *testing.T) {
+	cfg := struct {
+		Field1 string `required:"true"`
+	}{}
+	loader := LoaderFor(&cfg, Config{
+		SkipFlags: true,
+	})
+
+	err := loader.Load()
+
+	want := "load config: field Field1 is required but not set"
+	if err.Error() != want {
+		t.Fatalf("got %v, want %v", err, want)
+	}
+}
+func TestMissingFieldsWithRequiredTag(t *testing.T) {
+	cfg := struct {
+		Field1 string `required:"true"`
+		Field2 string `required:"true"`
+	}{}
+	loader := LoaderFor(&cfg, Config{
+		SkipFlags: true,
+	})
+
+	err := loader.Load()
+
+	want := "load config: fields Field1,Field2 are required but not set"
+	if err.Error() != want {
+		t.Fatalf("got %v, want %v", err, want)
+	}
+}
+
 func int32Ptr(a int32) *int32 {
 	return &a
 }

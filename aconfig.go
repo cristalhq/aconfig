@@ -261,15 +261,22 @@ func (l *Loader) loadSources() error {
 }
 
 func (l *Loader) checkRequired() error {
+	missedFields := []string{}
 	for _, field := range l.fields {
 		if field.isSet {
 			continue
 		}
 		if field.isRequired || l.config.AllFieldRequired {
-			return fmt.Errorf("field %s is required but not set", field.name)
+			missedFields = append(missedFields, field.name)
 		}
 	}
-	return nil
+	if len(missedFields) == 0 {
+		return nil
+	}
+	if len(missedFields) == 1 {
+		return fmt.Errorf("field %s is required but not set", missedFields[0])
+	}
+	return fmt.Errorf("fields %s are required but not set", strings.Join(missedFields, ","))
 }
 
 func (l *Loader) loadDefaults() error {
