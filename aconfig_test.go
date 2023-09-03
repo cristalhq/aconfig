@@ -1096,12 +1096,13 @@ func TestMissingFieldWithRequiredTag(t *testing.T) {
 	})
 
 	err := loader.Load()
+	want := "load config: fields required but not set: Field1"
 
-	want := "load config: field Field1 is required but not set"
-	if err.Error() != want {
+	if have := err.Error(); have != want {
 		t.Fatalf("got %v, want %v", err, want)
 	}
 }
+
 func TestMissingFieldsWithRequiredTag(t *testing.T) {
 	cfg := struct {
 		Field1 string `required:"true"`
@@ -1112,9 +1113,9 @@ func TestMissingFieldsWithRequiredTag(t *testing.T) {
 	})
 
 	err := loader.Load()
+	want := "load config: fields required but not set: Field1,Field2"
 
-	want := "load config: fields Field1,Field2 are required but not set"
-	if err.Error() != want {
+	if have := err.Error(); have != want {
 		t.Fatalf("got %v, want %v", err, want)
 	}
 }

@@ -270,13 +270,11 @@ func (l *Loader) checkRequired() error {
 			missedFields = append(missedFields, field.name)
 		}
 	}
+
 	if len(missedFields) == 0 {
 		return nil
 	}
-	if len(missedFields) == 1 {
-		return fmt.Errorf("field %s is required but not set", missedFields[0])
-	}
-	return fmt.Errorf("fields %s are required but not set", strings.Join(missedFields, ","))
+	return fmt.Errorf("fields required but not set: %s", strings.Join(missedFields, ","))
 }
 
 func (l *Loader) loadDefaults() error {
