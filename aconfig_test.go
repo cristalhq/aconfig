@@ -680,7 +680,7 @@ func TestUsage(t *testing.T) {
 }
 
 func TestBadDefauts(t *testing.T) {
-	f := func(cfg interface{}) {
+	f := func(cfg any) {
 		t.Helper()
 
 		loader := LoaderFor(cfg, Config{
@@ -1153,7 +1153,7 @@ func TestDontFillFlagsIfDisabled(t *testing.T) {
 }
 
 func TestPassBadStructs(t *testing.T) {
-	f := func(cfg interface{}) {
+	f := func(cfg any) {
 		t.Helper()
 
 		defer func() {
@@ -1185,7 +1185,7 @@ func TestBadRequiredTag(t *testing.T) {
 		Field string `required:"boom"`
 	}
 
-	f := func(cfg interface{}) {
+	f := func(cfg any) {
 		t.Helper()
 
 		defer func() {
@@ -1280,7 +1280,7 @@ type structConfig struct {
 	AA structA `json:"A"`
 	StructM
 
-	MM interface{} `json:"MM"`
+	MM any `json:"MM"`
 
 	P *structP `json:"P"`
 }
@@ -1358,7 +1358,7 @@ var testfile = &fstest.MapFile{Data: []byte(`{
 var wantConfig = func() structConfig {
 	i := int32(42)
 	j := int64(420)
-	mInterface := make([]interface{}, 2)
+	mInterface := make([]any, 2)
 	for iI, vI := range []string{"q", "w"} {
 		mInterface[iI] = vI
 	}
@@ -1582,7 +1582,7 @@ func failIfErr(tb testing.TB, err error) {
 	}
 }
 
-func mustEqual(tb testing.TB, got, want interface{}) {
+func mustEqual(tb testing.TB, got, want any) {
 	tb.Helper()
 	if !reflect.DeepEqual(got, want) {
 		tb.Fatalf("\nhave %+v\nwant %+v", got, want)

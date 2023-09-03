@@ -12,7 +12,7 @@ import (
 // Loader of user configuration.
 type Loader struct {
 	config  Config
-	dst     interface{}
+	dst     any
 	parser  *structParser
 	fields  []*fieldData
 	fsys    fs.FS
@@ -103,7 +103,7 @@ type Config struct {
 // FileDecoder is used to read config from files. See aconfig submodules.
 type FileDecoder interface {
 	Format() string
-	DecodeFile(filename string) (map[string]interface{}, error)
+	DecodeFile(filename string) (map[string]any, error)
 	// Init(fsys fs.FS)
 }
 
@@ -122,7 +122,7 @@ type Field interface {
 
 // LoaderFor creates a new Loader based on a given configuration structure.
 // Supports only non-nil structures.
-func LoaderFor(dst interface{}, cfg Config) *Loader {
+func LoaderFor(dst any, cfg Config) *Loader {
 	assertStruct(dst)
 
 	l := &Loader{
@@ -435,7 +435,7 @@ func (l *Loader) loadEnvironment() error {
 	return l.postEnvCheck(actualEnvs, dupls)
 }
 
-func (l *Loader) postEnvCheck(values map[string]interface{}, dupls map[string]struct{}) error {
+func (l *Loader) postEnvCheck(values map[string]any, dupls map[string]struct{}) error {
 	if l.config.AllowUnknownEnvs || l.config.EnvPrefix == "" {
 		return nil
 	}
@@ -473,7 +473,7 @@ func (l *Loader) loadFlags() error {
 	return l.postFlagCheck(actualFlags, dupls)
 }
 
-func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]struct{}) error {
+func (l *Loader) postFlagCheck(values map[string]any, dupls map[string]struct{}) error {
 	if l.config.AllowUnknownFlags || l.config.FlagPrefix == "" {
 		return nil
 	}
@@ -489,7 +489,7 @@ func (l *Loader) postFlagCheck(values map[string]interface{}, dupls map[string]s
 }
 
 // TODO(cristaloleg): revisit.
-func (l *Loader) setField(field *fieldData, name string, values map[string]interface{}, dupls map[string]struct{}) error {
+func (l *Loader) setField(field *fieldData, name string, values map[string]any, dupls map[string]struct{}) error {
 	if !l.config.AllowDuplicates {
 		if _, ok := dupls[name]; ok {
 			return fmt.Errorf("field %q is duplicated", name)

@@ -12,9 +12,8 @@ import (
 )
 
 type structParser struct {
-	dst       interface{}
 	cfg       Config
-	fields    map[string]interface{}
+	fields    map[string]any
 	flagSet   *flag.FlagSet
 	envNames  map[string]struct{}
 	flagNames map[string]struct{}
@@ -32,14 +31,13 @@ func newStructParser(cfg Config) *structParser {
 type parsedField struct {
 	name         string
 	namefull     string
-	value        interface{}
-	defaultValue interface{}
+	value        any
+	defaultValue any
 	parent       *parsedField
-	childs       map[string]interface{}
+	childs       map[string]any
 	tags         map[string]string
 	hasChilds    bool
 	isRequired   bool
-	isSet        bool
 }
 
 func (pf *parsedField) String() string {
@@ -160,13 +158,13 @@ func (sp *structParser) newParseField(parent *parsedField, field reflect.StructF
 	return pfield, nil
 }
 
-func (sp *structParser) parseStruct(x interface{}) error {
+func (sp *structParser) parseStruct(x any) error {
 	value := reflect.ValueOf(x)
 	if value.Type().Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
 
-	fields, err := sp.parseStructHelper(nil, value, map[string]interface{}{})
+	fields, err := sp.parseStructHelper(nil, value, map[string]any{})
 	if err != nil {
 		return err
 	}
@@ -176,7 +174,7 @@ func (sp *structParser) parseStruct(x interface{}) error {
 	return nil
 }
 
-func (sp *structParser) parseStructHelper(parent *parsedField, structValue reflect.Value, res map[string]interface{}) (map[string]interface{}, error) {
+func (sp *structParser) parseStructHelper(parent *parsedField, structValue reflect.Value, res map[string]any) (map[string]any, error) {
 	count := structValue.NumField()
 	structType := structValue.Type()
 
@@ -232,7 +230,7 @@ func (sp *structParser) parseStructHelper(parent *parsedField, structValue refle
 		case reflect.Struct:
 			pfield.hasChilds = true
 
-			param := map[string]interface{}{}
+			param := map[string]any{}
 			parent := pfield
 			if field.Anonymous {
 				pfield.hasChilds = false
@@ -254,8 +252,8 @@ func (sp *structParser) parseStructHelper(parent *parsedField, structValue refle
 				if field.Type.Elem().Kind() == reflect.Uint8 {
 					value = []byte(defaultTagValue)
 				} else {
-					values := []interface{}{}
-					if defaultTagValue != "" && strings.Index(defaultTagValue, ",") == -1 {
+					values := []any{}
+					if defaultTagValue != "" && !strings.Contains(defaultTagValue, ",") {
 						return nil, fmt.Errorf("incorrect default tag value for slice/array: %v", defaultTagValue)
 					}
 					for _, val := range strings.Split(defaultTagValue, ",") {
@@ -266,7 +264,7 @@ func (sp *structParser) parseStructHelper(parent *parsedField, structValue refle
 			} else {
 				pfield.hasChilds = true
 				// TODO: if value is struct - parse
-				// value = parseSlice(fieldValue, map[string]interface{}{})
+				// value = parseSlice(fieldValue, map[string]any{})
 			}
 
 			// if !sp.cfg.SkipDefaults {
@@ -275,9 +273,9 @@ func (sp *structParser) parseStructHelper(parent *parsedField, structValue refle
 
 		case reflect.Map:
 			// if isPrimitive(field.Type.Elem()) {
-			values := map[string]interface{}{}
+			values := map[string]any{}
 			parts := strings.Split(defaultTagValue, ",")
-			if defaultTagValue != "" && strings.Index(defaultTagValue, ",") == -1 {
+			if defaultTagValue != "" && !strings.Contains(defaultTagValue, ",") {
 				return nil, fmt.Errorf("incorrect default tag value for map: %v", defaultTagValue)
 			}
 
@@ -314,7 +312,6 @@ func (sp *structParser) parseStructHelper(parent *parsedField, structValue refle
 						value = val
 					}
 				}
-
 			}
 		}
 
@@ -333,7 +330,7 @@ func (sp *structParser) parseStructHelper(parent *parsedField, structValue refle
 
 var fieldType = reflect.TypeOf(&parsedField{})
 
-var hook = mapstructure.DecodeHookFuncType(func(from, to reflect.Type, data interface{}) (interface{}, error) {
+var hook = mapstructure.DecodeHookFuncType(func(from, to reflect.Type, data any) (any, error) {
 	if from != fieldType {
 		// fmt.Printf("hook: got %T (%+v) when %s\n", i, i, to.String())
 		return data, nil
@@ -351,7 +348,7 @@ var hook = mapstructure.DecodeHookFuncType(func(from, to reflect.Type, data inte
 	return field.value, nil
 })
 
-func (sp *structParser) apply(x interface{}) error {
+func (sp *structParser) apply(x any) error {
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result:           x,
 		DecodeHook:       hook,
@@ -367,7 +364,7 @@ func (sp *structParser) apply(x interface{}) error {
 	return nil
 }
 
-func (sp *structParser) applyLevel(tag string, values map[string]interface{}) error {
+func (sp *structParser) applyLevel(tag string, values map[string]any) error {
 	if err := sp.applyLevelHelper2(sp.fields, tag, values); err != nil {
 		return err
 	}
@@ -380,7 +377,7 @@ func (sp *structParser) applyLevel(tag string, values map[string]interface{}) er
 	return nil
 }
 
-func (sp *structParser) applyLevelHelper2(fields map[string]interface{}, tag string, values map[string]interface{}) error {
+func (sp *structParser) applyLevelHelper2(fields map[string]any, tag string, values map[string]any) error {
 	for _, field := range fields {
 		pfield, ok := field.(*parsedField)
 		if !ok {
@@ -397,9 +394,9 @@ func (sp *structParser) applyLevelHelper2(fields map[string]interface{}, tag str
 		}
 
 		switch value := value.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			if pfield.hasChilds {
-				pfieldValue, ok := pfield.value.(map[string]interface{})
+				pfieldValue, ok := pfield.value.(map[string]any)
 				if !ok {
 					fmt.Printf("ouch %T (%+v)\n", pfield.value, pfield.value)
 					continue
@@ -420,7 +417,7 @@ func (sp *structParser) applyLevelHelper2(fields map[string]interface{}, tag str
 	return nil
 }
 
-func (sp *structParser) applyLevelHelper(fields map[string]interface{}, tag string, values map[string]interface{}) error {
+func (sp *structParser) applyLevelHelper(fields map[string]any, tag string, values map[string]any) error {
 	for _, v := range fields {
 		field, ok := v.(*parsedField)
 		if !ok {
@@ -433,7 +430,7 @@ func (sp *structParser) applyLevelHelper(fields map[string]interface{}, tag stri
 		if !ok {
 			continue
 		}
-		vval, ok := value.(map[string]interface{})
+		vval, ok := value.(map[string]any)
 
 		// TODO: can be only for leaf nodes?
 		if !ok {
@@ -457,7 +454,7 @@ func (sp *structParser) applyLevelHelper(fields map[string]interface{}, tag stri
 	return nil
 }
 
-func (sp *structParser) applyFlat(tag string, values map[string]interface{}) error {
+func (sp *structParser) applyFlat(tag string, values map[string]any) error {
 	allowUnknown := true
 	prefix := ""
 
@@ -489,7 +486,7 @@ func (sp *structParser) applyFlat(tag string, values map[string]interface{}) err
 	return nil
 }
 
-func (sp *structParser) applyFlatHelper(fields map[string]interface{}, tag string, values map[string]interface{}) error {
+func (sp *structParser) applyFlatHelper(fields map[string]any, tag string, values map[string]any) error {
 	for _, field := range fields {
 		pfield, ok := field.(*parsedField)
 		if !ok {
@@ -506,7 +503,7 @@ func (sp *structParser) applyFlatHelper(fields map[string]interface{}, tag strin
 			if !pfield.hasChilds {
 				continue
 			}
-			if err := sp.applyFlatHelper(pfield.value.(map[string]interface{}), tag, values); err != nil {
+			if err := sp.applyFlatHelper(pfield.value.(map[string]any), tag, values); err != nil {
 				return err
 			}
 			continue
