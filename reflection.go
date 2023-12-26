@@ -404,7 +404,3 @@ func mii(m interface{}) map[string]interface{} {
 		panic(fmt.Sprintf("%T %v", m, m))
 	}
 }
-
-func isPrimitive(v reflect.Type) bool {
-	return v.Kind() < reflect.Array || v.Kind() == reflect.String
-}
