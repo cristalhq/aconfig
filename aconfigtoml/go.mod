@@ -1,8 +1,10 @@
 module github.com/cristalhq/aconfig/aconfigtoml
 
-go 1.16
+go 1.21.0
+
+toolchain go1.23.0
 
 require (
-	github.com/BurntSushi/toml v1.1.0
-	github.com/cristalhq/aconfig v0.17.0
+	github.com/cristalhq/aconfig v0.18.5
+	github.com/pelletier/go-toml/v2 v2.2.3
 )

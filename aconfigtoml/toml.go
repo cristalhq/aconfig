@@ -3,7 +3,7 @@ package aconfigtoml
 import (
 	"io/fs"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml/v2"
 )
 
 // Decoder of TOML files for aconfig.
@@ -28,7 +28,7 @@ func (d *Decoder) DecodeFile(filename string) (map[string]interface{}, error) {
 	defer f.Close()
 
 	var raw map[string]interface{}
-	if _, err := toml.DecodeReader(f, &raw); err != nil {
+	if err := toml.NewDecoder(f).Decode(&raw); err != nil {
 		return nil, err
 	}
 	return raw, nil

@@ -15,8 +15,12 @@ var configEmbed embed.FS
 
 func TestTOMLEmbed(t *testing.T) {
 	var cfg struct {
-		Foo string
-		Bar string
+		Foo    string
+		Bar    string
+		Foobar []struct {
+			Foo string
+			Bar string
+		}
 	}
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		SkipDefaults:       true,

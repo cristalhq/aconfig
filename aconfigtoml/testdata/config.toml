@@ -1,2 +1,5 @@
 foo = "value1"
 bar = "value2"
+[[foobar]]
+foo = "slice_foo"
+bar = "slice_bar"
