@@ -1,2 +1,11 @@
 foo = "value1"
 bar = "value2"
+
+[outter]
+  [outter.inner]
+    [[outter.inner.t1]]
+      a = "a"
+      b = "b"
+    [[outter.inner.t1]]
+      a = "c"
+      b = "d"

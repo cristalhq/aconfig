@@ -159,9 +159,11 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 		return nil
 	}
 
-	pv := field.value.Addr().Interface()
-	if v, ok := pv.(encoding.TextUnmarshaler); ok {
-		return v.UnmarshalText([]byte(fmt.Sprint(value)))
+	if field.value.CanAddr() {
+		pv := field.value.Addr().Interface()
+		if v, ok := pv.(encoding.TextUnmarshaler); ok {
+			return v.UnmarshalText([]byte(fmt.Sprint(value)))
+		}
 	}
 
 	switch kind := field.value.Type().Kind(); kind {
@@ -186,26 +188,44 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 	case reflect.Interface:
 		return l.setInterface(field, value)
 
+	case reflect.Struct:
+		fd := l.newFieldData(reflect.StructField{}, field.value, nil)
+		return l.m2s(mii(value), fd.value)
+
 	case reflect.Slice:
 		if field.field.Type.Elem().Kind() == reflect.Struct {
 			if value == nil {
 				return nil
 			}
-			v, ok := value.([]interface{})
+
+			if v, ok := value.([]interface{}); ok {
+				slice := reflect.MakeSlice(field.field.Type, len(v), len(v))
+				for i, val := range v {
+					vv := mii(val)
+
+					fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
+					if err := l.m2s(vv, fd.value); err != nil {
+						return err
+					}
+				}
+				field.value.Set(slice)
+				return nil
+			}
+
+			v, ok := value.([]map[string]interface{})
 			if !ok {
 				panic(fmt.Errorf("%T %v", value, value))
 			}
 
 			slice := reflect.MakeSlice(field.field.Type, len(v), len(v))
 			for i, val := range v {
-				vv := mii(val)
-
 				fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
-				if err := l.m2s(vv, fd.value); err != nil {
+				if err := l.m2s(val, fd.value); err != nil {
 					return err
 				}
 			}
 			field.value.Set(slice)
+
 			return nil
 		}
 		return l.setSlice(field, sliceToString(value))
@@ -223,10 +243,12 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 				return fmt.Errorf("incorrect map key %q: %w", key, err)
 			}
 
-			fdv := l.newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
+			fdv := l.newFieldData(reflect.StructField{}, reflect.New(field.value.Type().Elem()).Elem(), field)
+			fdv.field.Type = field.value.Type().Elem()
 			if err := l.setFieldData(fdv, val); err != nil {
 				return fmt.Errorf("incorrect map value %q: %w", val, err)
 			}
+
 			mapp.SetMapIndex(fdk.value, fdv.value)
 		}
 		field.value.Set(mapp)
@@ -309,6 +331,7 @@ func (l *Loader) setSlice(field *fieldData, value string) error {
 		val = strings.TrimSpace(val)
 
 		fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
+		fd.field.Type = field.field.Type.Elem()
 		if err := l.setFieldData(fd, val); err != nil {
 			return fmt.Errorf("incorrect slice item %q: %w", val, err)
 		}
@@ -334,8 +357,8 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 			return fmt.Errorf("incorrect map key %q: %w", key, err)
 		}
 
-		fdv := l.newSimpleFieldData(reflect.New(field.field.Type.Elem()).Elem())
-		fdv.field.Type = field.field.Type.Elem()
+		fdv := l.newFieldData(reflect.StructField{}, reflect.New(field.value.Type().Elem()).Elem(), field)
+		fdv.field.Type = field.value.Type().Elem()
 		if err := l.setFieldData(fdv, val); err != nil {
 			return fmt.Errorf("incorrect map value %q: %w", val, err)
 		}
