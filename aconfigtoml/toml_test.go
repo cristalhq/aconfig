@@ -15,8 +15,12 @@ var configEmbed embed.FS
 
 func TestTOMLEmbed(t *testing.T) {
 	var cfg struct {
-		Foo string
-		Bar string
+		Foo    string
+		Bar    string
+		Outter map[string]map[string][]struct {
+			A string
+			B string
+		}
 	}
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		SkipDefaults:       true,
@@ -39,6 +43,10 @@ func TestTOMLEmbed(t *testing.T) {
 	}
 	if cfg.Bar != "value2" {
 		t.Fatalf("have: %v", cfg.Bar)
+	}
+
+	if cfg.Outter["inner"]["t1"][0].A != "a" {
+		t.Fatalf("have: %v", cfg.Outter["inner"]["t1"][0].A)
 	}
 }
 
