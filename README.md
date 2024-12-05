@@ -67,12 +67,12 @@ if err := loader.Load(); err != nil {
 	panic(err)
 }
 
-// configuration fields will be loaded from (in order):
+// configuration fields will be loaded in following order:
 //
-// 1. defaults set in structure tags (see MyConfig defenition)
-// 2. loaded from files `file.json` if not `ouch.yaml` will be used
+// 1. defaults set in structure tags (see MyConfig definition)
+// 2. loaded from files `/var/opt/myapp/config.json`; if not possible - `ouch.yaml` will be used
 // 3. from corresponding environment variables with the prefix `APP_`
-// 4. command-line flags with the prefix `app.` if they are
+// 4. command-line flags with the prefix `app.`, if there are any
 ```
 
 Also see examples: [examples_test.go](https://github.com/cristalhq/aconfig/blob/master/example_test.go).
