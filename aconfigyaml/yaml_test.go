@@ -15,16 +15,16 @@ var configEmbed embed.FS
 
 func TestYAMLEmbed(t *testing.T) {
 	var cfg struct {
-		Foo       string   `yaml:"foo"`
-		Bar       string   `yaml:"bar"`
-		IsEnabled bool     `yaml:"is_enabled"`
-		Arr       []string `yaml:"arr"`
+		Foo       string
+		Bar       string
+		IsEnabled bool
+		Arr       []string
 		Arr2      []struct {
-			Name     string `yaml:"name"`
-			Age      int    `yaml:"age"`
-			IsActive bool   `yaml:"isActive"`
+			Name     string
+			Age      int
+			IsActive bool
 		} `yaml:"arr2"`
-		KeyValueMap map[string]string `yaml:"key_value_map"`
+		KeyValueMap map[string]string
 	}
 
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
