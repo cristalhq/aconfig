@@ -369,15 +369,16 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 }
 
 func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error {
-	for name, value := range m {
-		name = strings.Title(name)
-		structFieldValue := structValue.FieldByName(name)
+	for mKey, value := range m {
+		structFieldName := snakeToCamel(mKey)
+
+		structFieldValue := structValue.FieldByName(structFieldName)
 		if !structFieldValue.IsValid() {
-			return fmt.Errorf("no such field %q in struct", name)
+			return fmt.Errorf("no such field %q in struct (original key: %q)", structFieldName, mKey)
 		}
 
 		if !structFieldValue.CanSet() {
-			return fmt.Errorf("cannot set %q field value", name)
+			return fmt.Errorf("cannot set %q field value", structFieldName)
 		}
 
 		val := reflect.ValueOf(value)
@@ -385,6 +386,7 @@ func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error 
 			if structFieldValue.Kind() == reflect.Slice && val.Kind() == reflect.Slice {
 				vals := value.([]interface{})
 				slice := reflect.MakeSlice(structFieldValue.Type(), len(vals), len(vals))
+
 				if isPrimitive(structFieldValue.Type().Elem()) {
 					for i := 0; i < len(vals); i++ {
 						fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
@@ -394,18 +396,21 @@ func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error 
 					}
 				} else {
 					for i := 0; i < len(vals); i++ {
-						a := mii(vals[i])
-						b := slice.Index(i)
-						if err := l.m2s(a, b); err != nil {
+						elemValue := reflect.New(structFieldValue.Type().Elem()).Elem()
+						if err := l.m2s(mii(vals[i]), elemValue); err != nil {
 							return err
 						}
+						slice.Index(i).Set(elemValue)
 					}
 				}
 				structFieldValue.Set(slice)
 				continue
-			} else {
-				return fmt.Errorf("provided value type do not match struct field type (%v and %v)", structFieldValue.Type(), val.Type())
 			}
+
+			return fmt.Errorf(
+				"type mismatch for field %q (%v vs %v)",
+				structFieldName, structFieldValue.Type(), val.Type(),
+			)
 		}
 
 		structFieldValue.Set(val)
@@ -426,4 +431,12 @@ func mii(m interface{}) map[string]interface{} {
 	default:
 		panic(fmt.Sprintf("%T %v", m, m))
 	}
+}
+
+func snakeToCamel(s string) string {
+	parts := strings.Split(s, "_")
+	for i := range parts {
+		parts[i] = strings.Title(parts[i])
+	}
+	return strings.Join(parts, "")
 }

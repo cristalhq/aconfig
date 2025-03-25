@@ -1,2 +1,17 @@
 foo: value1
 bar: value2
+is_enabled: true
+arr:
+  - value3
+  - value4
+  - value5
+arr2:
+  - name: John
+    age: 25
+    is_active: true
+  - name: Jane
+    age: 26
+    is_active: false
+key_value_map:
+  key1: value6
+  key2: value7

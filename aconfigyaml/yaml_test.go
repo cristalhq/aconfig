@@ -15,9 +15,18 @@ var configEmbed embed.FS
 
 func TestYAMLEmbed(t *testing.T) {
 	var cfg struct {
-		Foo string
-		Bar string
+		Foo       string   `yaml:"foo"`
+		Bar       string   `yaml:"bar"`
+		IsEnabled bool     `yaml:"is_enabled"`
+		Arr       []string `yaml:"arr"`
+		Arr2      []struct {
+			Name     string `yaml:"name"`
+			Age      int    `yaml:"age"`
+			IsActive bool   `yaml:"isActive"`
+		} `yaml:"arr2"`
+		KeyValueMap map[string]string `yaml:"key_value_map"`
 	}
+
 	loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 		SkipDefaults:       true,
 		SkipEnv:            true,
@@ -39,6 +48,45 @@ func TestYAMLEmbed(t *testing.T) {
 	}
 	if cfg.Bar != "value2" {
 		t.Fatalf("have: %v", cfg.Bar)
+	}
+	if cfg.IsEnabled != true {
+		t.Fatalf("have: %v", cfg.IsEnabled)
+	}
+	if len(cfg.Arr) != 3 {
+		t.Fatalf("have: %v", cfg.Arr)
+	}
+	if len(cfg.Arr2) != 2 {
+		t.Fatalf("have: %v", cfg.Arr2)
+	}
+
+	if len(cfg.KeyValueMap) != 2 {
+		t.Fatalf("have: %v", cfg.KeyValueMap)
+	}
+
+	if cfg.KeyValueMap["key1"] != "value6" {
+		t.Fatalf("have: %v", cfg.KeyValueMap["key1"])
+	}
+	if cfg.KeyValueMap["key2"] != "value7" {
+		t.Fatalf("have: %v", cfg.KeyValueMap["key2"])
+	}
+
+	if cfg.Arr2[0].Name != "John" {
+		t.Fatalf("have: %v", cfg.Arr2[0].Name)
+	}
+	if cfg.Arr2[0].Age != 25 {
+		t.Fatalf("have: %v", cfg.Arr2[0].Age)
+	}
+	if cfg.Arr2[0].IsActive != true {
+		t.Fatalf("have: %v", cfg.Arr2[0].IsActive)
+	}
+	if cfg.Arr2[1].Name != "Jane" {
+		t.Fatalf("have: %v", cfg.Arr2[1].Name)
+	}
+	if cfg.Arr2[1].Age != 26 {
+		t.Fatalf("have: %v", cfg.Arr2[1].Age)
+	}
+	if cfg.Arr2[1].IsActive != false {
+		t.Fatalf("have: %v", cfg.Arr2[1].IsActive)
 	}
 }
 

@@ -48,6 +48,18 @@ func TestTOMLEmbed(t *testing.T) {
 	if cfg.Outter["inner"]["t1"][0].A != "a" {
 		t.Fatalf("have: %v", cfg.Outter["inner"]["t1"][0].A)
 	}
+
+	if cfg.Outter["inner"]["t1"][0].B != "b" {
+		t.Fatalf("have: %v", cfg.Outter["inner"]["t1"][0].B)
+	}
+
+	if cfg.Outter["inner"]["t1"][1].A != "c" {
+		t.Fatalf("have: %v", cfg.Outter["inner"]["t1"][0].A)
+	}
+
+	if cfg.Outter["inner"]["t1"][1].B != "d" {
+		t.Fatalf("have: %v", cfg.Outter["inner"]["t1"][0].B)
+	}
 }
 
 func TestTOML(t *testing.T) {
