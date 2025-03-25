@@ -8,10 +8,13 @@ arr:
 arr2:
   - name: John
     age: 25
+    isActive: true
     is_active: true
   - name: Jane
     age: 26
-    is_active: false
+    isActive: false
+    is_Active: true
+    is_active: true
 key_value_map:
   key1: value6
   key2: value7

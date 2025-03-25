@@ -2,6 +2,7 @@ package aconfigyaml_test
 
 import (
 	"embed"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
@@ -20,9 +21,11 @@ func TestYAMLEmbed(t *testing.T) {
 		IsEnabled bool
 		Arr       []string
 		Arr2      []struct {
-			Name     string
-			Age      int
-			IsActive bool
+			Name      string
+			Age       int
+			IsActive  bool `yaml:"isActive"`
+			Is_active bool `yaml:"is_Active"`
+			Is_Active bool `yaml:"is_active"`
 		} `yaml:"arr2"`
 		KeyValueMap map[string]string
 	}
@@ -79,6 +82,13 @@ func TestYAMLEmbed(t *testing.T) {
 	if cfg.Arr2[0].IsActive != true {
 		t.Fatalf("have: %v", cfg.Arr2[0].IsActive)
 	}
+	if cfg.Arr2[0].Is_active != false {
+		t.Fatalf("have: %v", cfg.Arr2[0].Is_active)
+	}
+	if cfg.Arr2[0].Is_Active != true {
+		t.Fatalf("have: %v", cfg.Arr2[0].Is_Active)
+	}
+
 	if cfg.Arr2[1].Name != "Jane" {
 		t.Fatalf("have: %v", cfg.Arr2[1].Name)
 	}
@@ -88,6 +98,14 @@ func TestYAMLEmbed(t *testing.T) {
 	if cfg.Arr2[1].IsActive != false {
 		t.Fatalf("have: %v", cfg.Arr2[1].IsActive)
 	}
+	if cfg.Arr2[1].Is_active != true {
+		t.Fatalf("have: %v", cfg.Arr2[1].Is_active)
+	}
+	if cfg.Arr2[1].Is_Active != true {
+		t.Fatalf("have: %v", cfg.Arr2[1].Is_Active)
+	}
+
+	fmt.Printf("%+v\n", cfg)
 }
 
 func TestYAML(t *testing.T) {

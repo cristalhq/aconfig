@@ -369,16 +369,46 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 }
 
 func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error {
-	for mKey, value := range m {
-		structFieldName := snakeToCamel(mKey)
+	structType := structValue.Type()
 
-		structFieldValue := structValue.FieldByName(structFieldName)
-		if !structFieldValue.IsValid() {
-			return fmt.Errorf("no such field %q in struct (original key: %q)", structFieldName, mKey)
+	// Create mapping: lowercase name and tags -> Field
+	fieldMap := make(map[string]reflect.StructField)
+	for i := 0; i < structType.NumField(); i++ {
+		field := structType.Field(i)
+
+		// Add the original name in lowercase to the mapping
+		fieldMap[strings.ToLower(field.Name)] = field
+
+		// Processing the yaml tag
+		if tag := field.Tag.Get("yaml"); tag != "" {
+			// Ignore tag options (e.g. "omitempty")
+			if commaPos := strings.Index(tag, ","); commaPos != -1 {
+				tag = tag[:commaPos]
+			}
+			if tag != "" {
+				fieldMap[tag] = field
+			}
+		}
+	}
+
+	for mKey, value := range m {
+		// Search for a field by tag or name in lowercase
+		var field reflect.StructField
+		var exists bool
+
+		// First, we check for an exact match of the tag
+		if field, exists = fieldMap[mKey]; !exists {
+			field, exists = fieldMap[strings.ToLower(mKey)]
 		}
 
+		if !exists {
+			return fmt.Errorf("no such field: %q (checked: %q and %q)",
+				mKey, mKey, strings.ToLower(mKey))
+		}
+
+		structFieldValue := structValue.FieldByName(field.Name)
 		if !structFieldValue.CanSet() {
-			return fmt.Errorf("cannot set %q field value", structFieldName)
+			return fmt.Errorf("cannot set %q field value", field.Name)
 		}
 
 		val := reflect.ValueOf(value)
@@ -407,14 +437,50 @@ func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error 
 				continue
 			}
 
-			return fmt.Errorf(
-				"type mismatch for field %q (%v vs %v)",
-				structFieldName, structFieldValue.Type(), val.Type(),
-			)
+			// Handling other type mismatches
+			if structFieldValue.Kind() == reflect.Map && val.Kind() == reflect.Map {
+				if err := l.handleMapField(structFieldValue, val); err != nil {
+					return err
+				}
+				continue
+			}
+
+			return fmt.Errorf("type mismatch for field %q (%s vs %s)",
+				mKey, structFieldValue.Type(), val.Type())
 		}
 
 		structFieldValue.Set(val)
 	}
+	return nil
+}
+
+func (l *Loader) handleMapField(fieldValue, mapValue reflect.Value) error {
+	mapType := fieldValue.Type()
+	resultMap := reflect.MakeMap(mapType)
+
+	iter := mapValue.MapRange()
+	for iter.Next() {
+		key := iter.Key().Interface()
+		value := iter.Value().Interface()
+
+		// Key processing
+		keyVal := reflect.New(mapType.Key()).Elem()
+		fdKey := l.newSimpleFieldData(keyVal)
+		if err := l.setFieldData(fdKey, key); err != nil {
+			return fmt.Errorf("map key error: %w", err)
+		}
+
+		// Processing the value
+		valueVal := reflect.New(mapType.Elem()).Elem()
+		fdValue := l.newFieldData(reflect.StructField{}, valueVal, nil)
+		if err := l.setFieldData(fdValue, value); err != nil {
+			return fmt.Errorf("map value error: %w", err)
+		}
+
+		resultMap.SetMapIndex(keyVal, valueVal)
+	}
+
+	fieldValue.Set(resultMap)
 	return nil
 }
 
