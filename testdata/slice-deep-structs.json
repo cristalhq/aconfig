@@ -1,0 +1,13 @@
+{
+  "services": [
+    {
+      "nested": {
+        "name": "service1",
+        "strings": ["string1", "string2"],
+        "integers": [1, 2],
+        "booleans": [true, false],
+        "structs": [{ "key": 1 }, { "key": 2 }, { "key": 3 }]
+      }
+    }
+  ]
+}

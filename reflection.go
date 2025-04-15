@@ -380,35 +380,12 @@ func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error 
 			return fmt.Errorf("cannot set %q field value", name)
 		}
 
-		val := reflect.ValueOf(value)
-		if structFieldValue.Type() != val.Type() {
-			if structFieldValue.Kind() == reflect.Slice && val.Kind() == reflect.Slice {
-				vals := value.([]interface{})
-				slice := reflect.MakeSlice(structFieldValue.Type(), len(vals), len(vals))
-				if isPrimitive(structFieldValue.Type().Elem()) {
-					for i := 0; i < len(vals); i++ {
-						fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
-						if err := l.setFieldData(fd, vals[i]); err != nil {
-							return fmt.Errorf("incorrect slice item %q: %w", vals[i], err)
-						}
-					}
-				} else {
-					for i := 0; i < len(vals); i++ {
-						a := mii(vals[i])
-						b := slice.Index(i)
-						if err := l.m2s(a, b); err != nil {
-							return err
-						}
-					}
-				}
-				structFieldValue.Set(slice)
-				continue
-			} else {
-				return fmt.Errorf("provided value type do not match struct field type (%v and %v)", structFieldValue.Type(), val.Type())
-			}
-		}
+		field, _ := structValue.Type().FieldByName(name)
 
-		structFieldValue.Set(val)
+		fd := l.newFieldData(field, structFieldValue, nil)
+		if err := l.setFieldData(fd, value); err != nil {
+			return err
+		}
 	}
 	return nil
 }

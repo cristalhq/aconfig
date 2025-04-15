@@ -1568,6 +1568,52 @@ func TestSliceOfStructsWithSliceOfPrimitives(t *testing.T) {
 	mustEqual(t, cfg, want)
 }
 
+func TestSliceOfDeepStructs(t *testing.T) {
+	type String string
+
+	type NestedStruct struct{ Key int }
+
+	type TestService struct {
+		Name     String
+		Strings  []String
+		Integers []int
+		Booleans []bool
+		Structs  []NestedStruct
+	}
+
+	type TestConfig struct {
+		Services []struct{ Nested TestService }
+	}
+	var cfg TestConfig
+	loader := LoaderFor(&cfg, Config{
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{"testdata/slice-deep-structs.json"},
+	})
+
+	failIfErr(t, loader.Load())
+
+	want := TestConfig{
+		Services: []struct{ Nested TestService }{
+			{
+				Nested: TestService{
+					Name:     "service1",
+					Strings:  []String{"string1", "string2"},
+					Integers: []int{1, 2},
+					Booleans: []bool{true, false},
+					Structs: []NestedStruct{
+						{1},
+						{2},
+						{3},
+					},
+				},
+			},
+		},
+	}
+	mustEqual(t, cfg, want)
+}
+
 func failIfOk(tb testing.TB, err error) {
 	tb.Helper()
 	if err == nil {
