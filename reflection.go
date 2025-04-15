@@ -197,42 +197,27 @@ func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
 		return l.m2s(mii(value), fd.value)
 
 	case reflect.Slice:
-		if field.field.Type.Elem().Kind() == reflect.Struct {
-			if value == nil {
-				return nil
-			}
-
-			if v, ok := value.([]interface{}); ok {
-				slice := reflect.MakeSlice(field.field.Type, len(v), len(v))
-				for i, val := range v {
-					vv := mii(val)
-
-					fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
-					if err := l.m2s(vv, fd.value); err != nil {
-						return err
-					}
-				}
-				field.value.Set(slice)
-				return nil
-			}
-
-			v, ok := value.([]map[string]interface{})
-			if !ok {
-				panic(fmt.Errorf("%T %v", value, value))
-			}
-
-			slice := reflect.MakeSlice(field.field.Type, len(v), len(v))
-			for i, val := range v {
-				fd := l.newFieldData(reflect.StructField{}, slice.Index(i), nil)
-				if err := l.m2s(val, fd.value); err != nil {
-					return err
-				}
-			}
-			field.value.Set(slice)
-
-			return nil
+		if isPrimitive(field.field.Type.Elem()) {
+			return l.setSlice(field, sliceToString(value))
 		}
-		return l.setSlice(field, sliceToString(value))
+
+		in := reflect.ValueOf(value)
+		if in.Kind() != reflect.Slice {
+			panic(fmt.Errorf("%T %v", value, value))
+		}
+
+		out := reflect.MakeSlice(field.field.Type, in.Len(), in.Len())
+		field.value.Set(out)
+
+		for i := 0; i < in.Len(); i++ {
+			fd := l.newFieldData(reflect.StructField{}, out.Index(i), nil)
+
+			if err := l.setFieldData(fd, in.Index(i).Interface()); err != nil {
+				return err
+			}
+		}
+
+		return nil
 
 	case reflect.Map:
 		v, ok := value.(map[string]interface{})

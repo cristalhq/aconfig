@@ -7,8 +7,9 @@
         "integers": [1, 2],
         "nullable": null,
         "booleans": [true, false],
-        "structs": [{ "key": 1 }, { "key": 2 }, { "key": 3 }]
+        "structs": [{ "key": 1 }, { "key": 2 }, null, { "key": 3 }]
       }
-    }
+    },
+    null
   ]
 }

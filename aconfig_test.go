@@ -1579,11 +1579,11 @@ func TestSliceOfDeepStructs(t *testing.T) {
 		Integers []int
 		Nullable *struct{}
 		Booleans []bool
-		Structs  []NestedStruct
+		Structs  []*NestedStruct
 	}
 
 	type TestConfig struct {
-		Services []struct{ Nested TestService }
+		Services []*struct{ Nested TestService }
 	}
 	var cfg TestConfig
 	loader := LoaderFor(&cfg, Config{
@@ -1596,7 +1596,7 @@ func TestSliceOfDeepStructs(t *testing.T) {
 	failIfErr(t, loader.Load())
 
 	want := TestConfig{
-		Services: []struct{ Nested TestService }{
+		Services: []*struct{ Nested TestService }{
 			{
 				Nested: TestService{
 					Name:     "service1",
@@ -1604,13 +1604,15 @@ func TestSliceOfDeepStructs(t *testing.T) {
 					Integers: []int{1, 2},
 					Nullable: nil,
 					Booleans: []bool{true, false},
-					Structs: []NestedStruct{
+					Structs: []*NestedStruct{
 						{1},
 						{2},
+						nil,
 						{3},
 					},
 				},
 			},
+			nil,
 		},
 	}
 	mustEqual(t, cfg, want)
