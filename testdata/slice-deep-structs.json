@@ -5,6 +5,7 @@
         "name": "service1",
         "strings": ["string1", "string2"],
         "integers": [1, 2],
+        "nullable": null,
         "booleans": [true, false],
         "structs": [{ "key": 1 }, { "key": 2 }, { "key": 3 }]
       }

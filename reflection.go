@@ -147,6 +147,10 @@ func (l *Loader) getFieldsHelper(valueObject reflect.Value, parent *fieldData) [
 }
 
 func (l *Loader) setFieldData(field *fieldData, value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
 	// unwrap pointers
 	for field.value.Type().Kind() == reflect.Ptr {
 		if field.value.IsNil() {

@@ -1577,6 +1577,7 @@ func TestSliceOfDeepStructs(t *testing.T) {
 		Name     String
 		Strings  []String
 		Integers []int
+		Nullable *struct{}
 		Booleans []bool
 		Structs  []NestedStruct
 	}
@@ -1601,6 +1602,7 @@ func TestSliceOfDeepStructs(t *testing.T) {
 					Name:     "service1",
 					Strings:  []String{"string1", "string2"},
 					Integers: []int{1, 2},
+					Nullable: nil,
 					Booleans: []bool{true, false},
 					Structs: []NestedStruct{
 						{1},
