@@ -358,22 +358,42 @@ func (l *Loader) setMap(field *fieldData, value string) error {
 }
 
 func (l *Loader) m2s(m map[string]interface{}, structValue reflect.Value) error {
-	for name, value := range m {
-		name = strings.Title(name)
-		structFieldValue := structValue.FieldByName(name)
-		if !structFieldValue.IsValid() {
-			return fmt.Errorf("no such field %q in struct", name)
-		}
+	for _, dec := range l.config.FileDecoders {
+		for name, value := range m {
+			structFieldValue := structValue.FieldByName(name)
+			for i := 0; i < structValue.NumField(); i++ {
+				// first try to find field by name
+				tagName := structValue.Type().Field(i).Tag.Get(dec.Format())
+				// if tag is set - use it
+				if strings.EqualFold(tagName, name) {
+					name = structValue.Type().Field(i).Name
+					structFieldValue = structValue.FieldByName(name)
+					break
+				}
+				// if tag is not set - try to find field by name
+				if tagName == "" {
+					if strings.EqualFold(structValue.Type().Field(i).Name, name) {
+						name = structValue.Type().Field(i).Name
+						structFieldValue = structValue.FieldByName(name)
+						break
+					}
+				}
+			}
 
-		if !structFieldValue.CanSet() {
-			return fmt.Errorf("cannot set %q field value", name)
-		}
+			if !structFieldValue.IsValid() {
+				return fmt.Errorf("no such field %q in struct", name)
+			}
 
-		field, _ := structValue.Type().FieldByName(name)
+			if !structFieldValue.CanSet() {
+				return fmt.Errorf("cannot set %q field value", name)
+			}
 
-		fd := l.newFieldData(field, structFieldValue, nil)
-		if err := l.setFieldData(fd, value); err != nil {
-			return err
+			field, _ := structValue.Type().FieldByName(name)
+
+			fd := l.newFieldData(field, structFieldValue, nil)
+			if err := l.setFieldData(fd, value); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

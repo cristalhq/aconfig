@@ -1536,10 +1536,11 @@ func TestFileConfigFlagDelim(t *testing.T) {
 
 func TestSliceOfStructsWithSliceOfPrimitives(t *testing.T) {
 	type TestService struct {
-		Name     string
-		Strings  []string
-		Integers []int
-		Booleans []bool
+		Name           string
+		Strings        []string
+		Integers       []int
+		Booleans       []bool
+		AnotherStrings []string `json:"another_strings"`
 	}
 
 	type TestConfig struct {
@@ -1558,10 +1559,11 @@ func TestSliceOfStructsWithSliceOfPrimitives(t *testing.T) {
 	want := TestConfig{
 		Services: []TestService{
 			{
-				Name:     "service1",
-				Strings:  []string{"string1", "string2"},
-				Integers: []int{1, 2},
-				Booleans: []bool{true, false},
+				Name:           "service1",
+				Strings:        []string{"string1", "string2"},
+				Integers:       []int{1, 2},
+				Booleans:       []bool{true, false},
+				AnotherStrings: []string{"another1", "another2"},
 			},
 		},
 	}

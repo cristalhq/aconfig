@@ -4,7 +4,8 @@
       "name": "service1",
       "strings": ["string1", "string2"],
       "integers": [1, 2],
-      "booleans": [true, false]
+      "booleans": [true, false],
+      "another_strings": ["another1", "another2"]
     }
   ]
 }
