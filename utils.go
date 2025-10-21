@@ -173,7 +173,9 @@ func (d *jsonDecoder) DecodeFile(filename string) (map[string]interface{}, error
 	defer f.Close()
 
 	var raw map[string]interface{}
-	if err := json.NewDecoder(f).Decode(&raw); err != nil {
+	dec := json.NewDecoder(f)
+	dec.UseNumber()
+	if err := dec.Decode(&raw); err != nil {
 		return nil, err
 	}
 	return raw, nil
