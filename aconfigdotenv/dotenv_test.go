@@ -87,6 +87,7 @@ func TestDotEnv(t *testing.T) {
 			M: "n",
 		},
 		MI: "q,w",
+		ML: "this\nis\na multiline\n",
 	}
 
 	if got := cfg; !reflect.DeepEqual(want, got) {
@@ -127,6 +128,7 @@ type structConfig struct {
 	AA structA `env:"A"`
 	StructM
 	MI interface{} `env:"MI"`
+	ML string      `env:"ML"`
 }
 
 type structY struct {
@@ -174,4 +176,9 @@ A_B_D=x,y,z
 
 M=n
 MI=q,w
+
+ML='this
+is
+a multiline
+'
 `
