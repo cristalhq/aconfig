@@ -81,6 +81,9 @@ func (l *Loader) fullTag(prefix string, f *fieldData, tag string) string {
 	if tag == "env" {
 		sep = l.config.envDelimiter
 	}
+	if tag == "env" && prefix == "" && l.config.EnvPrefix != "" {
+		prefix = l.config.EnvPrefix
+	}
 	res := f.Tag(tag)
 	if res == "-" {
 		return ""
