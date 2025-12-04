@@ -1479,6 +1479,25 @@ func TestJSONMap(t *testing.T) {
 	mustEqual(t, cfg, want)
 }
 
+func TestJSONBigInt(t *testing.T) {
+	type TestConfig struct {
+		Big int `json:"Big"`
+	}
+	var cfg TestConfig
+
+	loader := LoaderFor(&cfg, Config{
+		NewParser:    newParser,
+		SkipDefaults: true,
+		SkipEnv:      true,
+		SkipFlags:    true,
+		Files:        []string{"testdata/bigint.json"},
+	})
+
+	failIfErr(t, loader.Load())
+
+	mustEqual(t, cfg.Big, 1048576)
+}
+
 func TestBad(t *testing.T) {
 	t.Skip("probably too picky")
 
