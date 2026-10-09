@@ -267,7 +267,11 @@ func (*Loader) setInt(field *fieldData, value string) error {
 }
 
 func (l *Loader) setInt64(field *fieldData, value string) error {
-	if field.field.Type == reflect.TypeOf(time.Second) {
+	fieldType := field.field.Type
+	if field.field.Name != "" {
+		fieldType = field.value.Type()
+	}
+	if fieldType == reflect.TypeOf(time.Second) {
 		val, err := time.ParseDuration(value)
 		if err != nil {
 			return err

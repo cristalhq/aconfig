@@ -143,6 +143,110 @@ func TestDefaults(t *testing.T) {
 	mustEqual(t, cfg, want)
 }
 
+func TestDurationPointers(t *testing.T) {
+	for _, source := range []string{"defaults", "env", "flags", "json", "zero"} {
+		for _, populated := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/populated=%t", source, populated), func(t *testing.T) {
+				var cfg struct {
+					Plain   time.Duration   `default:"1s"`
+					Timeout *time.Duration  `default:"1s"`
+					Double  **time.Duration `default:"1s"`
+					Integer *int64          `default:"17"`
+				}
+				previous := 9 * time.Second
+				previousPointer := &previous
+				if populated {
+					cfg.Timeout = &previous
+					cfg.Double = &previousPointer
+				}
+				settings := Config{SkipFiles: true, SkipEnv: true, SkipFlags: true}
+				want := time.Second
+				switch source {
+				case "env":
+					settings.SkipEnv = false
+					settings.Envs = []string{"PLAIN=250ms", "TIMEOUT=250ms", "DOUBLE=250ms"}
+					want = 250 * time.Millisecond
+				case "flags":
+					settings.SkipFlags = false
+					settings.Args = []string{"-plain=-2s", "-timeout=-2s", "-double=-2s"}
+					want = -2 * time.Second
+				case "json":
+					settings.SkipDefaults = true
+					settings.SkipFiles = false
+					settings.Files = []string{"config.json"}
+					settings.FileSystem = fstest.MapFS{
+						"config.json": &fstest.MapFile{Data: []byte(`{"plain":"1.5s","timeout":"1.5s","double":"1.5s","integer":17}`)},
+					}
+					want = 1500 * time.Millisecond
+				case "zero":
+					settings.SkipEnv = false
+					settings.Envs = []string{"PLAIN=0", "TIMEOUT=0", "DOUBLE=0"}
+					want = 0
+				}
+
+				failIfErr(t, LoaderFor(&cfg, settings).Load())
+				if cfg.Timeout == nil || cfg.Double == nil || *cfg.Double == nil || cfg.Integer == nil {
+					t.Fatalf("missing pointer values: %+v", cfg)
+				}
+				mustEqual(t, cfg.Plain, want)
+				mustEqual(t, *cfg.Timeout, want)
+				mustEqual(t, **cfg.Double, want)
+				mustEqual(t, *cfg.Integer, int64(17))
+				if populated && (cfg.Timeout != &previous || cfg.Double != &previousPointer) {
+					t.Fatal("loading replaced existing pointers")
+				}
+			})
+		}
+	}
+}
+
+func TestDurationPointerErrors(t *testing.T) {
+	for _, value := range []string{"invalid", "123", "999999999999999999999h"} {
+		for _, source := range []string{"env", "flags", "json"} {
+			t.Run(source+"/"+value, func(t *testing.T) {
+				previous := 9 * time.Second
+				cfg := struct{ Timeout *time.Duration }{Timeout: &previous}
+				settings := Config{SkipDefaults: true, SkipFiles: true, SkipEnv: true, SkipFlags: true}
+				switch source {
+				case "env":
+					settings.SkipEnv = false
+					settings.Envs = []string{"TIMEOUT=" + value}
+				case "flags":
+					settings.SkipFlags = false
+					settings.Args = []string{"-timeout=" + value}
+				case "json":
+					settings.SkipFiles = false
+					settings.Files = []string{"config.json"}
+					settings.FileSystem = fstest.MapFS{
+						"config.json": &fstest.MapFile{Data: []byte(fmt.Sprintf(`{"timeout":%q}`, value))},
+					}
+				}
+				_, wantErr := time.ParseDuration(value)
+				err := LoaderFor(&cfg, settings).Load()
+				if err == nil || !strings.Contains(err.Error(), wantErr.Error()) {
+					t.Fatalf("got %v, want duration error %v", err, wantErr)
+				}
+				mustEqual(t, *cfg.Timeout, 9*time.Second)
+			})
+		}
+	}
+}
+
+func TestDurationContainers(t *testing.T) {
+	var cfg struct {
+		Slice []time.Duration          `default:"1s,250ms"`
+		Map   map[string]time.Duration `default:"first:1s,second:250ms"`
+		Keys  map[time.Duration]string `default:"123:first,456:second"`
+	}
+	failIfErr(t, LoaderFor(&cfg, Config{SkipFiles: true, SkipEnv: true, SkipFlags: true}).Load())
+	mustEqual(t, len(cfg.Slice), 2)
+	mustEqual(t, cfg.Slice[0], time.Second)
+	mustEqual(t, cfg.Slice[1], 250*time.Millisecond)
+	mustEqual(t, cfg.Map["first"], time.Second)
+	mustEqual(t, cfg.Map["second"], 250*time.Millisecond)
+	mustEqual(t, cfg.Keys, map[time.Duration]string{123: "first", 456: "second"})
+}
+
 func TestDefaults_AllTypes(t *testing.T) {
 	type AllTypesConfig struct {
 		Bool   bool   `default:"true"`
